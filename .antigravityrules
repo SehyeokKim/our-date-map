@@ -1,0 +1,14 @@
+# Our Date Map - PWA Project Context
+
+## Tech Stack
+- Framework: Next.js (App Router, TypeScript)
+- Styling: Tailwind CSS
+- Backend/DB: Supabase (PostgreSQL, Storage)
+- Map API: Kakao Maps JavaScript API
+- PWA: Standalone mode optimization, browser-image-compression
+
+## Coding Rules & Vibe Coding Principles
+1. Always write clean, fully typed TypeScript code.
+2. Mobile-first responsive design using Tailwind CSS.
+3. Optimize images below 300KB using `browser-image-compression` before uploading to Supabase Storage.
+4. Keep full-screen map layout without scrollbars (PWA app-like UI).
