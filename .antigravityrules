@@ -1,14 +1,44 @@
-# Our Date Map - PWA Project Context
+# Our Date Map - PWA Project Context & Agent Rules
 
-## Tech Stack
-- Framework: Next.js (App Router, TypeScript)
-- Styling: Tailwind CSS
-- Backend/DB: Supabase (PostgreSQL, Storage)
-- Map API: Kakao Maps JavaScript API
-- PWA: Standalone mode optimization, browser-image-compression
+## 1. Tech Stack
+- **Framework:** Next.js (App Router, TypeScript)
+- **Styling:** Tailwind CSS & Shadcn UI
+- **Backend/DB:** Supabase (PostgreSQL, Storage)
+- **Map API:** Kakao Maps JavaScript API (`NEXT_PUBLIC_KAKAO_MAP_KEY`)
+- **PWA:** Standalone mode optimization, Service Worker, Web App Manifest
+- **Utility:** `browser-image-compression` for client-side image optimization
 
-## Coding Rules & Vibe Coding Principles
-1. Always write clean, fully typed TypeScript code.
-2. Mobile-first responsive design using Tailwind CSS.
-3. Optimize images below 300KB using `browser-image-compression` before uploading to Supabase Storage.
-4. Keep full-screen map layout without scrollbars (PWA app-like UI).
+---
+
+## 2. Coding Rules & Principles
+1. **TypeScript First:** Always write clean, robust, fully typed TypeScript code. Avoid `any` types.
+2. **Mobile-First Design:** Build responsive, touch-friendly, mobile-first UIs using Tailwind CSS.
+3. **App-Like UX:** Maintain a full-screen, no-scrollbar map layout suitable for PWA standalone mode.
+4. **Image Optimization:** Compress all user-uploaded images to under 300KB using `browser-image-compression` before sending them to Supabase Storage.
+5. **Kakao SDK Handling:** Always load Kakao Map scripts safely and wrap initializations within `window.kakao.maps.load()` to prevent asynchronous rendering errors.
+
+---
+
+## 3. Versioning & Changelog Management (Strict)
+1. **Standard:** Follow Semantic Versioning (`vX.Y.Z`) and Keep a Changelog standards.
+2. **`CHANGELOG.md` Language:** Always write the `CHANGELOG.md` in Korean.
+3. **`CHANGELOG.md` Updates:** Whenever a new feature, bug fix, or major change is completed, automatically update the `CHANGELOG.md` file under the `[Unreleased]` section (or the current version section).
+4. **Change Categories:** Group all updates into standard categories in Korean:
+   - `추가` (Added): 새 기능 추가.
+   - `변경` (Changed): 기존 기능 변경.
+   - `수정` (Fixed): 버그 수정.
+   - `삭제` (Removed): 기존 기능 삭제.
+   - `보안` (Security): 보안 및 키 관리 개선.
+
+---
+
+## 4. Git & Vibe Coding Workflow
+1. **Conventional Commits:** Write clear commit messages using types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
+2. **Git Push Automation:** When instructed to complete and ship a task, ensure code compiles without errors, update `CHANGELOG.md`, create a Git commit, and push to `origin main`.
+
+---
+
+## 5. Supabase Schema & Migration Rules
+1. **Single Source of Truth:** Keep all database schema changes updated in `supabase/schema.sql` at the root directory.
+2. **Schema Management:** Whenever a new feature requires database changes (tables, columns, RLS policies, storage buckets), automatically update `supabase/schema.sql`.
+3. **Actionable SQL Snippets:** When schema changes occur, provide the exact newly added SQL statements in the chat so I can easily copy and run them in the Supabase SQL Editor.

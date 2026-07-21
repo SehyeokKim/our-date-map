@@ -37,3 +37,60 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom User Geolocation Marker Styles */
+.custom-user-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
+}
+
+.custom-user-marker .ping {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(244, 63, 94, 0.3); /* rose-500 with opacity */
+  animation: marker-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: 0.75;
+}
+
+.custom-user-marker .dot {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgb(244, 63, 94); /* rose-500 */
+  border: 2px solid white;
+  box-shadow: 0 4px 6px -1px rgba(244, 63, 94, 0.5), 0 2px 4px -1px rgba(244, 63, 94, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-user-marker .core {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+@keyframes marker-ping {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
