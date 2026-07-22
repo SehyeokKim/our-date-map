@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### 수정
+- Supabase `date_spots` 테이블에 대한 `anon` 익명 역할의 INSERT/SELECT 테이블 접근 권한(`GRANT ALL ON public.date_spots TO anon`) 부족으로 인해 데이트 기록 등록 시 발생하던 데이터베이스 오류(`permission denied for table date_spots`)를 마이그레이션(`20260722003349_fix_date_spots_permissions.sql`) 적용을 통해 해결했습니다.
+- `useDateSpots` 커스텀 훅에서 Supabase `PostgrestError` 발생 시 범용 에러 문구로 가려지던 현상을 개선하여 실제 에러 메시지가 사용자 토스트 알림에 노출되도록 예외 처리를 보완했습니다.
+
 ## [0.2.0] - 2026-07-22
 
 ### 추가

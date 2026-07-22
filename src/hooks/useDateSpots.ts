@@ -80,7 +80,12 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       await loadDateSpots();
       return true;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "데이트 기록 등록 중 오류가 발생했습니다.";
+      let message = "데이트 기록 등록 중 오류가 발생했습니다.";
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        message = String((err as { message: unknown }).message);
+      }
       console.error("Failed to create date spot:", err);
       showToast(message, "error");
       return false;
