@@ -42,9 +42,14 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose,
               <Calendar className="w-3 h-3 text-rose-500" />
               {formattedDate}
             </span>
-            <h2 className="text-xl font-extrabold text-gray-900 mt-1 tracking-tight">{spot.title}</h2>
+            <div className="mt-0.5">
+              <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider block">
+                📍 장소
+              </span>
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">{spot.title}</h2>
+            </div>
             {spot.address && (
-              <p className="text-xs text-gray-500 flex items-center gap-1 font-medium">
+              <p className="text-xs text-gray-500 flex items-center gap-1 font-medium mt-0.5">
                 <MapPin className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
                 {spot.address}
               </p>
@@ -76,7 +81,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose,
           <div className="space-y-1.5">
             <label className="text-[11px] font-bold text-rose-500 uppercase tracking-wider flex items-center gap-1">
               <Heart className="w-3.5 h-3.5 fill-current" />
-              우리의 이야기
+              우리의 이야기 (전문)
             </label>
             {spot.description ? (
               <p className="text-sm font-medium text-gray-700 leading-relaxed bg-rose-50/30 rounded-2xl p-4 border border-rose-100/50 whitespace-pre-wrap">

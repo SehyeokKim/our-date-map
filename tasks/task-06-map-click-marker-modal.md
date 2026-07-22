@@ -2,7 +2,7 @@
 
 🎯 **목표 (Goal)**
 - 지도 화면의 임의의 위치를 클릭하여 해당 좌표에 임시 핀(마커)을 배치하고, Kakao Maps Reverse Geocoding(`kakao.maps.services.Geocoder`)을 통해 도로명/지번 주소를 실시간으로 자동 변환하여 입력 모달의 📍 **'장소'** 필드에 placeholder 가이드로 노출합니다.
-- 저장된 핀 터치 시 **2단계 상세 보기 프로세스 (1단계: 요약 팝업의 클릭 가능한 장소명 제목 링크 → 2단계: 사진/이야기 전문 전체 상세 보기 팝업)**를 제공하며, 전체 상세 보기에서 **핀 삭제(Spot Deletion)** 기능 및 제목이 `"Test"`(대소문자 미구분)인 테스트 기록에 대한 **3분 후 자동 삭제 타이머** 기능을 제공합니다.
+- 저장된 핀 터치 시 **2단계 상세 보기 프로세스 (1단계: 📍 장소명 요약 팝업 시트 → 2단계: 장소명 링크 클릭 시 전체 사진/이야기 전문 자세히 보기 창)**를 제공하며, 자세히 보기 창에서 **핀 삭제(Spot Deletion)** 기능 및 제목이 `"Test"`(대소문자 미구분)인 테스트 기록에 대한 **3분 후 자동 삭제 타이머** 기능을 제공합니다.
 - 단일 거대 파일(`src/app/page.tsx`)을 `.antigravityrules`에 명시된 프로젝트 모듈화 표준에 맞게 컴포넌트(`src/components/`), 데이터 타입(`src/types/`), 커스텀 훅(`src/hooks/`) 단위로 관심사를 분리하여 클린 아키텍처로 리팩토링합니다.
 
 ✅ **진행 상태 (Status)**
@@ -35,9 +35,9 @@
   - 중복된 '위치 주소' 입력창을 제거하고 📍 **'장소'** 단일 필드로 통합.
   - 도로명 주소 placeholder 안내 및 미입력 제출 시 주소 자동 폴백 저장.
 - **`src/components/modal/SpotSummarySheet.tsx`**:
-  - 1단계 요약 정보 팝업 시트 (장소명 클릭 시 2단계 이동 링크, 날짜, 데이트 메모 요약 2줄 미리보기).
+  - 1단계 요약 정보 팝업 시트 (📍 장소명 클릭 시 2단계 자세히 보기 창 전환, 날짜, 데이트 메모 요약 2줄 미리보기).
 - **`src/components/modal/SpotDetailSheet.tsx`**:
-  - 2단계 전체 상세 보기 팝업 (원본 비비율 자름 없는 이미지 뷰, 메모 전문, 주소, 📍 위경도, 🗑️ 핀 삭제 버튼).
+  - 2단계 전체 상세 보기 팝업 (📍 장소 헤더, 원본 비비율 자름 없는 이미지 뷰, 메모 전문, 주소, 📍 위경도, 🗑️ 핀 삭제 버튼).
 - **`src/components/common/Header.tsx`**:
   - 상단 브랜딩 Glassmorphic Header UI.
 - **`src/components/common/Toast.tsx`**:
@@ -64,8 +64,8 @@
 - `[NEW] src/hooks/useDateSpots.ts`: Supabase CRUD, 핀 삭제 및 Test 3분 자동 삭제 타이머 훅
 - `[NEW] src/components/map/MapContainer.tsx`: 지도 뷰 및 컨트롤러 컴포넌트
 - `[NEW] src/components/modal/AddSpotModal.tsx`: 데이트 장소 등록 모달 (📍 장소 필드 통합)
-- `[NEW] src/components/modal/SpotSummarySheet.tsx`: 1단계 요약 정보 팝업 시트 (장소명 링크)
-- `[NEW] src/components/modal/SpotDetailSheet.tsx`: 2단계 전체 상세 보기 시트 (원본 이미지/전문/핀 삭제 포함)
+- `[NEW] src/components/modal/SpotSummarySheet.tsx`: 1단계 📍 장소 요약 정보 팝업 시트
+- `[NEW] src/components/modal/SpotDetailSheet.tsx`: 2단계 자세히 보기 창 (원본 이미지/전문/핀 삭제 포함)
 - `[NEW] src/components/common/Header.tsx`: 상단 헤더 컴포넌트
 - `[NEW] src/components/common/Toast.tsx`: 알림 토스트 컴포넌트
 - `[MODIFY] src/app/page.tsx`: 모듈화된 컴포넌트 조립을 위한 메인 페이지 리팩토링
@@ -74,7 +74,7 @@
 ---
 
 ⚠️ **유지 관리 시 주의사항 & 체크리스트 (Caveats & Checklist)**
-- [x] **2단계 상세 보기 UX:** 핀 클릭 시 1단계 요약 시트 렌더링 → 클릭 가능한 장소명 제목 터치 시 2단계 전체 상세 시트 전환.
+- [x] **2단계 상세 보기 UX:** 핀 클릭 시 1단계 📍 장소 요약 시트 렌더링 → 클릭 가능한 장소명 제목 터치 시 2단계 자세히 보기 창 전환.
 - [x] **TypeScript First:** `any` 타입 지양 및 Kakao Maps API에 대해 명확한 인터페이스 정의/확장.
 - [x] **핀 삭제 파이프라인:** DB 레코드와 Storage 이미지가 함께 완전 삭제되도록 보장.
 - [x] **Test 3분 자동 삭제:** 3분 만료 시 클라이언트 타이머 및 앱 진입 시 자동 정리 수행.

@@ -38,15 +38,20 @@ export const SpotSummarySheet: React.FC<SpotSummarySheetProps> = ({
               {formattedDate}
             </span>
 
-            {/* Clickable Title Link to Step 2 Full Detail View Popup */}
-            <h2
-              onClick={handleTitleClick}
-              title="클릭하여 자세히 보기"
-              className="text-base font-bold text-gray-900 hover:text-rose-600 cursor-pointer transition-all duration-150 flex items-center gap-1.5 mt-1 group underline-offset-4 hover:underline"
-            >
-              <span>{spot.title}</span>
-              <ExternalLink className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform flex-shrink-0" />
-            </h2>
+            {/* Clickable Title (📍 장소) -> Opens Full Detail View Popup */}
+            <div className="mt-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                📍 장소
+              </span>
+              <h2
+                onClick={handleTitleClick}
+                title="클릭하여 자세히 보기 창 열기"
+                className="text-base font-bold text-gray-900 hover:text-rose-600 cursor-pointer transition-all duration-150 flex items-center gap-1.5 mt-0.5 group underline-offset-4 hover:underline"
+              >
+                <span>{spot.title}</span>
+                <ExternalLink className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+              </h2>
+            </div>
 
             {spot.address && (
               <p className="text-xs text-gray-500 flex items-center gap-1 font-medium mt-0.5">
@@ -65,13 +70,19 @@ export const SpotSummarySheet: React.FC<SpotSummarySheetProps> = ({
           </button>
         </div>
 
+        {/* Truncated Preview of '우리의 이야기' */}
         {spot.description && (
-          <p
-            onClick={handleTitleClick}
-            className="text-xs font-medium text-gray-600 bg-gray-50 rounded-xl p-3 border border-gray-100/60 line-clamp-2 cursor-pointer hover:bg-rose-50/20 hover:border-rose-100 transition-colors"
-          >
-            {spot.description}
-          </p>
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider block">
+              우리의 이야기 미리보기
+            </span>
+            <p
+              onClick={handleTitleClick}
+              className="text-xs font-medium text-gray-600 bg-gray-50 rounded-xl p-3 border border-gray-100/60 line-clamp-2 cursor-pointer hover:bg-rose-50/20 hover:border-rose-100 transition-colors leading-relaxed"
+            >
+              {spot.description}
+            </p>
+          </div>
         )}
 
         <button
@@ -79,7 +90,7 @@ export const SpotSummarySheet: React.FC<SpotSummarySheetProps> = ({
           onClick={handleTitleClick}
           className="w-full mt-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-rose-500/15 active:scale-98 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer"
         >
-          <span>상세히 보기 (사진 및 스토리)</span>
+          <span>자세히 보기 (전체 사진 & 이야기)</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
