@@ -40,6 +40,8 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setAddress(initialAddress || "");
+      // Pre-fill title input with fetched address as default text
+      setTitle(initialAddress || "");
     }
   }, [isOpen, initialAddress]);
 
@@ -136,16 +138,17 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="title" className="text-xs font-semibold text-gray-500">
+            <label htmlFor="title" className="text-xs font-semibold text-gray-500 flex items-center gap-1">
               장소/제목
+              <span className="text-[10px] font-normal text-rose-500">(주소가 자동 채움되며 자유롭게 수정 가능합니다)</span>
             </label>
             <input
               id="title"
               type="text"
-              placeholder="어디서 데이트를 하셨나요?"
+              placeholder="어디서 데이트를 하셨나요? (예: 서울 마포구 독막로 123 예쁜 카페)"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-200/50 transition-all duration-200 placeholder:text-gray-400 font-medium"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-200/50 transition-all duration-200 placeholder:text-gray-400 font-medium text-gray-800"
               required
               disabled={isUploading}
             />
@@ -201,7 +204,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
             <AlertCircle className="w-4 h-4 text-rose-500 mt-0.5 flex-shrink-0" />
             <div className="text-[10px] text-rose-800 leading-relaxed font-medium">
               <p className="font-bold mb-0.5">📍 위치 및 주소 지정 완료</p>
-              지도를 터치하면 마커 핀과 도로명 주소가 실시간으로 변경됩니다.
+              지도를 터치하면 핀 위치와 도로명 주소가 제목 및 주소 필드에 자동으로 설정됩니다.
             </div>
           </div>
 
