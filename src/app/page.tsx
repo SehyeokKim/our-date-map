@@ -9,6 +9,7 @@ import { Header } from "@/components/common/Header";
 import { Toast } from "@/components/common/Toast";
 import { MapContainer } from "@/components/map/MapContainer";
 import { AddSpotModal } from "@/components/modal/AddSpotModal";
+import { SpotSummarySheet } from "@/components/modal/SpotSummarySheet";
 import { SpotDetailSheet } from "@/components/modal/SpotDetailSheet";
 
 export default function Home() {
@@ -33,6 +34,9 @@ export default function Home() {
     initKakaoMap,
     locateUser,
     renderSpotMarkers,
+    summarySpot,
+    closeSummary,
+    openDetailFromSummary,
     selectedSpot,
     setSelectedSpot,
     isAddModalOpen,
@@ -85,6 +89,14 @@ export default function Home() {
         isUploading={isUploading}
       />
 
+      {/* Step 1: Summary Preview Popup */}
+      <SpotSummarySheet
+        spot={summarySpot}
+        onClose={closeSummary}
+        onOpenDetail={openDetailFromSummary}
+      />
+
+      {/* Step 2: Full Detail View Popup */}
       <SpotDetailSheet
         spot={selectedSpot}
         onClose={() => setSelectedSpot(null)}

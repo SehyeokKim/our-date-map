@@ -16,6 +16,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   const isFirstLocationLoadRef = useRef<boolean>(true);
 
   // Spot selection & Temporary pin states
+  const [summarySpot, setSummarySpot] = useState<DateSpot | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<DateSpot | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [newSpotLatLng, setNewSpotLatLng] = useState<LatLng | null>(null);
@@ -203,9 +204,11 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         </div>
       `;
 
+        // Clicking a saved spot marker opens Step 1 Summary Preview Popup
         el.addEventListener("click", (e) => {
           e.stopPropagation();
-          setSelectedSpot(spot);
+          setSummarySpot(spot);
+          setSelectedSpot(null);
           map.panTo(position);
         });
 
@@ -223,6 +226,16 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     },
     [map]
   );
+
+  // Transition from Step 1 Summary to Step 2 Full Detail View
+  const openDetailFromSummary = useCallback((spot: DateSpot) => {
+    setSelectedSpot(spot);
+    setSummarySpot(null);
+  }, []);
+
+  const closeSummary = useCallback(() => {
+    setSummarySpot(null);
+  }, []);
 
   // Open "Add Spot" modal manually via FAB
   const handleStartAddSpot = useCallback(() => {
@@ -355,6 +368,9 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     initKakaoMap,
     locateUser,
     renderSpotMarkers,
+    summarySpot,
+    closeSummary,
+    openDetailFromSummary,
     selectedSpot,
     setSelectedSpot,
     isAddModalOpen,

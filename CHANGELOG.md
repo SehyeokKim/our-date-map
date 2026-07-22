@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### 추가
+- 지도 상의 저장된 하트 마커 터치 시 2단계 상세 보기 UX를 구현했습니다. 1단계로 가벼운 **요약 정보 팝업**([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx))을 먼저 노출하여 장소명과 메모 요약을 보여주며, 장소명이나 '자세히 보기' 버튼을 터치할 경우 2단계 **전체 상세 팝업**([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx))으로 전환되어 원본 이미지, 메모 전문 및 🗑️ 핀 삭제 기능을 이용할 수 있습니다.
 - 저장된 데이트 기록 상세 보기 바텀 시트([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)) 하단에 🗑️ **핀 삭제** 버튼을 추가했습니다. 사용자가 삭제를 승인할 경우 Supabase DB 레코드 및 Storage 버킷의 원본 이미지가 함께 완전 제거됩니다.
 - 디버깅용 **"Test"** 제목(대소문자 미구분)으로 생성된 데이트 기록에 대해 생성 3분(180초) 후 Supabase DB 및 Storage에서 자동으로 완전 삭제되는 타이머 워커 기능([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts))을 추가했습니다.
 
