@@ -21,7 +21,7 @@ export default function Home() {
     }, 3000);
   }, []);
 
-  const { spots, isUploading, loadDateSpots, createDateSpot } = useDateSpots(showToast);
+  const { spots, isUploading, loadDateSpots, createDateSpot, deleteDateSpot } = useDateSpots(showToast);
 
   const {
     mapContainerRef,
@@ -85,7 +85,11 @@ export default function Home() {
         isUploading={isUploading}
       />
 
-      <SpotDetailSheet spot={selectedSpot} onClose={() => setSelectedSpot(null)} />
+      <SpotDetailSheet
+        spot={selectedSpot}
+        onClose={() => setSelectedSpot(null)}
+        onDelete={deleteDateSpot}
+      />
 
       {/* Dynamic Kakao Map SDK Script Loading with Geocoder Services */}
       <Script

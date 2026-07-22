@@ -1,15 +1,18 @@
 "use client";
 
-import React from "react";
-import { Heart, X, MapPin } from "lucide-react";
+import React, { useState } from "react";
+import { Heart, X, MapPin, Trash2, Loader2 } from "lucide-react";
 import { DateSpot } from "@/types/spot";
 
 interface SpotDetailSheetProps {
   spot: DateSpot | null;
   onClose: () => void;
+  onDelete?: (spot: DateSpot) => Promise<boolean>;
 }
 
-export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose }) => {
+export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose, onDelete }) => {
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
   if (!spot) return null;
 
   const formattedDate = new Date(spot.visited_at)
@@ -17,9 +20,21 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose 
     .replace(/\. /g, ".")
     .replace(/\.$/, "");
 
+  const handleDeleteClick = async () => {
+    if (!onDelete) return;
+    if (window.confirm(`"${spot.title}" 데이트 기록을 정말로 삭제하시겠습니까?`)) {
+      setIsDeleting(true);
+      const success = await onDelete(spot);
+      setIsDeleting(false);
+      if (success) {
+        onClose();
+      }
+    }
+  };
+
   return (
     <div className="absolute inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm p-4 transition-all duration-300">
-      <div className="absolute inset-0" onClick={onClose} />
+      <div className="absolute inset-0" onClick={() => !isDeleting && onClose()} />
 
       <div className="relative w-full max-w-md bg-white rounded-t-[32px] md:rounded-2xl shadow-2xl overflow-hidden z-10 animate-bounce-in max-h-[85vh] flex flex-col">
         {spot.image_url ? (
@@ -27,7 +42,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose 
             <img src={spot.image_url} alt={spot.title} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
             <button
-              onClick={onClose}
+              onClick={() => !isDeleting && onClose()}
               className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/35 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -62,7 +77,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose 
               )}
             </div>
             <button
-              onClick={onClose}
+              onClick={() => !isDeleting && onClose()}
               className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -90,6 +105,27 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose 
             <span>📍 위도: {spot.latitude.toFixed(6)}</span>
             <span>경도: {spot.longitude.toFixed(6)}</span>
           </div>
+
+          {onDelete && (
+            <button
+              type="button"
+              onClick={handleDeleteClick}
+              disabled={isDeleting}
+              className="w-full mt-2 py-3 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 rounded-xl text-xs font-semibold active:scale-98 transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>기록 삭제 중...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span>핀 삭제</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Heart, X, Camera, AlertCircle, Loader2, MapPin } from "lucide-react";
+import { Heart, X, Camera, AlertCircle, Loader2 } from "lucide-react";
 import { LatLng } from "@/types/spot";
 
 interface AddSpotModalProps {
@@ -40,7 +40,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setAddress(initialAddress || "");
-      setTitle(""); // Start empty so placeholder guidance text displays cleanly
+      setTitle(""); // Start empty so address placeholder guidance displays cleanly
     }
   }, [isOpen, initialAddress]);
 
@@ -67,7 +67,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
       latLng,
       imageFile,
       visitedAt,
-      address,
+      address: address || initialAddress,
     });
 
     if (success) {
@@ -141,8 +141,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
 
           <div className="flex flex-col gap-1">
             <label htmlFor="title" className="text-xs font-semibold text-gray-500 flex items-center gap-1">
-              장소/제목
-              <span className="text-[10px] font-normal text-rose-500">(미입력 시 추출된 주소로 자동 등록)</span>
+              📍 장소
             </label>
             <input
               id="title"
@@ -151,22 +150,6 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-200/50 transition-all duration-200 placeholder:text-gray-400 font-medium text-gray-800"
-              disabled={isUploading}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label htmlFor="address" className="text-xs font-semibold text-gray-500 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-rose-500" />
-              위치 주소 (자동 변환)
-            </label>
-            <input
-              id="address"
-              type="text"
-              placeholder="지도를 터치하면 주소가 자동으로 입력됩니다."
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-200/50 transition-all duration-200 placeholder:text-gray-400 font-medium text-gray-700"
               disabled={isUploading}
             />
           </div>
@@ -204,7 +187,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
           <div className="bg-rose-50/50 border border-rose-100/50 rounded-xl p-3 flex gap-2 items-start">
             <AlertCircle className="w-4 h-4 text-rose-500 mt-0.5 flex-shrink-0" />
             <div className="text-[10px] text-rose-800 leading-relaxed font-medium">
-              <p className="font-bold mb-0.5">📍 위치 및 주소 지정 완료</p>
+              <p className="font-bold mb-0.5">📍 위치 및 장소 지정 완료</p>
               지도를 터치하면 핀 위치와 도로명 주소가 자동으로 변환 및 안내됩니다.
             </div>
           </div>

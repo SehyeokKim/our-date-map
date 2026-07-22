@@ -8,7 +8,11 @@
 ## [Unreleased]
 
 ### 추가
-- Kakao Maps `kakao.maps.services.Geocoder`를 활용한 Reverse Geocoding 주소 자동 변환 기능의 UX를 개선했습니다. 지도의 임의 좌표를 클릭하면 해당 위치의 도로명/지번 주소를 실시간으로 추출하여 데이트 기록 등록 모달([AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx))의 '장소/제목' 입력 필드 **`placeholder` 가이드 텍스트**(예: `"광주 동구 필문대로 309"`)로 제공합니다. 사용자는 지우개 없이 바로 커스텀 제목을 입력할 수 있으며, 제목을 미입력하고 제출하더라도 추출된 도로명 주소가 자동으로 기본 장소명으로 채워져 편리하게 저장됩니다.
+- 저장된 데이트 기록 상세 보기 바텀 시트([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)) 하단에 🗑️ **핀 삭제** 버튼을 추가했습니다. 사용자가 삭제를 승인할 경우 Supabase DB 레코드 및 Storage 버킷의 원본 이미지가 함께 완전 제거됩니다.
+- 디버깅용 **"Test"** 제목(대소문자 미구분)으로 생성된 데이트 기록에 대해 생성 3분(180초) 후 Supabase DB 및 Storage에서 자동으로 완전 삭제되는 타이머 워커 기능([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts))을 추가했습니다.
+
+### 변경
+- 데이트 기록 등록 모달([AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx)) 내 중복되었던 '위치 주소' 입력 필드를 제거하고, 핀 이모지가 포함된 **📍 '장소'** 단일 필드로 통합하여 UI를 깔끔하게 다듬었습니다.
 
 ### 수정
 - Supabase `date_spots` 테이블에 대한 `anon` 익명 역할의 INSERT/SELECT 테이블 접근 권한(`GRANT ALL ON public.date_spots TO anon`) 부족으로 인해 데이트 기록 등록 시 발생하던 데이터베이스 오류(`permission denied for table date_spots`)를 마이그레이션(`20260722003349_fix_date_spots_permissions.sql`) 적용을 통해 해결했습니다.

@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.2.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 지도 클릭 마커 생성 모달, Reverse Geocoding 주소 자동 변환 & 모듈화 리팩토링)
+- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 핀 삭제 & Test 3분 자동 삭제 & 📍 장소 단일 필드 통합 등록 모달)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -74,12 +74,13 @@
 
 ---
 
-### 6. [Task 06] 지도 클릭 기반 신규 데이트 장소 등록 & Reverse Geocoding 주소 자동 변환 & 모듈화 리팩토링
+### 6. [Task 06] 지도 클릭 신규 장소 등록 & 핀 삭제 & Test 3분 자동 삭제 & 📍 장소 단일 필드 모듈화
 - **상태:** `Completed` (완료일: 2026-07-22 / 적용 버전: `v0.2.0`)
-- **개요:** 지도의 임의 위치를 클릭하여 임시 핀을 찍고, Kakao Maps Reverse Geocoding(`kakao.maps.services.Geocoder`)을 통해 도로명/지번 주소를 실시간으로 자동 추출하여 신규 데이트 기록 폼(사진/제목/주소/날짜/메모) 모달에 채움 처리 및 저장하는 기능 구현.
+- **개요:** 지도 터치 시 임시 핀 생성, Kakao Reverse Geocoding 주소 자동 추출, 중복 입력창을 제거한 📍 **'장소'** 단일 필드 통합 UI, 저장된 핀 삭제 기능(`SpotDetailSheet`), 그리고 디버깅용 `"Test"` 제목 작성 시 **3분 후 DB/Storage 자동 완전 삭제** 타이머 구축.
 - **주요 스펙:**
-  - 지도 클릭 시 해당 좌표에 바운스 임시 오버레이 핀 렌더링 및 `coord2Address()` 주소 자동 변환
-  - 데이트 정보 등록 바텀 시트/모달 UI (`AddSpotModal`)에 주소 자동입력 폼 필드 연동 및 DB `address` 컬럼 저장
-  - 모듈화 아키텍처 분리: `src/components/`, `src/hooks/`, `src/types/`
+  - 지도 터치 시 바운스 오버레이 핀 렌더링 및 `coord2Address()` 도로명 주소 추출
+  - 등록 모달 중복 필드 제거 및 📍 **'장소'** 단일 필드 통합 (미입력 시 도로명 주소 자동 저장)
+  - 핀 삭제 기능: Supabase DB 및 Storage 이미지 파일 완전 삭제
+  - `"Test"` 제목 3분(180초) 디버깅 자동 삭제 타이머
 - **상세 명세:** [`tasks/task-06-map-click-marker-modal.md`](file:///c:/dev/our-date-map/tasks/task-06-map-click-marker-modal.md)
-- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx), [AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx), [useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts)
+- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx), [AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx), [useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts)
