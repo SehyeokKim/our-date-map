@@ -1,25 +1,23 @@
 export interface DateSpot {
   id: string;
   title: string;
-  description: string | null;
+  description: string;
   latitude: number;
   longitude: number;
-  image_url: string | null;
-  address: string | null;
+  image_url?: string;
+  image_urls?: string[];
+  address?: string;
   visited_at: string;
   created_at: string;
+  deleted_at?: string | null;
 }
-
-export type CreateDateSpotInput = Omit<DateSpot, "id" | "created_at">;
 
 export interface LatLng {
   lat: number;
   lng: number;
 }
 
-export type ToastType = "success" | "error" | "info";
-
 export interface ToastState {
   message: string;
-  type: ToastType;
+  type: "success" | "error" | "info";
 }

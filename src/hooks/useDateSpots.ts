@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { uploadCompressedPhoto } from "@/lib/upload";
+import { uploadCompressedPhotos } from "@/lib/upload";
 import { DateSpot, LatLng } from "@/types/spot";
 
 // Helper to extract relative storage file path from photo URL
@@ -28,13 +28,32 @@ function extractStoragePath(imageUrl: string | null): string | null {
   }
 }
 
+// Helper to extract all storage file paths from a spot (checking both image_urls array & image_url string)
+function extractAllStoragePaths(spot: DateSpot): string[] {
+  const pathsSet = new Set<string>();
+
+  if (spot.image_urls && Array.isArray(spot.image_urls)) {
+    spot.image_urls.forEach((url) => {
+      const path = extractStoragePath(url);
+      if (path) pathsSet.add(path);
+    });
+  }
+
+  if (spot.image_url) {
+    const path = extractStoragePath(spot.image_url);
+    if (path) pathsSet.add(path);
+  }
+
+  return Array.from(pathsSet);
+}
+
 export function useDateSpots(showToast: (message: string, type?: "success" | "error" | "info") => void) {
   const [spots, setSpots] = useState<DateSpot[]>([]);
   const [loadingSpots, setLoadingSpots] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const activeTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  // Permanent Hard Delete Helper (removes DB row & Storage photo completely)
+  // Permanent Hard Delete Helper (removes DB row & Storage photos completely)
   const hardDeleteSpotInternal = useCallback(
     async (spot: DateSpot, toastMsg?: string) => {
       try {
@@ -43,13 +62,13 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
           activeTimersRef.current.delete(spot.id);
         }
 
-        // 1. Delete photo file from Supabase Storage date-photos bucket
-        const filePath = extractStoragePath(spot.image_url);
-        if (filePath) {
+        // 1. Delete all photo files from Supabase Storage date-photos bucket
+        const filePaths = extractAllStoragePaths(spot);
+        if (filePaths.length > 0) {
           try {
-            await supabase.storage.from("date-photos").remove([filePath]);
+            await supabase.storage.from("date-photos").remove(filePaths);
           } catch (storageErr) {
-            console.error("Failed to delete photo from Supabase Storage:", storageErr);
+            console.error("Failed to delete photos from Supabase Storage:", storageErr);
           }
         }
 
@@ -80,21 +99,24 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
       const now = Date.now();
 
-      const expiredSpots = data.filter((spot) => {
+      const expiredSpots: DateSpot[] = data.filter((spot) => {
         if (!spot.deleted_at) return false;
         return now - new Date(spot.deleted_at).getTime() >= threeDaysMs;
       });
 
       if (expiredSpots.length === 0) return;
 
-      // 1. Extract file paths and batch delete from Storage
-      const filePaths = expiredSpots
-        .map((s) => extractStoragePath(s.image_url))
-        .filter((path): path is string => Boolean(path));
+      // 1. Extract all file paths from all expired spots and batch delete from Storage
+      const allFilePathsSet = new Set<string>();
+      expiredSpots.forEach((spot) => {
+        const paths = extractAllStoragePaths(spot);
+        paths.forEach((p) => allFilePathsSet.add(p));
+      });
 
-      if (filePaths.length > 0) {
+      const filePathsArray = Array.from(allFilePathsSet);
+      if (filePathsArray.length > 0) {
         try {
-          await supabase.storage.from("date-photos").remove(filePaths);
+          await supabase.storage.from("date-photos").remove(filePathsArray);
         } catch (storageErr) {
           console.error("Failed to batch delete photos from Supabase Storage:", storageErr);
         }
@@ -203,17 +225,18 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     }
   }, [showToast, checkAndScheduleAutoDelete, purgeExpiredDeletedSpots]);
 
-  // Create a new Date Spot
+  // Create a new Date Spot (with support for multiple image files up to 10)
   const createDateSpot = useCallback(
     async (params: {
       title: string;
       description: string;
       latLng: LatLng;
-      imageFile: File | null;
+      imageFiles?: File[];
+      imageFile?: File | null;
       visitedAt: string;
       address?: string;
     }): Promise<boolean> => {
-      const { title, description, latLng, imageFile, visitedAt, address } = params;
+      const { title, description, latLng, imageFiles, imageFile, visitedAt, address } = params;
 
       if (!title.trim()) {
         showToast("장소를 입력해 주세요.", "error");
@@ -228,15 +251,21 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       showToast("데이트 기록을 등록하는 중...", "info");
 
       try {
-        let imageUrl = "";
+        let uploadedUrls: string[] = [];
 
-        if (imageFile) {
-          const uploadedUrl = await uploadCompressedPhoto(imageFile);
-          if (!uploadedUrl) {
-            throw new Error("이미지 업로드에 실패했습니다.");
-          }
-          imageUrl = uploadedUrl;
+        // Prepare files list (up to 10)
+        let filesToUpload: File[] = [];
+        if (imageFiles && imageFiles.length > 0) {
+          filesToUpload = imageFiles.slice(0, 10);
+        } else if (imageFile) {
+          filesToUpload = [imageFile];
         }
+
+        if (filesToUpload.length > 0) {
+          uploadedUrls = await uploadCompressedPhotos(filesToUpload);
+        }
+
+        const primaryUrl = uploadedUrls.length > 0 ? uploadedUrls[0] : "";
 
         const { data, error } = await supabase
           .from("date_spots")
@@ -245,7 +274,8 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             description: description.trim(),
             latitude: latLng.lat,
             longitude: latLng.lng,
-            image_url: imageUrl,
+            image_url: primaryUrl,
+            image_urls: uploadedUrls,
             address: address ? address.trim() : "",
             visited_at: new Date(visitedAt).toISOString(),
           })
