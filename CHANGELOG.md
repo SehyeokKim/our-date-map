@@ -7,7 +7,15 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-22
+
 ### 추가
+- 지도의 임의 위치 클릭 시 해당 좌표에 바운스 임시 오버레이 핀 마커 생성 및 핀 터치 시 데이트 장소 기록(사진, 제목, 날짜, 메모)을 입력하는 바텀 시트 폼 UI([AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx))를 구현했습니다.
+- 프로젝트 전체 작업 현황 및 Task 세부 명세를 총괄하는 [TASKS.md](file:///c:/dev/our-date-map/TASKS.md) master 오버뷰 문서를 루트 경로에 추가했습니다.
+
+### 변경
+- 기존 거대한 단일 파일 구조였던 메인 페이지([page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx))를 프로젝트 모듈화 표준 가이드라인에 맞춰 타입([types/](file:///c:/dev/our-date-map/src/types/)), 커스텀 훅([hooks/](file:///c:/dev/our-date-map/src/hooks/)), 컴포넌트([components/](file:///c:/dev/our-date-map/src/components/)) 단위로 가독성 높게 리팩토링했습니다.
+
 - `navigator.geolocation.watchPosition`을 이용한 실시간 GPS 위치 추적 기능을 추가하여 사용자의 움직임에 따라 지도의 위치가 실시간으로 자동 업데이트되도록 구현했습니다.
 - Kakao 지도 API 로드 실패 시(예: 미등록 도메인으로 호출 시) 해결 방법을 직관적으로 안내하는 글래스모피즘 스타일의 오류 안내 카드 UI를 추가했습니다.
 - 데이터베이스 테이블 및 스토리지 버킷 스키마 관리를 위해 [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql) 스키마 정의 파일을 프로젝트 루트 경로에 추가했습니다.

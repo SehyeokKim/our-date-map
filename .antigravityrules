@@ -25,10 +25,11 @@
 
 ---
 
-## 4. Task-Driven Development (Strict)
-1. **Task Spec Compliance:** Before starting any major feature or refactoring, read and follow the specific task file under the `tasks/` directory (e.g., `tasks/task-01-xxxx.md`).
+## 4. Task-Driven Development & `TASKS.md` Synchronization (Strict)
+1. **Task Spec Compliance:** Before starting any major feature or refactoring, read and follow the specific task file under the `tasks/` directory (e.g., `tasks/task-06-xxxx.md`).
 2. **Context Efficiency:** Refer to individual task files rather than reading the entire codebase, minimizing token usage and preventing hallucinations.
 3. **Documentation First:** When asked to document existing or new features, strictly create or update standard task specifications inside the `tasks/` directory.
+4. **Root `TASKS.md` Korean Updates:** Whenever a task spec is created, updated, or completed, automatically sync and update the root `TASKS.md` master overview in Korean. Keep it easy for humans to read, updating overall progress, status (`Completed`, `In Progress`, `Planned`), and task links.
 
 ---
 
@@ -46,8 +47,9 @@
 ---
 
 ## 6. Git & Vibe Coding Workflow
-1. **Conventional Commits:** Write clear commit messages using types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
-2. **Git Push Automation:** When instructed to complete and ship a task, ensure code compiles without errors, update `CHANGELOG.md`, create a Git commit, and push to `origin main`.
+1. **Task-Based Branching:** Always isolate development work by individual task. Automatically create and switch to a task-specific Git feature branch (e.g., `feature/task-06-xxxx`) based on `main` before modifying code for that task.
+2. **Conventional Commits:** Write clear commit messages using types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
+3. **Git Push Automation:** When instructed to complete and ship a task, ensure code compiles without errors, update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push the feature branch or merge to `origin main` as requested.
 
 ---
 

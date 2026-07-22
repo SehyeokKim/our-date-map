@@ -5,17 +5,18 @@
 - 단일 거대 파일(`src/app/page.tsx`)을 `.antigravityrules`에 명시된 프로젝트 모듈화 표준에 맞게 컴포넌트(`src/components/`), 데이터 타입(`src/types/`), 커스텀 훅(`src/hooks/`) 단위로 관심사를 분리하여 클린 아키텍처로 리팩토링합니다.
 
 ✅ **진행 상태 (Status)**
-- `Planned` (예정 / 예상 적용 버전: `v0.2.0`)
+- `Completed` (완료일: 2026-07-22 / 적용 버전: `v0.2.0`)
 
 ---
 
 📐 **구현 세부 스펙 (Specifications)**
 
-### 1. 데이터 타입 정의 (`src/types/spot.ts`)
+### 1. 데이터 타입 정의 (`src/types/spot.ts`, `src/types/kakao.d.ts`)
 - Supabase `date_spots` 테이블 스키마에 대응하는 TypeScript 인터페이스 정의.
 - **주요 타입:**
   - `DateSpot`: `id`, `title`, `description`, `latitude`, `longitude`, `image_url`, `visited_at`, `created_at`
   - `CreateDateSpotInput`: `Omit<DateSpot, 'id' | 'created_at'>`
+  - `window.kakao` 글로벌 타입 안전화 선언 (`kakao.d.ts`)
 
 ### 2. Custom Hooks 개발 (`src/hooks/`)
 - **`useKakaoMap.ts`**:
@@ -40,7 +41,7 @@
   - 성공/에러 피드백을 알리는 알림 토스트 UI.
 
 ### 4. 메인 엔트리 리팩토링 (`src/app/page.tsx`)
-- 거대한 비즈니스 로직 및 JSX 구조를 제거하고, 분리된 Hooks 및 Components를 조립하는 메인 엔트리로 리팩토링.
+- 거대한 비즈니스 로직 및 JSX 구조를 제거하고, 분리된 Hooks 및 Components를 조립하는 메인 엔트리로 리팩토링 (730여 줄 -> 90여 줄).
 
 ---
 
@@ -54,6 +55,7 @@
 
 🛠️ **관련 코드 및 파일 경로 (Implemented & Related Files)**
 - `[NEW] src/types/spot.ts`: 데이트 장소 데이터 타입 정의
+- `[NEW] src/types/kakao.d.ts`: Kakao Maps 글로벌 인터페이스 선언
 - `[NEW] src/hooks/useKakaoMap.ts`: Kakao Map 지도 조작 및 이벤트 관리 훅
 - `[NEW] src/hooks/useDateSpots.ts`: Supabase 연동 및 이미지 압축 데이터 훅
 - `[NEW] src/components/map/MapContainer.tsx`: 지도 뷰 및 컨트롤러 컴포넌트
@@ -67,8 +69,8 @@
 ---
 
 ⚠️ **유지 관리 시 주의사항 & 체크리스트 (Caveats & Checklist)**
-- [ ] **TypeScript First:** `any` 타입 지양 및 Kakao Maps API에 대해 명확한 인터페이스 정의/확장.
-- [ ] **이미지 압축:** `browser-image-compression`으로 업로드 전 300KB 이하 검증.
-- [ ] **Kakao Map SDK 로드 안전성:** SDK 로드가 완료된 후에만 지도 및 이벤트 등록 실행.
-- [ ] **GPS 예외 처리:** 위치 권한 거부 시 기본 위치(남산타워) 로딩 및 안내 토스트 노출.
-- [ ] **CHANGELOG.md 기재:** 기능 완료 후 `CHANGELOG.md` 내에 한국어로 업데이트 작성.
+- [x] **TypeScript First:** `any` 타입 지양 및 Kakao Maps API에 대해 명확한 인터페이스 정의/확장.
+- [x] **이미지 압축:** `browser-image-compression`으로 업로드 전 300KB 이하 검증.
+- [x] **Kakao Map SDK 로드 안전성:** SDK 로드가 완료된 후에만 지도 및 이벤트 등록 실행.
+- [x] **GPS 예외 처리:** 위치 권한 거부 시 기본 위치(남산타워) 로딩 및 안내 토스트 노출.
+- [x] **CHANGELOG.md 기재:** 기능 완료 후 `CHANGELOG.md` 내에 한국어로 업데이트 작성.
