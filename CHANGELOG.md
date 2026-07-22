@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### 추가
+- **Supabase Storage 사진 파일 자동 동기화 삭제:** PostgreSQL 데이터베이스 `date_spots` 레코드가 완전 삭제(Hard-Delete)되거나 3일 Soft-Delete 경과 및 10분 "Test" 디버깅 레코드 정리 시, `image_url` 경로에서 상대 경로를 파싱(`extractStoragePath`)하여 Supabase Storage(`date-photos` 버킷)에 업로드된 원본 이미지 파일을 함께 완전 제거하는 스토리지 연동 삭제 파이프라인([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts))을 구축했습니다.
 - 지도의 하트 마커 핀 터치 시 원본 사진, 데이트 이야기 전문, 날짜, 주소, 📍 위경도, 🗑️ 핀 삭제 버튼이 모두 표출되는 종합 데이트 기록 바텀 시트([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx))를 기본 요약 화면으로 100% 직접 연결했습니다.
 
 ### 수정
