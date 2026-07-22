@@ -3,7 +3,7 @@
 ## 1. Tech Stack
 - **Framework:** Next.js (App Router, TypeScript)
 - **Styling:** Tailwind CSS & Shadcn UI
-- **Backend/DB:** Supabase (PostgreSQL, Storage)
+- **Backend/DB:** Supabase (PostgreSQL, Storage) - Connected via Supabase CLI (`pbdxopqpwizlefawlobq`)
 - **Map API:** Kakao Maps JavaScript API (`NEXT_PUBLIC_KAKAO_MAP_KEY`)
 - **PWA:** Standalone mode optimization, Service Worker, Web App Manifest
 - **Utility:** `browser-image-compression` for client-side image optimization
@@ -19,7 +19,20 @@
 
 ---
 
-## 3. Versioning & Changelog Management (Strict)
+## 3. Modular Architecture & File Structure
+1. **Component Isolation:** Keep UI components highly modularized under `components/` grouped by feature (`components/map/`, `components/spot/`, etc.).
+2. **Business Logic Separation:** Extract reusable hooks and state logic into `hooks/`, helper logic into `lib/`, and global types into `types/`.
+
+---
+
+## 4. Task-Driven Development (Strict)
+1. **Task Spec Compliance:** Before starting any major feature or refactoring, read and follow the specific task file under the `tasks/` directory (e.g., `tasks/task-01-xxxx.md`).
+2. **Context Efficiency:** Refer to individual task files rather than reading the entire codebase, minimizing token usage and preventing hallucinations.
+3. **Documentation First:** When asked to document existing or new features, strictly create or update standard task specifications inside the `tasks/` directory.
+
+---
+
+## 5. Versioning & Changelog Management
 1. **Standard:** Follow Semantic Versioning (`vX.Y.Z`) and Keep a Changelog standards.
 2. **`CHANGELOG.md` Language:** Always write the `CHANGELOG.md` in Korean.
 3. **`CHANGELOG.md` Updates:** Whenever a new feature, bug fix, or major change is completed, automatically update the `CHANGELOG.md` file under the `[Unreleased]` section (or the current version section).
@@ -32,13 +45,15 @@
 
 ---
 
-## 4. Git & Vibe Coding Workflow
+## 6. Git & Vibe Coding Workflow
 1. **Conventional Commits:** Write clear commit messages using types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
 2. **Git Push Automation:** When instructed to complete and ship a task, ensure code compiles without errors, update `CHANGELOG.md`, create a Git commit, and push to `origin main`.
 
 ---
 
-## 5. Supabase Schema & Migration Rules
-1. **Single Source of Truth:** Keep all database schema changes updated in `supabase/schema.sql` at the root directory.
-2. **Schema Management:** Whenever a new feature requires database changes (tables, columns, RLS policies, storage buckets), automatically update `supabase/schema.sql`.
-3. **Actionable SQL Snippets:** When schema changes occur, provide the exact newly added SQL statements in the chat so I can easily copy and run them in the Supabase SQL Editor.
+## 7. Supabase CLI & Database Migration Rules
+1. **CLI Automation Workflows:** Use Supabase CLI commands (`supabase migration`, `supabase db push`) as the primary mechanism for database schema changes.
+2. **Migration Generation:** Whenever a feature requires DB changes (tables, columns, RLS policies, storage buckets), automatically generate a new migration file inside `supabase/migrations/` using `npx supabase migration new <migration_name>`.
+3. **Schema Consolidation:** Keep `supabase/schema.sql` at the root directory updated as a reference consolidated schema file.
+4. **Applying Changes:** After creating or modifying migration files, instruct or execute `npx supabase db push` to synchronize local migrations directly with the linked remote Supabase project (`pbdxopqpwizlefawlobq`).
+5. **TypeScript Types Generation:** Automatically run `npx supabase gen types typescript --linked > types/supabase.ts` whenever database schema changes occur to keep TypeScript interfaces strictly typed.
