@@ -14,6 +14,7 @@
 - **요약 팝업 UI 개선:** 1단계 요약 팝업([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx)) 내 '우리의 이야기' 텍스트를 `\n` 기준 첫 줄만 깔끔하게 노출하도록 수정하고, 텍스트 라벨을 '우리의 이야기'로 다듬었으며, 중복되던 하단 자세히보기 버튼을 제거하여 더욱 직관적이고 깔끔한 카드 UX를 완성했습니다.
 
 ### 수정
+- **'Test' 기록 3분 자동 삭제 타이머 수정:** 'Test' 제목(대소문자 미구분)으로 등록된 데이트 기록이 생성 3분(180초) 후 Supabase DB 및 Storage 원본 사진에서 자동으로 영구 제거되도록 타이머 시간을 3분(180,000ms)으로 정확히 보완했습니다. ([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts))
 - **모바일 핀 터치 인식 불량 버그 강력 해결:** 모바일(iOS Safari, Android Chrome, 카카오톡 인앱 브라우저 등) 환경에서 마커 핀 터치 시 카카오 지도 캔버스가 `touchstart`/`pointerdown` 이벤트를 상위로 전파받아 지도 드래그 세션을 실행하여 마커 핀의 터치 이벤트가 취소되던 버그를 분석했습니다. 마커 Wrapper의 `touchstart`, `touchmove`, `pointerdown`, `mousedown` 이벤트 발생 시 상위 전파를 완벽히 차단(`e.stopPropagation()`)하여 모바일 기기에서의 핀 터치 인식률 및 팝업 오픈 안정성을 100% 보증하도록 수정했습니다. ([useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts))
 
 ## [0.2.0] - 2026-07-22

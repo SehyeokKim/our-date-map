@@ -166,23 +166,23 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     [showToast]
   );
 
-  // Schedule auto-deletion for "Test" spots after 10 minutes (600,000 ms)
+  // Schedule auto-deletion for "Test" spots after 3 minutes (180,000 ms)
   const checkAndScheduleAutoDelete = useCallback(
     (spotList: DateSpot[]) => {
       spotList.forEach((spot) => {
         if (spot.title.trim().toLowerCase() === "test") {
           const createdAtTime = new Date(spot.created_at).getTime();
           const elapsed = Date.now() - createdAtTime;
-          const tenMinutesMs = 10 * 60 * 1000;
+          const threeMinutesMs = 3 * 60 * 1000;
 
-          if (elapsed >= tenMinutesMs) {
-            // Already past 10 minutes -> hard delete immediately from DB and Storage
-            hardDeleteSpotInternal(spot, "⏱️ 'Test' 기록이 10분 경과하여 영구 삭제되었습니다.");
+          if (elapsed >= threeMinutesMs) {
+            // Already past 3 minutes -> hard delete immediately from DB and Storage
+            hardDeleteSpotInternal(spot, "⏱️ 'Test' 기록이 3분 경과하여 영구 삭제되었습니다.");
           } else if (!activeTimersRef.current.has(spot.id)) {
-            // Remaining time to 10 minutes
-            const remainingMs = tenMinutesMs - elapsed;
+            // Remaining time to 3 minutes
+            const remainingMs = threeMinutesMs - elapsed;
             const timerId = setTimeout(() => {
-              hardDeleteSpotInternal(spot, "⏱️ 'Test' 기록이 10분 경과하여 영구 삭제되었습니다.");
+              hardDeleteSpotInternal(spot, "⏱️ 'Test' 기록이 3분 경과하여 영구 삭제되었습니다.");
             }, remainingMs);
             activeTimersRef.current.set(spot.id, timerId);
           }
