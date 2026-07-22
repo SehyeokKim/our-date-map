@@ -9,9 +9,8 @@
 
 ### 추가
 - **다중 사진 업로드 (최대 10장):** 데이트 기록 시 사진을 최대 10장까지 선택 및 개별 압축 업로드할 수 있는 기능([AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx))을 구현하고, DB 테이블에 `image_urls TEXT[]` 컬럼 추가 마이그레이션(`20260722022000_add_image_urls_array_to_date_spots.sql`)을 적용했습니다.
-- **2단계 팝업 뷰 아키텍처 재구축:**
-  - 1단계 요약 팝업([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx)): 대표 사진 1장, 1줄 메모 미리보기, 클릭 가능한 장소 제목 링크로 간결하게 다듬었으며, 핀 삭제 버튼을 제거했습니다.
-  - 2단계 전체 자세히보기 팝업([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)): 요약 팝업의 제목 클릭 시 전환되며, 최대 10장 전체 사진 갤러리 슬라이더 캐러셀, 메모 전문, 📍 위경도, 🗑️ 핀 삭제 버튼을 제공합니다. (삭제 시 등록된 모든 사진이 Supabase Storage에서 일괄 제거됩니다)
+### 변경
+- **요약 팝업 UI 개선:** 1단계 요약 팝업([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx)) 내 '우리의 이야기' 텍스트를 `\n` 기준 첫 줄만 깔끔하게 노출하도록 수정하고, 텍스트 라벨을 '우리의 이야기'로 다듬었으며, 중복되던 하단 자세히보기 버튼을 제거하여 더욱 직관적이고 깔끔한 카드 UX를 완성했습니다.
 
 ### 수정
 - **모바일 핀 터치 인식 불량 버그 강력 해결:** 모바일(iOS Safari, Android Chrome, 카카오톡 인앱 브라우저 등) 환경에서 마커 핀 터치 시 카카오 지도 캔버스가 `touchstart`/`pointerdown` 이벤트를 상위로 전파받아 지도 드래그 세션을 실행하여 마커 핀의 터치 이벤트가 취소되던 버그를 분석했습니다. 마커 Wrapper의 `touchstart`, `touchmove`, `pointerdown`, `mousedown` 이벤트 발생 시 상위 전파를 완벽히 차단(`e.stopPropagation()`)하여 모바일 기기에서의 핀 터치 인식률 및 팝업 오픈 안정성을 100% 보증하도록 수정했습니다. ([useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts))

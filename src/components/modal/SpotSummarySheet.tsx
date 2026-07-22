@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Heart, X, ExternalLink, MapPin, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { Heart, X, ExternalLink, MapPin, Image as ImageIcon } from "lucide-react";
 import { DateSpot } from "@/types/spot";
 
 interface SpotSummarySheetProps {
@@ -106,32 +106,21 @@ export const SpotSummarySheet: React.FC<SpotSummarySheetProps> = ({
           </div>
         )}
 
-        {/* Truncated 1-line Preview of '우리의 이야기' */}
+        {/* First Line of '우리의 이야기' */}
         {spot.description && (
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider block">
-              우리의 이야기 미리보기
+              우리의 이야기
             </span>
             <p
               onClick={handleTitleClick}
               onTouchEnd={handleTitleClick}
               className="text-xs font-medium text-gray-600 bg-gray-50 rounded-xl p-2.5 border border-gray-100/60 line-clamp-1 cursor-pointer hover:bg-rose-50/20 hover:border-rose-100 transition-colors leading-relaxed touch-manipulation"
             >
-              {spot.description}
+              {spot.description.split("\n")[0]}
             </p>
           </div>
         )}
-
-        {/* Button to Open Step 2 Full Detail View Modal */}
-        <button
-          type="button"
-          onClick={handleTitleClick}
-          onTouchEnd={handleTitleClick}
-          className="w-full mt-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl text-xs font-semibold shadow-md shadow-rose-500/15 active:scale-98 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer touch-manipulation"
-        >
-          <span>자세히 보기 (전체 {photoCount > 0 ? `${photoCount}장 사진 & ` : ""}이야기)</span>
-          <ChevronRight className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );
