@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Navigation, Camera, AlertCircle, Loader2 } from "lucide-react";
+import { Navigation, AlertCircle, Loader2 } from "lucide-react";
 
 interface MapContainerProps {
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -80,21 +80,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       {!loading && (
         <button
           onClick={locateUser}
-          className="absolute bottom-24 right-6 z-10 w-12 h-12 rounded-full bg-white/95 border border-gray-100/50 text-gray-700 flex items-center justify-center shadow-lg shadow-black/5 hover:text-rose-500 hover:border-rose-100 hover:bg-white active:scale-95 transition-all duration-200 cursor-pointer"
+          className="absolute bottom-6 right-6 z-10 w-12 h-12 rounded-full bg-white/95 border border-gray-100/50 text-gray-700 flex items-center justify-center shadow-lg shadow-black/5 hover:text-rose-500 hover:border-rose-100 hover:bg-white active:scale-95 transition-all duration-200 cursor-pointer"
           aria-label="현재 위치 찾기"
         >
           <Navigation className="w-5 h-5 fill-current" />
-        </button>
-      )}
-
-      {/* Floating Action Button (FAB) */}
-      {!loading && (
-        <button
-          onClick={handleFabClick}
-          className="group absolute bottom-6 right-6 z-10 flex items-center gap-2 px-5 py-3.5 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 text-white font-medium text-sm tracking-wide shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-300 ease-out border border-rose-400/20 cursor-pointer"
-        >
-          <Camera className="w-5 h-5 transition-transform group-hover:rotate-12 duration-300" />
-          <span>데이트 사진 올리기</span>
         </button>
       )}
     </>
