@@ -37,6 +37,7 @@ export default function Home() {
     setSelectedSpot,
     isAddModalOpen,
     newSpotLatLng,
+    currentAddress,
     handleStartAddSpot,
     closeAddModal,
   } = useKakaoMap(showToast);
@@ -79,13 +80,14 @@ export default function Home() {
         isOpen={isAddModalOpen}
         onClose={closeAddModal}
         latLng={newSpotLatLng}
+        initialAddress={currentAddress}
         onSubmit={createDateSpot}
         isUploading={isUploading}
       />
 
       <SpotDetailSheet spot={selectedSpot} onClose={() => setSelectedSpot(null)} />
 
-      {/* Dynamic Kakao Map SDK Script Loading */}
+      {/* Dynamic Kakao Map SDK Script Loading with Geocoder Services */}
       <Script
         src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&libraries=services&autoload=false`}
         strategy="afterInteractive"

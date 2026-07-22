@@ -19,6 +19,18 @@ declare global {
           addListener: (target: any, type: string, handler: (e: any) => void) => void;
           removeListener: (target: any, type: string, handler: (e: any) => void) => void;
         };
+        services: {
+          Geocoder: new () => {
+            coord2Address: (
+              lng: number,
+              lat: number,
+              callback: (result: any[], status: string) => void
+            ) => void;
+          };
+          Status: {
+            OK: string;
+          };
+        };
       };
     };
   }

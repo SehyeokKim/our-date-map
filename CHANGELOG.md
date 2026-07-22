@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### 추가
+- Kakao Maps `kakao.maps.services.Geocoder`를 활용한 Reverse Geocoding 주소 자동 변환 기능을 추가했습니다. 지도의 임의 좌표를 클릭하면 해당 위치의 도로명/지번 주소를 실시간으로 추출하여 데이트 기록 등록 모달([AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx))의 주소 필드에 자동 채움 처리하고 Supabase `date_spots` 테이블(`address` 컬럼)에 저장합니다.
+
 ### 수정
 - Supabase `date_spots` 테이블에 대한 `anon` 익명 역할의 INSERT/SELECT 테이블 접근 권한(`GRANT ALL ON public.date_spots TO anon`) 부족으로 인해 데이트 기록 등록 시 발생하던 데이터베이스 오류(`permission denied for table date_spots`)를 마이그레이션(`20260722003349_fix_date_spots_permissions.sql`) 적용을 통해 해결했습니다.
 - `useDateSpots` 커스텀 훅에서 Supabase `PostgrestError` 발생 시 범용 에러 문구로 가려지던 현상을 개선하여 실제 에러 메시지가 사용자 토스트 알림에 노출되도록 예외 처리를 보완했습니다.

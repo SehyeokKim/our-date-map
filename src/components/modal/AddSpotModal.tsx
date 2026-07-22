@@ -1,19 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
-import { Heart, X, Camera, AlertCircle, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Heart, X, Camera, AlertCircle, Loader2, MapPin } from "lucide-react";
 import { LatLng } from "@/types/spot";
 
 interface AddSpotModalProps {
   isOpen: boolean;
   onClose: () => void;
   latLng: LatLng | null;
+  initialAddress?: string;
   onSubmit: (params: {
     title: string;
     description: string;
     latLng: LatLng;
     imageFile: File | null;
     visitedAt: string;
+    address?: string;
   }) => Promise<boolean>;
   isUploading: boolean;
 }
@@ -22,16 +24,24 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
   isOpen,
   onClose,
   latLng,
+  initialAddress = "",
   onSubmit,
   isUploading,
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [address, setAddress] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [visitedAt, setVisitedAt] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
+
+  useEffect(() => {
+    if (isOpen) {
+      setAddress(initialAddress || "");
+    }
+  }, [isOpen, initialAddress]);
 
   if (!isOpen) return null;
 
@@ -53,11 +63,13 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
       latLng,
       imageFile,
       visitedAt,
+      address,
     });
 
     if (success) {
       setTitle("");
       setDescription("");
+      setAddress("");
       setImageFile(null);
       setImagePreview(null);
       onClose();
@@ -89,11 +101,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
             <label className="text-xs font-semibold text-gray-500">데이트 사진</label>
             {imagePreview ? (
               <div className="relative w-full h-48 rounded-2xl overflow-hidden group border border-gray-100">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                 {!isUploading && (
                   <button
                     type="button"
@@ -144,6 +152,22 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
+            <label htmlFor="address" className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-rose-500" />
+              위치 주소 (자동 변환)
+            </label>
+            <input
+              id="address"
+              type="text"
+              placeholder="지도를 터치하면 주소가 자동으로 입력됩니다."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-200/50 transition-all duration-200 placeholder:text-gray-400 font-medium text-gray-700"
+              disabled={isUploading}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
             <label htmlFor="date" className="text-xs font-semibold text-gray-500">
               방문 날짜
             </label>
@@ -176,8 +200,8 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
           <div className="bg-rose-50/50 border border-rose-100/50 rounded-xl p-3 flex gap-2 items-start">
             <AlertCircle className="w-4 h-4 text-rose-500 mt-0.5 flex-shrink-0" />
             <div className="text-[10px] text-rose-800 leading-relaxed font-medium">
-              <p className="font-bold mb-0.5">📍 위치 지정 완료</p>
-              지도를 터치하면 등록할 위치를 자유롭게 이동할 수 있습니다.
+              <p className="font-bold mb-0.5">📍 위치 및 주소 지정 완료</p>
+              지도를 터치하면 마커 핀과 도로명 주소가 실시간으로 변경됩니다.
             </div>
           </div>
 

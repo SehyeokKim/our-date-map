@@ -19,9 +19,33 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   const [selectedSpot, setSelectedSpot] = useState<DateSpot | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [newSpotLatLng, setNewSpotLatLng] = useState<LatLng | null>(null);
+  const [currentAddress, setCurrentAddress] = useState<string>("");
 
   const overlaysRef = useRef<any[]>([]);
   const tempOverlayRef = useRef<any | null>(null);
+  const geocoderRef = useRef<any | null>(null);
+
+  // Helper for Reverse Geocoding
+  const fetchAddress = useCallback((lat: number, lng: number) => {
+    const kakao = window.kakao;
+    if (!kakao || !kakao.maps || !kakao.maps.services) return;
+
+    if (!geocoderRef.current) {
+      geocoderRef.current = new kakao.maps.services.Geocoder();
+    }
+
+    geocoderRef.current.coord2Address(lng, lat, (result: any[], status: string) => {
+      if (status === kakao.maps.services.Status.OK && result.length > 0) {
+        const item = result[0];
+        const roadAddr = item.road_address ? item.road_address.address_name : "";
+        const jibunAddr = item.address ? item.address.address_name : "";
+        const finalAddress = roadAddr || jibunAddr || "";
+        setCurrentAddress(finalAddress);
+      } else {
+        setCurrentAddress("");
+      }
+    });
+  }, []);
 
   // Initialize Kakao Maps
   const initKakaoMap = useCallback(() => {
@@ -52,73 +76,76 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   }, []);
 
   // Geolocation tracking
-  const startTrackingLocation = useCallback((mapInstance: any) => {
-    if (!mapInstance || typeof window === "undefined" || !navigator.geolocation) {
-      return;
-    }
+  const startTrackingLocation = useCallback(
+    (mapInstance: any) => {
+      if (!mapInstance || typeof window === "undefined" || !navigator.geolocation) {
+        return;
+      }
 
-    const kakao = window.kakao;
-    if (!kakao || !kakao.maps) return;
+      const kakao = window.kakao;
+      if (!kakao || !kakao.maps) return;
 
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
 
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        userCoordsRef.current = { latitude, longitude };
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          userCoordsRef.current = { latitude, longitude };
 
-        const currentLatLng = new kakao.maps.LatLng(latitude, longitude);
+          const currentLatLng = new kakao.maps.LatLng(latitude, longitude);
 
-        if (isFirstLocationLoadRef.current) {
-          mapInstance.panTo(currentLatLng);
-          isFirstLocationLoadRef.current = false;
-          showToast("현재 위치를 불러왔습니다.", "success");
-        }
+          if (isFirstLocationLoadRef.current) {
+            mapInstance.panTo(currentLatLng);
+            isFirstLocationLoadRef.current = false;
+            showToast("현재 위치를 불러왔습니다.", "success");
+          }
 
-        if (userOverlayRef.current) {
-          userOverlayRef.current.setPosition(currentLatLng);
-          userOverlayRef.current.setMap(mapInstance);
-        } else {
-          const overlayElement = document.createElement("div");
-          overlayElement.className = "custom-user-marker";
+          if (userOverlayRef.current) {
+            userOverlayRef.current.setPosition(currentLatLng);
+            userOverlayRef.current.setMap(mapInstance);
+          } else {
+            const overlayElement = document.createElement("div");
+            overlayElement.className = "custom-user-marker";
 
-          const ping = document.createElement("div");
-          ping.className = "ping";
+            const ping = document.createElement("div");
+            ping.className = "ping";
 
-          const dot = document.createElement("div");
-          dot.className = "dot";
+            const dot = document.createElement("div");
+            dot.className = "dot";
 
-          const core = document.createElement("div");
-          core.className = "core";
+            const core = document.createElement("div");
+            core.className = "core";
 
-          dot.appendChild(core);
-          overlayElement.appendChild(ping);
-          overlayElement.appendChild(dot);
+            dot.appendChild(core);
+            overlayElement.appendChild(ping);
+            overlayElement.appendChild(dot);
 
-          const newOverlay = new kakao.maps.CustomOverlay({
-            position: currentLatLng,
-            content: overlayElement,
-            xAnchor: 0.5,
-            yAnchor: 0.5,
-            zIndex: 10,
-          });
+            const newOverlay = new kakao.maps.CustomOverlay({
+              position: currentLatLng,
+              content: overlayElement,
+              xAnchor: 0.5,
+              yAnchor: 0.5,
+              zIndex: 10,
+            });
 
-          newOverlay.setMap(mapInstance);
-          userOverlayRef.current = newOverlay;
-        }
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        if (isFirstLocationLoadRef.current) {
-          showToast("위치 정보를 가져올 수 없어 기본 위치로 표시합니다.", "info");
-          isFirstLocationLoadRef.current = false;
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
-  }, [showToast]);
+            newOverlay.setMap(mapInstance);
+            userOverlayRef.current = newOverlay;
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          if (isFirstLocationLoadRef.current) {
+            showToast("위치 정보를 가져올 수 없어 기본 위치로 표시합니다.", "info");
+            isFirstLocationLoadRef.current = false;
+          }
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    },
+    [showToast]
+  );
 
   // Center map on user location
   const locateUser = useCallback(() => {
@@ -152,19 +179,20 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   }, [map, showToast, startTrackingLocation]);
 
   // Render Date Spot markers
-  const renderSpotMarkers = useCallback((spotsData: DateSpot[]) => {
-    const kakao = window.kakao;
-    if (!kakao || !kakao.maps || !map) return;
+  const renderSpotMarkers = useCallback(
+    (spotsData: DateSpot[]) => {
+      const kakao = window.kakao;
+      if (!kakao || !kakao.maps || !map) return;
 
-    overlaysRef.current.forEach((overlay) => overlay.setMap(null));
-    overlaysRef.current = [];
+      overlaysRef.current.forEach((overlay) => overlay.setMap(null));
+      overlaysRef.current = [];
 
-    spotsData.forEach((spot) => {
-      const position = new kakao.maps.LatLng(spot.latitude, spot.longitude);
+      spotsData.forEach((spot) => {
+        const position = new kakao.maps.LatLng(spot.latitude, spot.longitude);
 
-      const el = document.createElement("div");
-      el.className = "cursor-pointer active:scale-95 transition-transform duration-200";
-      el.innerHTML = `
+        const el = document.createElement("div");
+        el.className = "cursor-pointer active:scale-95 transition-transform duration-200";
+        el.innerHTML = `
         <div class="relative flex flex-col items-center">
           <div class="w-9 h-9 rounded-full bg-white border border-rose-100 shadow-md flex items-center justify-center hover:scale-110 transition-transform duration-200">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500">
@@ -175,43 +203,51 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         </div>
       `;
 
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        setSelectedSpot(spot);
-        map.panTo(position);
-      });
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          setSelectedSpot(spot);
+          map.panTo(position);
+        });
 
-      const overlay = new kakao.maps.CustomOverlay({
-        position: position,
-        content: el,
-        xAnchor: 0.5,
-        yAnchor: 0.5,
-        zIndex: 5,
-      });
+        const overlay = new kakao.maps.CustomOverlay({
+          position: position,
+          content: el,
+          xAnchor: 0.5,
+          yAnchor: 0.5,
+          zIndex: 5,
+        });
 
-      overlay.setMap(map);
-      overlaysRef.current.push(overlay);
-    });
-  }, [map]);
+        overlay.setMap(map);
+        overlaysRef.current.push(overlay);
+      });
+    },
+    [map]
+  );
 
   // Open "Add Spot" modal manually via FAB
   const handleStartAddSpot = useCallback(() => {
+    let coords: LatLng | null = null;
     if (userCoordsRef.current) {
-      setNewSpotLatLng({
+      coords = {
         lat: userCoordsRef.current.latitude,
         lng: userCoordsRef.current.longitude,
-      });
+      };
     } else if (map) {
       const center = map.getCenter();
-      setNewSpotLatLng({
+      coords = {
         lat: center.getLat(),
         lng: center.getLng(),
-      });
+      };
+    }
+
+    if (coords) {
+      setNewSpotLatLng(coords);
+      fetchAddress(coords.lat, coords.lng);
     }
     setIsAddModalOpen(true);
-  }, [map]);
+  }, [map, fetchAddress]);
 
-  // Handle map click to place temporary pin or change pin location
+  // Handle map click to place temporary pin & fetch reverse geocoding address
   useEffect(() => {
     if (!map) return;
     const kakao = window.kakao;
@@ -219,11 +255,14 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
 
     let clickListener: any = null;
 
-    // Direct Map Click Listener (always active to place or move pin)
     clickListener = (mouseEvent: any) => {
       const clickedLatLng = mouseEvent.latLng;
-      const newCoords = { lat: clickedLatLng.getLat(), lng: clickedLatLng.getLng() };
+      const lat = clickedLatLng.getLat();
+      const lng = clickedLatLng.getLng();
+      const newCoords = { lat, lng };
+
       setNewSpotLatLng(newCoords);
+      fetchAddress(lat, lng);
     };
 
     kakao.maps.event.addListener(map, "click", clickListener);
@@ -233,9 +272,9 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         kakao.maps.event.removeListener(map, "click", clickListener);
       }
     };
-  }, [map]);
+  }, [map, fetchAddress]);
 
-  // Handle temporary pin overlay rendering and click on temporary pin to open modal
+  // Handle temporary pin overlay rendering
   useEffect(() => {
     if (!map) return;
     const kakao = window.kakao;
@@ -286,10 +325,11 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     }
   }, [map, newSpotLatLng]);
 
-  // Clean temp overlay when modal is closed (if user cancels or submits)
+  // Clean temp overlay when modal is closed
   const closeAddModal = useCallback(() => {
     setIsAddModalOpen(false);
     setNewSpotLatLng(null);
+    setCurrentAddress("");
     if (tempOverlayRef.current) {
       tempOverlayRef.current.setMap(null);
       tempOverlayRef.current = null;
@@ -321,6 +361,8 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     setIsAddModalOpen,
     newSpotLatLng,
     setNewSpotLatLng,
+    currentAddress,
+    setCurrentAddress,
     handleStartAddSpot,
     closeAddModal,
   };

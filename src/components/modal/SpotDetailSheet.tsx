@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Heart, X } from "lucide-react";
+import { Heart, X, MapPin } from "lucide-react";
 import { DateSpot } from "@/types/spot";
 
 interface SpotDetailSheetProps {
@@ -38,6 +38,12 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose 
                 {formattedDate}
               </span>
               <h2 className="text-xl font-bold mt-2 tracking-tight drop-shadow-md">{spot.title}</h2>
+              {spot.address && (
+                <p className="text-xs text-white/90 flex items-center gap-1 mt-1 font-medium drop-shadow">
+                  <MapPin className="w-3.5 h-3.5 text-rose-300 flex-shrink-0" />
+                  {spot.address}
+                </p>
+              )}
             </div>
           </div>
         ) : (
@@ -48,6 +54,12 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({ spot, onClose 
                 {formattedDate}
               </span>
               <h2 className="text-lg font-bold text-gray-800 mt-1">{spot.title}</h2>
+              {spot.address && (
+                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5 font-medium">
+                  <MapPin className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
+                  {spot.address}
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
