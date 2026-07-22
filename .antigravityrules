@@ -47,9 +47,9 @@
 ---
 
 ## 6. Git & Vibe Coding Workflow
-1. **Task-Based Branching:** Always isolate development work by individual task. Automatically create and switch to a task-specific Git feature branch (e.g., `feature/task-06-xxxx`) based on `main` before modifying code for that task.
+1. **Main Branch Strategy:** Work directly on the `main` branch for faster individual development. No separate feature branches required.
 2. **Conventional Commits:** Write clear commit messages using types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
-3. **Git Push Automation:** When instructed to complete and ship a task, ensure code compiles without errors, update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push the feature branch or merge to `origin main` as requested.
+3. **Git Push Automation:** When instructed to complete and ship a task, ensure code compiles without errors, update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push directly to `origin main`.
 
 ---
 
