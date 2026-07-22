@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.date_spots (
     latitude DOUBLE PRECISION NOT NULL,         -- 위도
     longitude DOUBLE PRECISION NOT NULL,        -- 경도
     image_url TEXT,                             -- 업로드된 사진 URL
+    image_urls TEXT[] DEFAULT '{}',             -- 사진 URL 배열
     address TEXT,                               -- 도로명/지번 주소
     visited_at TIMESTAMPTZ DEFAULT NOW() NOT NULL, -- 방문 날짜
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL  -- 생성 일시

@@ -16,6 +16,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   const isFirstLocationLoadRef = useRef<boolean>(true);
 
   // Spot selection & Temporary pin states
+  const [summarySpot, setSummarySpot] = useState<DateSpot | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<DateSpot | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [newSpotLatLng, setNewSpotLatLng] = useState<LatLng | null>(null);
@@ -178,7 +179,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     }
   }, [map, showToast, startTrackingLocation]);
 
-  // Render Date Spot markers with Mobile Map Pan Event Prevention & Direct SpotDetailSheet Open
+  // Render Date Spot markers with Mobile Touch Event Prevention & 2-Step View Navigation
   const renderSpotMarkers = useCallback(
     (spotsData: DateSpot[]) => {
       const kakao = window.kakao;
@@ -191,7 +192,6 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         const position = new kakao.maps.LatLng(spot.latitude, spot.longitude);
 
         const el = document.createElement("div");
-        // Minimum 48x48px touch target & explicit pointer-events: auto
         el.className = "w-12 h-12 flex items-center justify-center cursor-pointer active:scale-95 transition-transform duration-200 select-none touch-manipulation pointer-events-auto";
         el.style.pointerEvents = "auto";
         el.style.cursor = "pointer";
@@ -209,7 +209,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         </div>
       `;
 
-        // CRITICAL FIX FOR MOBILE: Stop touchstart/pointerdown propagation to prevent Kakao Map from capturing map drag session
+        // Prevent Kakao Map pan on touchstart/pointerdown
         const stopMapPan = (e: Event) => {
           e.stopPropagation();
         };
@@ -230,8 +230,9 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
           if (now - lastTouchTime < 300) return;
           lastTouchTime = now;
 
-          // DIRECTLY OPEN SpotDetailSheet (Full detail view sheet with photo, story, address, coordinates, delete button)
-          setSelectedSpot(spot);
+          // Open Step 1 Summary View on Pin Tap
+          setSummarySpot(spot);
+          setSelectedSpot(null);
           map.panTo(position);
         };
 
@@ -253,6 +254,16 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     },
     [map]
   );
+
+  // Transition from Step 1 Summary to Step 2 Full Detail View
+  const openDetailFromSummary = useCallback((spot: DateSpot) => {
+    setSelectedSpot(spot);
+    setSummarySpot(null);
+  }, []);
+
+  const closeSummary = useCallback(() => {
+    setSummarySpot(null);
+  }, []);
 
   // Open "Add Spot" modal manually via FAB
   const handleStartAddSpot = useCallback(() => {
@@ -411,6 +422,9 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     initKakaoMap,
     locateUser,
     renderSpotMarkers,
+    summarySpot,
+    closeSummary,
+    openDetailFromSummary,
     selectedSpot,
     setSelectedSpot,
     isAddModalOpen,

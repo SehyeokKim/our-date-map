@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.2.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, Supabase Storage 사진 파일 연동 삭제, SpotDetailSheet 종합 바텀 시트 직접 표출, 3일 Soft Delete, Test 10분 자동삭제 파이프라인)
+- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, Supabase Storage 사진 파일 연동 삭제, 3일 Soft Delete, Test 10분 자동삭제 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -22,7 +22,7 @@
   - `public/manifest.json` 내 `display: standalone` 설정으로 모바일 앱과 동일한 UX 제공
   - Tailwind CSS `backdrop-blur-md` 기반 Glassmorphic 헤더 바 구현
 - **상세 명세:** [`tasks/task-01-pwa-mobile-layout.md`](file:///c:/dev/our-date-map/tasks/task-01-pwa-mobile-layout.md)
-- **주요 파일:** [layout.tsx](file:///c:/dev/our-date-map/src/app/layout.tsx), [manifest.json](file:///c:/dev/our-date-map/public/manifest.json), [globals.css](file:///c:/dev/our-date-map/src/app/globals.css)
+- **주요 파일:** [layout.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [manifest.json](file:///c:/dev/our-date-map/public/manifest.json), [globals.css](file:///c:/dev/our-date-map/src/app/globals.css)
 
 ---
 
@@ -74,13 +74,12 @@
 
 ---
 
-### 6. [Task 06] Supabase Storage 사진 파일 연동 삭제 & SpotDetailSheet 직접 표출 & 3일 Soft Delete & 📍 장소 모듈화
+### 6. [Task 06] 다중 사진 업로드(최대 10장) & 2단계 요약/자세히보기 팝업 구축
 - **상태:** `Completed` (완료일: 2026-07-22 / 적용 버전: `v0.2.0`)
-- **개요:** `date_spots` 레코드 완전 삭제 및 3일/10분 경과 자동 정리 시 Supabase Storage `date-photos` 버킷 내 원본 사진 파일 100% 연동 삭제, 마커 터치 시 종합 바텀 시트(`SpotDetailSheet`) 기본 표출, `deleted_at` 3일 Soft Delete 및 `"Test"` 10분 자동삭제 구축.
+- **개요:** 데이트 기록 시 사진 최대 10장 업로드 지원(`image_urls TEXT[]`), 1단계 요약 팝업(대표사진 1장, 1줄 메모, 제목링크) ➔ 2단계 전체 자세히보기 팝업(사진 10장 캐러셀 갤러리, 메모 전문, 🗑️ 핀 삭제 버튼) 재구축.
 - **주요 스펙:**
-  - Supabase Storage `date-photos` 사진 파일 동기화 연동 삭제 (`extractStoragePath`)
-  - 마커 터치 시 종합 데이트 바텀 시트 (`SpotDetailSheet`) 기본 요약 화면 직접 표출
-  - 3일 경과 소프트 삭제 레코드 DB 및 Storage 이미지 파일 영구 삭제(Purge)
-  - `"Test"` 제목 10분(600초) 디버깅 자동 영구 삭제 타이머
+  - 최대 10장 다중 사진 선택, 개별 압축 업로드 및 `image_urls TEXT[]` 스키마 마이그레이션 (`20260722022000_add_image_urls_array_to_date_spots.sql`)
+  - 1단계 요약 팝업([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx)): 대표사진 1장, 1줄 메모, 제목 링크, 핀 삭제 버튼 제거
+  - 2단계 전체 자세히보기 팝업([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)): 10장 갤러리 슬라이더 캐러셀, 메모 전문, 📍 위경도, 🗑️ 핀 삭제 버튼
 - **상세 명세:** [`tasks/task-06-map-click-marker-modal.md`](file:///c:/dev/our-date-map/tasks/task-06-map-click-marker-modal.md)
-- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx), [useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts)
+- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx), [SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
