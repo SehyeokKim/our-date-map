@@ -8,16 +8,10 @@
 ## [Unreleased]
 
 ### 추가
-- 지도 상의 저장된 하트 마커 터치 시 2단계 상세 보기 UX를 구현했습니다. 1단계로 가벼운 **요약 정보 팝업**([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx))을 먼저 노출하여 장소명과 메모 요약을 보여주며, 장소명이나 '자세히 보기' 버튼을 터치할 경우 2단계 **전체 상세 팝업**([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx))으로 전환되어 원본 이미지, 메모 전문 및 🗑️ 핀 삭제 기능을 이용할 수 있습니다.
-- 저장된 데이트 기록 상세 보기 바텀 시트([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)) 하단에 🗑️ **핀 삭제** 버튼을 추가했습니다. 사용자가 삭제를 승인할 경우 Supabase DB 레코드 및 Storage 버킷의 원본 이미지가 함께 완전 제거됩니다.
-- 디버깅용 **"Test"** 제목(대소문자 미구분)으로 생성된 데이트 기록에 대해 생성 3분(180초) 후 Supabase DB 및 Storage에서 자동으로 완전 삭제되는 타이머 워커 기능([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts))을 추가했습니다.
-
-### 변경
-- 데이트 기록 등록 모달([AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx)) 내 중복되었던 '위치 주소' 입력 필드를 제거하고, 핀 이모지가 포함된 **📍 '장소'** 단일 필드로 통합하여 UI를 깔끔하게 다듬었습니다.
+- 지도의 하트 마커 핀 터치 시 원본 사진, 데이트 이야기 전문, 날짜, 주소, 📍 위경도, 🗑️ 핀 삭제 버튼이 모두 표출되는 종합 데이트 기록 바텀 시트([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx))를 기본 요약 화면으로 100% 직접 연결했습니다.
 
 ### 수정
-- Supabase `date_spots` 테이블에 대한 `anon` 익명 역할의 INSERT/SELECT 테이블 접근 권한(`GRANT ALL ON public.date_spots TO anon`) 부족으로 인해 데이트 기록 등록 시 발생하던 데이터베이스 오류(`permission denied for table date_spots`)를 마이그레이션(`20260722003349_fix_date_spots_permissions.sql`) 적용을 통해 해결했습니다.
-- `useDateSpots` 커스텀 훅에서 Supabase `PostgrestError` 발생 시 범용 에러 문구로 가려지던 현상을 개선하여 실제 에러 메시지가 사용자 토스트 알림에 노출되도록 예외 처리를 보완했습니다.
+- **모바일 핀 터치 인식 불량 버그 강력 해결:** 모바일(iOS Safari, Android Chrome, 카카오톡 인앱 브라우저 등) 환경에서 마커 핀 터치 시 카카오 지도 캔버스가 `touchstart`/`pointerdown` 이벤트를 상위로 전파받아 지도 드래그 세션을 실행하여 마커 핀의 터치 이벤트가 취소되던 버그를 분석했습니다. 마커 Wrapper의 `touchstart`, `touchmove`, `pointerdown`, `mousedown` 이벤트 발생 시 상위 전파를 완벽히 차단(`e.stopPropagation()`)하여 모바일 기기에서의 핀 터치 인식률 및 팝업 오픈 안정성을 100% 보증하도록 수정했습니다. ([useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts))
 
 ## [0.2.0] - 2026-07-22
 

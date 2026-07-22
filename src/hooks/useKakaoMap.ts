@@ -16,7 +16,6 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   const isFirstLocationLoadRef = useRef<boolean>(true);
 
   // Spot selection & Temporary pin states
-  const [summarySpot, setSummarySpot] = useState<DateSpot | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<DateSpot | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [newSpotLatLng, setNewSpotLatLng] = useState<LatLng | null>(null);
@@ -179,7 +178,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     }
   }, [map, showToast, startTrackingLocation]);
 
-  // Render Date Spot markers
+  // Render Date Spot markers with Mobile Map Pan Event Prevention & Direct SpotDetailSheet Open
   const renderSpotMarkers = useCallback(
     (spotsData: DateSpot[]) => {
       const kakao = window.kakao;
@@ -192,32 +191,60 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         const position = new kakao.maps.LatLng(spot.latitude, spot.longitude);
 
         const el = document.createElement("div");
-        el.className = "cursor-pointer active:scale-95 transition-transform duration-200";
+        // Minimum 48x48px touch target & explicit pointer-events: auto
+        el.className = "w-12 h-12 flex items-center justify-center cursor-pointer active:scale-95 transition-transform duration-200 select-none touch-manipulation pointer-events-auto";
+        el.style.pointerEvents = "auto";
+        el.style.cursor = "pointer";
+        el.style.touchAction = "manipulation";
+        (el.style as any).webkitTapHighlightColor = "transparent";
+
         el.innerHTML = `
-        <div class="relative flex flex-col items-center">
-          <div class="w-9 h-9 rounded-full bg-white border border-rose-100 shadow-md flex items-center justify-center hover:scale-110 transition-transform duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500">
+        <div class="relative flex flex-col items-center pointer-events-auto cursor-pointer">
+          <div class="w-10 h-10 rounded-full bg-white border border-rose-100 shadow-md flex items-center justify-center hover:scale-110 transition-transform duration-200 pointer-events-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500 pointer-events-none">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           </div>
-          <div class="w-1.5 h-1.5 bg-rose-500 rounded-full -mt-0.5 shadow-sm"></div>
+          <div class="w-1.5 h-1.5 bg-rose-500 rounded-full -mt-0.5 shadow-sm pointer-events-none"></div>
         </div>
       `;
 
-        // Clicking a saved spot marker opens Step 1 Summary Preview Popup
-        el.addEventListener("click", (e) => {
+        // CRITICAL FIX FOR MOBILE: Stop touchstart/pointerdown propagation to prevent Kakao Map from capturing map drag session
+        const stopMapPan = (e: Event) => {
           e.stopPropagation();
-          setSummarySpot(spot);
-          setSelectedSpot(null);
+        };
+
+        el.addEventListener("touchstart", stopMapPan, { passive: true });
+        el.addEventListener("touchmove", stopMapPan, { passive: true });
+        el.addEventListener("pointerdown", stopMapPan);
+        el.addEventListener("mousedown", stopMapPan);
+
+        let lastTouchTime = 0;
+        const handleMarkerSelect = (e: Event) => {
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+          e.stopPropagation();
+
+          const now = Date.now();
+          if (now - lastTouchTime < 300) return;
+          lastTouchTime = now;
+
+          // DIRECTLY OPEN SpotDetailSheet (Full detail view sheet with photo, story, address, coordinates, delete button)
+          setSelectedSpot(spot);
           map.panTo(position);
-        });
+        };
+
+        el.addEventListener("click", handleMarkerSelect);
+        el.addEventListener("touchend", handleMarkerSelect);
 
         const overlay = new kakao.maps.CustomOverlay({
           position: position,
           content: el,
           xAnchor: 0.5,
           yAnchor: 0.5,
-          zIndex: 5,
+          zIndex: 30,
+          clickable: true,
         });
 
         overlay.setMap(map);
@@ -226,16 +253,6 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     },
     [map]
   );
-
-  // Transition from Step 1 Summary to Step 2 Full Detail View
-  const openDetailFromSummary = useCallback((spot: DateSpot) => {
-    setSelectedSpot(spot);
-    setSummarySpot(null);
-  }, []);
-
-  const closeSummary = useCallback(() => {
-    setSummarySpot(null);
-  }, []);
 
   // Open "Add Spot" modal manually via FAB
   const handleStartAddSpot = useCallback(() => {
@@ -301,11 +318,16 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         tempOverlayRef.current.setMap(map);
       } else {
         const el = document.createElement("div");
-        el.className = "animate-bounce cursor-pointer";
+        el.className = "animate-bounce cursor-pointer touch-manipulation w-12 h-12 flex items-center justify-center p-1 pointer-events-auto";
+        el.style.pointerEvents = "auto";
+        el.style.cursor = "pointer";
+        el.style.touchAction = "manipulation";
+        (el.style as any).webkitTapHighlightColor = "transparent";
+
         el.innerHTML = `
-          <div class="relative flex flex-col items-center">
-            <div class="w-9 h-9 rounded-full bg-rose-500 border border-white shadow-lg flex items-center justify-center hover:scale-110 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-white">
+          <div class="relative flex flex-col items-center pointer-events-auto">
+            <div class="w-10 h-10 rounded-full bg-rose-500 border border-white shadow-lg flex items-center justify-center hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-white">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
@@ -314,17 +336,38 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
           </div>
         `;
 
-        el.addEventListener("click", (e) => {
+        const stopMapPan = (e: Event) => {
           e.stopPropagation();
+        };
+        el.addEventListener("touchstart", stopMapPan, { passive: true });
+        el.addEventListener("touchmove", stopMapPan, { passive: true });
+        el.addEventListener("pointerdown", stopMapPan);
+        el.addEventListener("mousedown", stopMapPan);
+
+        let lastTempTouchTime = 0;
+        const handleTempSelect = (e: Event) => {
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+          e.stopPropagation();
+
+          const now = Date.now();
+          if (now - lastTempTouchTime < 300) return;
+          lastTempTouchTime = now;
+
           setIsAddModalOpen(true);
-        });
+        };
+
+        el.addEventListener("click", handleTempSelect);
+        el.addEventListener("touchend", handleTempSelect);
 
         const overlay = new kakao.maps.CustomOverlay({
           position: latLngObj,
           content: el,
           xAnchor: 0.5,
           yAnchor: 0.5,
-          zIndex: 15,
+          zIndex: 35,
+          clickable: true,
         });
 
         overlay.setMap(map);
@@ -368,9 +411,6 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     initKakaoMap,
     locateUser,
     renderSpotMarkers,
-    summarySpot,
-    closeSummary,
-    openDetailFromSummary,
     selectedSpot,
     setSelectedSpot,
     isAddModalOpen,
