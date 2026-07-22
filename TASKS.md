@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.2.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 모바일 핀 터치 버그 강력 해결, SpotDetailSheet 종합 바텀 시트 직접 표출, 핀 삭제 RLS 지속성, 3일 Soft Delete, Test 10분 자동삭제 파이프라인)
+- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, Supabase Storage 사진 파일 연동 삭제, SpotDetailSheet 종합 바텀 시트 직접 표출, 3일 Soft Delete, Test 10분 자동삭제 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -74,11 +74,11 @@
 
 ---
 
-### 6. [Task 06] 모바일 핀 터치 버그 강력 수정 & SpotDetailSheet 직접 표출 & 3일 Soft Delete & 📍 장소 모듈화
+### 6. [Task 06] Supabase Storage 사진 파일 연동 삭제 & SpotDetailSheet 직접 표출 & 3일 Soft Delete & 📍 장소 모듈화
 - **상태:** `Completed` (완료일: 2026-07-22 / 적용 버전: `v0.2.0`)
-- **개요:** 모바일(iOS/Android) 핀 터치 시 카카오 지도 캔버스가 드래그 이벤트를 낚아채던 버그 차단(`touchstart`/`pointerdown` 전파 차단), 마커 터치 시 종합 바텀 시트(`SpotDetailSheet`) 직접 연결, `deleted_at` 3일 Soft Delete 및 `"Test"` 10분 자동삭제 구축.
+- **개요:** `date_spots` 레코드 완전 삭제 및 3일/10분 경과 자동 정리 시 Supabase Storage `date-photos` 버킷 내 원본 사진 파일 100% 연동 삭제, 마커 터치 시 종합 바텀 시트(`SpotDetailSheet`) 기본 표출, `deleted_at` 3일 Soft Delete 및 `"Test"` 10분 자동삭제 구축.
 - **주요 스펙:**
-  - 모바일 핀 터치 인식 불량 강력 수정: `touchstart`, `touchmove`, `pointerdown`, `mousedown` 이벤트 상위 전파 차단 (`e.stopPropagation()`)
+  - Supabase Storage `date-photos` 사진 파일 동기화 연동 삭제 (`extractStoragePath`)
   - 마커 터치 시 종합 데이트 바텀 시트 (`SpotDetailSheet`) 기본 요약 화면 직접 표출
   - 3일 경과 소프트 삭제 레코드 DB 및 Storage 이미지 파일 영구 삭제(Purge)
   - `"Test"` 제목 10분(600초) 디버깅 자동 영구 삭제 타이머
