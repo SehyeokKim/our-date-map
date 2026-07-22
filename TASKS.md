@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.2.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 2단계 핀 상세 보기 팝업 & 핀 삭제 & Test 3분 자동 삭제 & 📍 장소 단일 필드 통합 등록 모달)
+- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 모바일 핀 터치 버그 강력 해결, SpotDetailSheet 종합 바텀 시트 직접 표출, 핀 삭제 RLS 지속성, 3일 Soft Delete, Test 10분 자동삭제 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -57,7 +57,7 @@
   - `date_spots` 테이블 schema DDL 및 RLS (Row Level Security) 정책 정의
   - `browser-image-compression` 활용: 업로드 전 사진을 300KB 이하, 최대 해상도 1200px로 클라이언트 압축
   - Supabase Storage `date-photos` 버킷 저장 및 퍼블릭 접근 URL (`getPublicUrl`) 반환
-- **상세 명세:** [`tasks/task-04-supabase-storage-pipeline.md`](file:///c:/dev/our-date-map/tasks/task-04-supabase-storage-pipeline.md)
+- **상세 명세:** [`tasks/task-04-supabase-storage-pipeline.md`](file:///c:/dev/our-date-map/tasks/task-04-supabase-pipeline.md)
 - **주요 파일:** [supabase.ts](file:///c:/dev/our-date-map/src/lib/supabase.ts), [upload.ts](file:///c:/dev/our-date-map/src/lib/upload.ts), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql)
 
 ---
@@ -74,13 +74,13 @@
 
 ---
 
-### 6. [Task 06] 2단계 핀 상세 보기 UX & 신규 장소 등록 & 핀 삭제 & Test 3분 자동 삭제 & 📍 장소 단일 필드 모듈화
+### 6. [Task 06] 모바일 핀 터치 버그 강력 수정 & SpotDetailSheet 직접 표출 & 3일 Soft Delete & 📍 장소 모듈화
 - **상태:** `Completed` (완료일: 2026-07-22 / 적용 버전: `v0.2.0`)
-- **개요:** 지도 핀 클릭 시 1단계 요약 정보 팝업(`SpotSummarySheet`) 표출 (장소명 클릭 인터랙션) 후 터치 시 2단계 전체 상세 보기(`SpotDetailSheet`)로 전환되는 UX 구축. Kakao Reverse Geocoding 주소 추출, 📍 **'장소'** 단일 필드 통합 UI, 저장된 핀 삭제 기능 및 디버깅용 `"Test"` 제목 작성 시 **3분 후 DB/Storage 자동 완전 삭제** 타이머 구축.
+- **개요:** 모바일(iOS/Android) 핀 터치 시 카카오 지도 캔버스가 드래그 이벤트를 낚아채던 버그 차단(`touchstart`/`pointerdown` 전파 차단), 마커 터치 시 종합 바텀 시트(`SpotDetailSheet`) 직접 연결, `deleted_at` 3일 Soft Delete 및 `"Test"` 10분 자동삭제 구축.
 - **주요 스펙:**
-  - 핀 터치 2단계 상세 보기 UX (1단계 클릭 가능 장소명 요약 팝업 → 2단계 전체 사진/스토리 상세 보기 팝업)
-  - 등록 모달 📍 **'장소'** 단일 필드 통합 (미입력 시 도로명 주소 자동 저장)
-  - 핀 삭제 기능: Supabase DB 및 Storage 이미지 파일 완전 삭제
-  - `"Test"` 제목 3분(180초) 디버깅 자동 삭제 타이머
+  - 모바일 핀 터치 인식 불량 강력 수정: `touchstart`, `touchmove`, `pointerdown`, `mousedown` 이벤트 상위 전파 차단 (`e.stopPropagation()`)
+  - 마커 터치 시 종합 데이트 바텀 시트 (`SpotDetailSheet`) 기본 요약 화면 직접 표출
+  - 3일 경과 소프트 삭제 레코드 DB 및 Storage 이미지 파일 영구 삭제(Purge)
+  - `"Test"` 제목 10분(600초) 디버깅 자동 영구 삭제 타이머
 - **상세 명세:** [`tasks/task-06-map-click-marker-modal.md`](file:///c:/dev/our-date-map/tasks/task-06-map-click-marker-modal.md)
-- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx), [AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx), [SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx), [useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts)
+- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx), [useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts)

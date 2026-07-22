@@ -14,6 +14,7 @@ declare global {
           xAnchor?: number;
           yAnchor?: number;
           zIndex?: number;
+          clickable?: boolean;
         }) => any;
         event: {
           addListener: (target: any, type: string, handler: (e: any) => void) => void;
