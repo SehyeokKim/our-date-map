@@ -47,6 +47,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Return the user to an error page if session exchange fails
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  // Return the user to home with auth_error query parameter if session exchange fails
+  return NextResponse.redirect(`${origin}/?auth_error=true`);
 }

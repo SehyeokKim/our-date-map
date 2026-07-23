@@ -22,10 +22,11 @@ export function createClient() {
 export const supabase = createClient();
 
 export async function signInWithKakao() {
-  const origin =
+  const rawOrigin =
     typeof window !== 'undefined' && window.location.origin
       ? window.location.origin
       : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const origin = rawOrigin.replace(/\/$/, '');
 
   const redirectTo = `${origin}/auth/callback`;
 

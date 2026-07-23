@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### 수정
+- **OAuth Callback URL 지정 및 실패 리다이렉트 처리:** `signInWithKakao()` 실행 시 OAuth `redirectTo` URL의 trailing slash를 정제하여 `/auth/callback` 경로가 정확히 전달되도록 보장하고, Auth Callback Route Handler([route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts))의 에러 리다이렉트 대상을 `/?auth_error=true`로 정돈했습니다.
+
 ## [0.4.0] - 2026-07-23
 
 ### 추가
