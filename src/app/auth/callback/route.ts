@@ -45,6 +45,8 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}${next}`);
       }
     }
+
+    console.error('Exchange code for session failed:', error);
   }
 
   // Return the user to home with auth_error query parameter if session exchange fails
