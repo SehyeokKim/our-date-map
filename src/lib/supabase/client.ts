@@ -22,9 +22,12 @@ export function createClient() {
 export const supabase = createClient();
 
 export async function signInWithKakao() {
-  const redirectTo = typeof window !== 'undefined'
-    ? `${window.location.origin}/auth/callback`
-    : undefined;
+  const origin =
+    typeof window !== 'undefined' && window.location.origin
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+  const redirectTo = `${origin}/auth/callback`;
 
   return await supabase.auth.signInWithOAuth({
     provider: 'kakao',
