@@ -9,6 +9,17 @@ export function useAuth() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // If the browser lands on root (or any path) with OAuth authorization `code`,
+    // forward to /auth/callback to perform exchangeCodeForSession.
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+      if (code && !window.location.pathname.startsWith("/auth/callback")) {
+        window.location.href = `/auth/callback${window.location.search}`;
+        return;
+      }
+    }
+
     // Check initial active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
