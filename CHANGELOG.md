@@ -19,6 +19,7 @@
 
 ### 수정
 - **카카오 로그인 KOE205 에러 강력 해결:** Supabase Auth 클라이언트가 카카오 OAuth 호출 시 기본값으로 `account_email` 스코프를 자동 첨부하여 발생하던 KOE205 에러를 완벽히 차단하기 위해, `queryParams.scope`를 명시적으로 재정의(`queryParams: { scope: 'profile_nickname profile_image' }`)했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts))
+- **카카오 OAuth 로그인 내비게이션 수정:** `signInWithKakao()` 실행 시 `supabase.auth.signInWithOAuth` 결과로 리턴되는 카카오 OAuth 인가 URL (`data.url`)이 존재할 경우 `window.location.href = data.url;`로 직접 내비게이션을 수행하여, 카카오 인증 페이지 (`https://kauth.kakao.com/oauth/authorize...`)로 올바르게 이동하도록 버그를 수정했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts))
 
 ## [0.3.0] - 2026-07-23
 

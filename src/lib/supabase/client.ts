@@ -29,7 +29,7 @@ export async function signInWithKakao() {
 
   const redirectTo = `${origin}/auth/callback`;
 
-  return await supabase.auth.signInWithOAuth({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
     options: {
       redirectTo,
@@ -39,6 +39,17 @@ export async function signInWithKakao() {
       },
     },
   });
+
+  if (error) {
+    console.error('Kakao OAuth error:', error);
+    return { data, error };
+  }
+
+  if (data?.url) {
+    window.location.href = data.url;
+  }
+
+  return { data, error };
 }
 
 export async function signOut() {
