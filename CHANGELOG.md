@@ -8,7 +8,7 @@
 ## [Unreleased]
 
 ### 수정
-- **OAuth Callback URL (`redirectTo`) 명시적 지정:** Kakao OAuth `signInWithOAuth` 호출 시 `redirectTo` 옵션 대상을 `${window.location.origin}/auth/callback`으로 명시적으로 지정하여, OAuth 로그인 후 루트 경로(`/?code=...`)로 우회하지 않고 Auth Callback Route Handler([route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts))의 `exchangeCodeForSession`을 거치도록 수정했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts))
+- **OAuth 로그인 무음 실패 방지 & Trace 로깅 강화:** Kakao OAuth `signInWithOAuth` 호출 시 동적 `redirectTo` (`${origin}/auth/callback`) 및 `scopes` (`profile_nickname profile_image`) 옵션을 정밀 적용하고, Auth Callback Route Handler ([route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts)) 및 `useAuth` 훅에 상세 서버/클라이언트 로깅 및 명시적 `auth_error` 쿼리 파라미터 전달 로직을 추가하여 세션 교환 실패 시 오류가 무음 무시되지 않도록 보완했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts))
 
 ## [0.4.0] - 2026-07-23
 

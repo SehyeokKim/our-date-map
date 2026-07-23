@@ -5,7 +5,27 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
+  const providerError = searchParams.get('error');
+  const providerErrorDescription = searchParams.get('error_description');
   const next = searchParams.get('next') ?? '/';
+
+  console.log('[Auth Callback] Incoming callback request:', {
+    hasCode: Boolean(code),
+    providerError,
+    providerErrorDescription,
+    origin,
+    url: request.url,
+  });
+
+  if (providerError) {
+    console.error('[Auth Callback] OAuth Provider Error:', providerError, providerErrorDescription);
+    const errorRedirectUrl = new URL(origin);
+    errorRedirectUrl.searchParams.set('auth_error', providerError);
+    if (providerErrorDescription) {
+      errorRedirectUrl.searchParams.set('error_description', providerErrorDescription);
+    }
+    return NextResponse.redirect(errorRedirectUrl.toString());
+  }
 
   if (code) {
     const cookieStore = await cookies();
@@ -22,18 +42,18 @@ export async function GET(request: Request) {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing user sessions.
+            } catch (err) {
+              console.warn('[Auth Callback] Failed setting auth cookie:', err);
             }
           },
         },
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      console.log('[Auth Callback] Successfully exchanged code for session. User ID:', data.user?.id);
       const forwardedHost = request.headers.get('x-forwarded-host');
       const isLocalEnv = process.env.NODE_ENV === 'development';
 
@@ -46,9 +66,17 @@ export async function GET(request: Request) {
       }
     }
 
-    console.error('Exchange code for session failed:', error);
+    console.error('[Auth Callback] Exchange code for session failed:', {
+      message: error.message,
+      status: error.status,
+      name: error.name,
+    });
+
+    const errorRedirectUrl = new URL(origin);
+    errorRedirectUrl.searchParams.set('auth_error', error.message || 'exchange_failed');
+    return NextResponse.redirect(errorRedirectUrl.toString());
   }
 
-  // Return the user to home with auth_error query parameter if session exchange fails
-  return NextResponse.redirect(`${origin}/?auth_error=true`);
+  console.error('[Auth Callback] Request missing authorization code parameter');
+  return NextResponse.redirect(`${origin}/?auth_error=missing_code`);
 }
