@@ -8,6 +8,7 @@ import { useDateSpots } from "@/hooks/useDateSpots";
 import { useFuturePlanner } from "@/hooks/useFuturePlanner";
 import { useDirections } from "@/hooks/useDirections";
 import { useAuth } from "@/hooks/useAuth";
+import { useWebPush } from "@/hooks/useWebPush";
 import { Header } from "@/components/common/Header";
 import { Toast } from "@/components/common/Toast";
 import { MapContainer } from "@/components/map/MapContainer";
@@ -30,6 +31,14 @@ export default function Home() {
 
   // Supabase Auth (Kakao OAuth)
   const { user, nickname, avatarUrl, loginWithKakao, logout } = useAuth();
+
+  // Web Push Notifications
+  const {
+    pushEnabled,
+    loading: pushLoading,
+    togglePushNotification,
+    sendInstantPushNotification,
+  } = useWebPush(showToast, user?.id);
 
   // Supabase Memory Date Spots
   const { spots, isUploading, loadDateSpots, createDateSpot, deleteDateSpot } = useDateSpots(showToast);
@@ -145,6 +154,9 @@ export default function Home() {
         avatarUrl={avatarUrl}
         onLoginWithKakao={loginWithKakao}
         onLogout={logout}
+        pushEnabled={pushEnabled}
+        onTogglePush={togglePushNotification}
+        pushLoading={pushLoading}
       />
 
       <Toast toast={toast} />
@@ -156,6 +168,9 @@ export default function Home() {
         mapError={mapError}
         locateUser={locateUser}
         handleFabClick={handleStartAddSpot}
+        pushEnabled={pushEnabled}
+        onSendInstantPush={() => sendInstantPushNotification()}
+        pushLoading={pushLoading}
       />
 
       {/* Memory Spot Creation Modal with Creator Tracking */}

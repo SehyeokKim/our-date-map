@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### 추가
+- **Web Push 알림 토글 UI & 실시간 전송 파이프라인:** 1번 헤더 프로필 영역 내 커스텀 아이콘 기반 푸시 알림 ON/OFF 토글 버튼([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx))과 1번 토글이 ON일 때만 2번 지도 우측 하단 플로팅 알림 전송 버튼([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx))을 추가했습니다. 서비스 워커([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 수신, `push_subscriptions` DB 마이그레이션(`20260723110339_add_push_subscriptions.sql`), Next.js Route Handler ([route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts)) 및 커스텀 훅 ([useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts)) 연동을 통해 커플 상대방에게 즉시 알림을 발송하는 파이프라인을 구사했습니다.
 - **회원 UUID (`user_id`) 소유권 연동 & DB 마이그레이션:** `date_spots` 및 `records` 테이블에 `user_id UUID REFERENCES auth.users(id)` 컬럼 추가 마이그레이션 (`20260723103136_add_user_id_to_spots_and_records.sql`) 및 RLS 정책을 적용했습니다. 핀 기록 시 인증된 사용자 세션(`supabase.auth.getUser()`)의 `user_id`를 자동 첨부하고, 핀 상세 보기 시트 ([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx))에서 본인 기록일 경우 `(내 기록)` 소유권 뱃지를 노출하도록 구현했습니다. ([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx))
 
 ### 수정

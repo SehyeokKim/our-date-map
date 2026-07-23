@@ -110,3 +110,15 @@
   - 헤더 드롭다운 내 카카오 간편 로그인 / 프로필 & 로그아웃 UI 통합 및 상세 시트 작성자 배지 노출
 - **상세 명세:** [`tasks/task-08-kakao-auth-creator-tracking.md`](file:///c:/dev/our-date-map/tasks/task-08-kakao-auth-creator-tracking.md)
 - **주요 파일:** [client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [server.ts](file:///c:/dev/our-date-map/src/lib/supabase/server.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
+---
+
+### 9. [Task 09] Web Push 알림 토글 UI & 실시간 전송 파이프라인
+- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.5.0`)
+- **개요:** 1번 헤더 프로필 영역 푸시 알림 ON/OFF 토글 및 1번 토글 ON 조건 시 지도 우측 하단 2번 플로팅 알림 전송 버튼을 구현하고, Web Push API 및 서비스 워커를 연동하여 실시간 알림을 발송합니다.
+- **주요 스펙:**
+  - 1번 위치 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)): 푸시 알림 ON/OFF 토글 버튼, 커스텀 아이콘 (`push-on.svg`, `push-off.svg`), 권한 요청 및 구독 상태 `localStorage` & Supabase DB 동기화
+  - 2번 위치 ([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)): 1번 토글 ON 시 우측 하단 노출 커스텀 플로팅 전송 버튼 (`send-alert.svg`)
+  - Web Push 서비스 워커 ([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 및 클릭 포커싱 처리
+  - `push_subscriptions` DB 마이그레이션 및 Next.js Route Handler (`/api/push/send/route.ts`)
+- **주요 파일:** [sw.js](file:///c:/dev/our-date-map/public/sw.js), [useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)
