@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### 수정
+- **Kakao KOE205 에러 방지 & OAuth Scope 규칙 강화:** 카카오 개발자 콘솔 미설정 항목인 `account_email` 스코프 요청을 완전 차단하기 위해 [`.antigravityrules`](file:///c:/dev/our-date-map/.antigravityrules)에 KOE205 방지 규칙을 엄격 제정하고, `signInWithOAuth` 호출 시 `scopes: 'profile_nickname profile_image'` 및 `queryParams: { scope: 'profile_nickname profile_image' }`를 함께 적용하여 이메일 스코프 자동 포함을 강력 차단했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [.antigravityrules](file:///c:/dev/our-date-map/.antigravityrules))
 - **OAuth 로그인 무음 실패 방지 & Trace 로깅 강화:** Kakao OAuth `signInWithOAuth` 호출 시 동적 `redirectTo` (`${origin}/auth/callback`) 및 `scopes` (`profile_nickname profile_image`) 옵션을 정밀 적용하고, Auth Callback Route Handler ([route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts)) 및 `useAuth` 훅에 상세 서버/클라이언트 로깅 및 명시적 `auth_error` 쿼리 파라미터 전달 로직을 추가하여 세션 교환 실패 시 오류가 무음 무시되지 않도록 보완했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts))
 
 ## [0.4.0] - 2026-07-23

@@ -30,6 +30,9 @@ export async function signInWithKakao() {
     options: {
       redirectTo,
       scopes: 'profile_nickname profile_image',
+      queryParams: {
+        scope: 'profile_nickname profile_image',
+      },
     },
   });
 

@@ -60,6 +60,22 @@
 2. **Server-Side REST API Keys:** Confidential keys (e.g., `KAKAO_REST_API_KEY`) must NEVER use the `NEXT_PUBLIC_` prefix. They must be accessed strictly within Next.js Route Handlers (`src/app/api/...`) to prevent client-side exposure.
 3. **Environment Security:** Never hardcode any API key strings directly in component, hook, or utility files. Always pull from `process.env`.
 
+### 7.1 Kakao OAuth & Scope Rules (KOE205 Prevention)
+- **STRICT REQUIREMENT:** NEVER request `account_email` or default Kakao email scopes.
+- Always explicitly pass scopes when calling `signInWithOAuth` for Kakao:
+  `scopes: 'profile_nickname profile_image'`
+  `queryParams: { scope: 'profile_nickname profile_image' }`
+- When calling `supabase.auth.signInWithOAuth({ provider: 'kakao', ... })`, you MUST explicitly override scopes to prevent KOE205 errors:
+  ```typescript
+  options: {
+    redirectTo: `${window.location.origin}/auth/callback`,
+    scopes: 'profile_nickname profile_image',
+    queryParams: {
+      scope: 'profile_nickname profile_image',
+    },
+  }
+  ```
+
 ---
 
 ## 8. Kakao Mobility API & Route Calculation Rules
