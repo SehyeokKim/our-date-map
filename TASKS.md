@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.4.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 10 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, 미래 데이트 플래닝 & Kakao Mobility API 코스 길찾기 시각화, Kakao OAuth 로그인 & 작성자 추적, Web Push 알림 토글 & 실시간 전송, 작성자 메타데이터 profiles 테이블 분리 및 동적 관계형 조인)
+- **구현 완료 (Completed):** Task 01 ~ Task 11 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림, profiles 테이블 분리, 프로필 수정 모달 & DB/스토리지 동기화)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -135,4 +135,17 @@
   - Supabase 조회 쿼리 동적 JOIN 연동 (`.select('*, profiles(id, nickname, profile_image_url)')`)
   - UI 컴포넌트 동적 프로필 접근 연동 (`spot.profiles.nickname`, `spot.profiles.profile_image_url`)
 - **주요 파일:** [20260723233625_decouple_creator_data_to_profiles.sql](file:///c:/dev/our-date-map/supabase/migrations/20260723233625_decouple_creator_data_to_profiles.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [supabase.ts](file:///c:/dev/our-date-map/src/types/supabase.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
+---
+
+### 11. [Task 11] 프로필 수정 모달 UI 구축 & DB/스토리지 동기화
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
+- **개요:** 헤더 드롭다운의 사용자 카드를 클릭하여 닉네임과 프로필 사진을 직접 변경할 수 있는 프로필 수정 모달 UI([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))를 구현하고, Supabase Storage `avatars` 버킷 및 `public.profiles` DB 동기화 파이프라인을 구축했습니다.
+- **주요 스펙:**
+  - 헤더 드롭다운 하단 유저 프로필 카드 클릭 트리거 및 호버 인터랙션 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx))
+  - `ProfileEditModal` UI: 프로필 사진 300KB 압축 및 실시간 미리보기, 닉네임 입력, `취소`/`저장` 버튼 ([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))
+  - Supabase Storage `avatars` 퍼블릭 버킷 마이그레이션 (`20260723235156_add_avatars_storage_bucket.sql`)
+  - `useAuth` 훅 강화: `profiles` 조회/upsert, Kakao OAuth 기본값 자동 폴백, 실시간 전역 프로필 동기화 ([useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts))
+- **주요 파일:** [ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [upload.ts](file:///c:/dev/our-date-map/src/lib/upload.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql)
+
 

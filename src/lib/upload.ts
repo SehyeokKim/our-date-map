@@ -66,3 +66,36 @@ export async function uploadCompressedPhotos(files: File[]): Promise<string[]> {
 
   return results.filter((url): url is string => Boolean(url));
 }
+
+/**
+ * Compress and upload a user profile avatar photo to Supabase Storage 'avatars' bucket
+ */
+export async function uploadCompressedAvatar(userId: string, file: File): Promise<string | null> {
+  try {
+    const compressedFile = await compressPhoto(file);
+
+    const fileExt = compressedFile.name.split(".").pop() || "png";
+    const filePath = `${userId}/avatar_${Date.now()}.${fileExt}`;
+
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, compressedFile, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Supabase avatars storage upload error:", error);
+      return null;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  } catch (error) {
+    console.error("Failed to upload avatar photo:", error);
+    return null;
+  }
+}

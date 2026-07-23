@@ -15,6 +15,7 @@ interface HeaderProps {
   avatarUrl?: string | null;
   onLoginWithKakao?: () => void;
   onLogout?: () => void;
+  onOpenProfileEdit?: () => void;
   pushEnabled?: boolean;
   onTogglePush?: () => void;
   pushLoading?: boolean;
@@ -30,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   avatarUrl,
   onLoginWithKakao,
   onLogout,
+  onOpenProfileEdit,
   pushEnabled = false,
   onTogglePush,
   pushLoading = false,
@@ -229,13 +231,20 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Auth Section: Kakao Login / Profile & Logout */}
           <div className="pt-0.5 px-1">
             {user ? (
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/50 border border-amber-100">
+              <div
+                onClick={() => {
+                  onOpenProfileEdit?.();
+                  setIsOpen(false);
+                }}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 transition-all cursor-pointer group active:scale-[0.98]"
+                title="클릭하여 프로필 수정하기"
+              >
                 <div className="flex items-center gap-2.5 min-w-0">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
                       alt={nickname || "프로필 이미지"}
-                      className="w-8 h-8 rounded-full border border-amber-200 object-cover flex-shrink-0"
+                      className="w-8 h-8 rounded-full border border-amber-300 object-cover flex-shrink-0 group-hover:scale-105 transition-transform"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-amber-200/80 flex items-center justify-center text-amber-800 font-bold text-xs">
@@ -243,21 +252,24 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-gray-800 truncate">
-                      {nickname || "카카오 사용자"}님
+                    <div className="text-xs font-bold text-gray-800 truncate flex items-center gap-1">
+                      <span>{nickname || "카카오 사용자"}님</span>
+                      <span className="text-[10px] text-amber-600 font-normal">✏️</span>
                     </div>
                     <div className="text-[10px] text-amber-700 font-medium">
-                      작성자 추적 중 📍
+                      프로필 수정하기
                     </div>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onLogout?.();
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>로그아웃</span>
@@ -265,6 +277,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             ) : (
               <button
+                type="button"
                 onClick={() => {
                   onLoginWithKakao?.();
                   setIsOpen(false);
