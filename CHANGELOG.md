@@ -8,7 +8,7 @@
 ## [Unreleased]
 
 ### 수정
-- **OAuth Callback URL 지정 및 실패 리다이렉트 처리:** `signInWithKakao()` 실행 시 OAuth `redirectTo` URL의 trailing slash를 정제하여 `/auth/callback` 경로가 정확히 전달되도록 보장하고, Auth Callback Route Handler([route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts))의 에러 리다이렉트 대상을 `/?auth_error=true`로 정돈했습니다.
+- **OAuth Callback URL (`redirectTo`) 명시적 지정:** Kakao OAuth `signInWithOAuth` 호출 시 `redirectTo` 옵션 대상을 `${window.location.origin}/auth/callback`으로 명시적으로 지정하여, OAuth 로그인 후 루트 경로(`/?code=...`)로 우회하지 않고 Auth Callback Route Handler([route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts))의 `exchangeCodeForSession`을 거치도록 수정했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts))
 
 ## [0.4.0] - 2026-07-23
 
