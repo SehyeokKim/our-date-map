@@ -1,5 +1,6 @@
 export interface DateSpot {
   id: string;
+  user_id?: string | null;
   title: string;
   description: string | null;
   latitude: number;

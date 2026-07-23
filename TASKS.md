@@ -102,8 +102,9 @@
 - **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.4.0`)
 - **개요:** Kakao OAuth 간편 로그인 연동(`@supabase/ssr`)을 구축하고, 데이트 핀 추가 시 작성자의 ID 및 닉네임/프로필 사진을 자동으로 저장하며 상세 보기에서 작성자 정보를 시각화합니다.
 - **주요 스펙:**
-  - DB 컬럼 마이그레이션 (`created_by`, `creator_nickname`, `creator_avatar_url`) 적용
+  - DB 컬럼 마이그레이션 (`user_id`, `created_by`, `creator_nickname`, `creator_avatar_url`) 및 RLS 소유권 정책 적용 (`20260723103136_add_user_id_to_spots_and_records.sql`)
   - Supabase Browser & Server Client (`src/lib/supabase/client.ts`, `server.ts`) 및 Auth Callback Route Handler (`/auth/callback/route.ts`) 구현
+  - 핀 기록 시 인증 세션의 `user_id` 자동 첨부 및 상세 시트 `(내 기록)` 작성자 배지 시각화
   - Kakao OAuth `redirectTo` (`${origin}/auth/callback`) 동적 설정 및 KOE205 방지를 위한 `scopes` / `queryParams.scope` 명시적 재정의 (`profile_nickname profile_image`)
   - Auth Callback Route Handler 세션 교환 추적 및 서버/클라이언트 예외 로깅 추가
   - 헤더 드롭다운 내 카카오 간편 로그인 / 프로필 & 로그아웃 UI 통합 및 상세 시트 작성자 배지 노출

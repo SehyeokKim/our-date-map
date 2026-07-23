@@ -203,7 +203,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     }
   }, [showToast, checkAndScheduleAutoDelete, purgeExpiredDeletedSpots]);
 
-  // Create a new Date Spot (with support for multiple image files up to 10 & Creator tracking)
+  // Create a new Date Spot (with support for multiple image files up to 10, user_id & Creator tracking)
   const createDateSpot = useCallback(
     async (params: {
       title: string;
@@ -213,6 +213,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       imageFile?: File | null;
       visitedAt: string;
       address?: string;
+      userId?: string | null;
       createdBy?: string | null;
       creatorNickname?: string | null;
       creatorAvatarUrl?: string | null;
@@ -225,6 +226,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         imageFile,
         visitedAt,
         address,
+        userId,
         createdBy,
         creatorNickname,
         creatorAvatarUrl,
@@ -258,6 +260,17 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
 
         const primaryUrl = uploadedUrls.length > 0 ? uploadedUrls[0] : "";
 
+        // Determine authenticated user_id from parameters or active Supabase session
+        let activeUserId = userId || createdBy || null;
+        if (!activeUserId) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) activeUserId = user.id;
+          } catch (e) {
+            console.warn("Could not retrieve active session user:", e);
+          }
+        }
+
         const { data, error } = await supabase
           .from("date_spots")
           .insert({
@@ -269,7 +282,8 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             image_urls: uploadedUrls,
             address: address ? address.trim() : "",
             visited_at: new Date(visitedAt).toISOString(),
-            created_by: createdBy || null,
+            user_id: activeUserId,
+            created_by: activeUserId,
             creator_nickname: creatorNickname || null,
             creator_avatar_url: creatorAvatarUrl || null,
           })

@@ -202,6 +202,7 @@ export default function Home() {
           spot={selectedSpot}
           onClose={() => setSelectedSpot(null)}
           onDelete={deleteDateSpot}
+          currentUserId={user?.id}
         />
       )}
 

@@ -3,6 +3,10 @@
 -- 1. 데이트 장소 테이블 (date_spots) 생성
 CREATE TABLE IF NOT EXISTS public.date_spots (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), -- 작성자 회원 UUID
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- 생성자 UUID
+    creator_nickname TEXT,                      -- 작성자 닉네임
+    creator_avatar_url TEXT,                    -- 작성자 프로필 사진 URL
     title VARCHAR(255) NOT NULL,                -- 장소 이름
     description TEXT,                           -- 추억/설명
     latitude DOUBLE PRECISION NOT NULL,         -- 위도

@@ -8,12 +8,14 @@ interface SpotDetailSheetProps {
   spot: DateSpot | null;
   onClose: () => void;
   onDelete?: (spot: DateSpot) => Promise<boolean>;
+  currentUserId?: string | null;
 }
 
 export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
   spot,
   onClose,
   onDelete,
+  currentUserId,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -24,6 +26,11 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
   }, [spot]);
 
   if (!spot) return null;
+
+  const isOwner = Boolean(
+    currentUserId &&
+      (spot.user_id === currentUserId || spot.created_by === currentUserId)
+  );
 
   const photos: string[] =
     spot.image_urls && spot.image_urls.length > 0
@@ -96,19 +103,22 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                 📍 장소
               </span>
 
-              {/* Creator Info */}
-              {spot.creator_nickname && (
+              {/* Creator Info / Ownership Badge */}
+              {(spot.creator_nickname || isOwner) && (
                 <div className="flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/80 rounded-full px-2.5 py-0.5 text-[11px] text-amber-900 font-semibold">
                   {spot.creator_avatar_url ? (
                     <img
                       src={spot.creator_avatar_url}
-                      alt={spot.creator_nickname}
+                      alt={spot.creator_nickname || "작성자"}
                       className="w-4 h-4 rounded-full object-cover border border-amber-300"
                     />
                   ) : (
                     <span className="text-[10px]">✍️</span>
                   )}
-                  <span>작성자: {spot.creator_nickname}</span>
+                  <span>
+                    작성자: {spot.creator_nickname || "카카오 사용자"}
+                    {isOwner ? " (내 기록)" : ""}
+                  </span>
                 </div>
               )}
             </div>

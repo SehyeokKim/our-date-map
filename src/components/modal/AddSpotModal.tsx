@@ -16,6 +16,7 @@ interface AddSpotModalProps {
     imageFiles?: File[];
     visitedAt: string;
     address?: string;
+    userId?: string | null;
     createdBy?: string | null;
     creatorNickname?: string | null;
     creatorAvatarUrl?: string | null;
@@ -97,6 +98,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
       imageFiles,
       visitedAt,
       address: initialAddress,
+      userId: currentUserId || null,
       createdBy: currentUserId || null,
       creatorNickname: currentUserNickname || null,
       creatorAvatarUrl: currentUserAvatarUrl || null,
