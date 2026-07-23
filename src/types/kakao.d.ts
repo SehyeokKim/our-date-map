@@ -16,6 +16,14 @@ declare global {
           zIndex?: number;
           clickable?: boolean;
         }) => any;
+        Polyline: new (options: {
+          map?: any;
+          path: any[];
+          strokeWeight?: number;
+          strokeColor?: string;
+          strokeOpacity?: number;
+          strokeStyle?: string;
+        }) => any;
         event: {
           addListener: (target: any, type: string, handler: (e: any) => void) => void;
           removeListener: (target: any, type: string, handler: (e: any) => void) => void;

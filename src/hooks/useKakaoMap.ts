@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DateSpot, LatLng } from "@/types/spot";
+import { PlannedSpot } from "@/types/planner";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function useKakaoMap(showToast: (message: string, type?: "success" | "error" | "info") => void) {
@@ -23,6 +24,8 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   const [currentAddress, setCurrentAddress] = useState<string>("");
 
   const overlaysRef = useRef<any[]>([]);
+  const plannedOverlaysRef = useRef<any[]>([]);
+  const polylineRef = useRef<any | null>(null);
   const tempOverlayRef = useRef<any | null>(null);
   const geocoderRef = useRef<any | null>(null);
 
@@ -179,7 +182,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     }
   }, [map, showToast, startTrackingLocation]);
 
-  // Render Date Spot markers with Mobile Touch Event Prevention & 2-Step View Navigation
+  // Render Date Spot markers with Mobile Touch Event Prevention
   const renderSpotMarkers = useCallback(
     (spotsData: DateSpot[]) => {
       const kakao = window.kakao;
@@ -209,7 +212,6 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         </div>
       `;
 
-        // Prevent Kakao Map pan on touchstart/pointerdown
         const stopMapPan = (e: Event) => {
           e.stopPropagation();
         };
@@ -230,7 +232,6 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
           if (now - lastTouchTime < 300) return;
           lastTouchTime = now;
 
-          // Open Step 1 Summary View on Pin Tap
           setSummarySpot(spot);
           setSelectedSpot(null);
           map.panTo(position);
@@ -254,6 +255,117 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     },
     [map]
   );
+
+  // Clear memory spot overlays
+  const clearMemorySpotMarkers = useCallback(() => {
+    overlaysRef.current.forEach((overlay) => overlay.setMap(null));
+    overlaysRef.current = [];
+  }, []);
+
+  // Clear planned spot overlays
+  const clearPlannedSpotMarkers = useCallback(() => {
+    plannedOverlaysRef.current.forEach((overlay) => overlay.setMap(null));
+    plannedOverlaysRef.current = [];
+  }, []);
+
+  // Render Planned Spot markers (Numbered violet circles)
+  const renderPlannedSpotMarkers = useCallback(
+    (plannedSpotsData: PlannedSpot[]) => {
+      const kakao = window.kakao;
+      if (!kakao || !kakao.maps || !map) return;
+
+      clearPlannedSpotMarkers();
+
+      plannedSpotsData.forEach((spot) => {
+        const position = new kakao.maps.LatLng(spot.latitude, spot.longitude);
+
+        const el = document.createElement("div");
+        el.className = "flex flex-col items-center select-none touch-manipulation pointer-events-auto cursor-pointer";
+        el.style.pointerEvents = "auto";
+        el.style.touchAction = "manipulation";
+        (el.style as any).webkitTapHighlightColor = "transparent";
+
+        el.innerHTML = `
+          <div class="relative flex flex-col items-center hover:scale-105 transition-transform">
+            <div class="w-8 h-8 rounded-full bg-violet-600 border-2 border-white shadow-lg flex items-center justify-center text-white font-extrabold text-xs shadow-violet-300">
+              ${spot.order}
+            </div>
+            <div class="mt-1 bg-white/95 backdrop-blur-sm border border-violet-200 px-2 py-0.5 rounded-full shadow-md text-[11px] font-bold text-violet-900 whitespace-nowrap max-w-[130px] truncate">
+              ${spot.title}
+            </div>
+          </div>
+        `;
+
+        const stopMapPan = (e: Event) => {
+          e.stopPropagation();
+        };
+
+        el.addEventListener("touchstart", stopMapPan, { passive: true });
+        el.addEventListener("touchmove", stopMapPan, { passive: true });
+        el.addEventListener("pointerdown", stopMapPan);
+        el.addEventListener("mousedown", stopMapPan);
+
+        const handlePlannedSelect = (e: Event) => {
+          if (e.cancelable) e.preventDefault();
+          e.stopPropagation();
+          map.panTo(position);
+        };
+
+        el.addEventListener("click", handlePlannedSelect);
+        el.addEventListener("touchend", handlePlannedSelect);
+
+        const overlay = new kakao.maps.CustomOverlay({
+          position: position,
+          content: el,
+          xAnchor: 0.5,
+          yAnchor: 0.5,
+          zIndex: 35,
+          clickable: true,
+        });
+
+        overlay.setMap(map);
+        plannedOverlaysRef.current.push(overlay);
+      });
+    },
+    [map, clearPlannedSpotMarkers]
+  );
+
+  // Render Route Polyline connecting spots
+  const renderRoutePolyline = useCallback(
+    (pathCoords: { lat: number; lng: number }[]) => {
+      const kakao = window.kakao;
+      if (!kakao || !kakao.maps || !map) return;
+
+      if (polylineRef.current) {
+        polylineRef.current.setMap(null);
+        polylineRef.current = null;
+      }
+
+      if (pathCoords.length < 2) return;
+
+      const kakaoPath = pathCoords.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
+
+      const polyline = new kakao.maps.Polyline({
+        map: map,
+        path: kakaoPath,
+        strokeWeight: 5,
+        strokeColor: "#8B5CF6",
+        strokeOpacity: 0.9,
+        strokeStyle: "solid",
+      });
+
+      polylineRef.current = polyline;
+    },
+    [map]
+  );
+
+  // Clear polyline
+  const clearRoutePolyline = useCallback(() => {
+    if (polylineRef.current) {
+      polylineRef.current.setMap(null);
+      polylineRef.current = null;
+    }
+  }, []);
 
   // Transition from Step 1 Summary to Step 2 Full Detail View
   const openDetailFromSummary = useCallback((spot: DateSpot) => {
@@ -422,6 +534,11 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     initKakaoMap,
     locateUser,
     renderSpotMarkers,
+    clearMemorySpotMarkers,
+    renderPlannedSpotMarkers,
+    clearPlannedSpotMarkers,
+    renderRoutePolyline,
+    clearRoutePolyline,
     summarySpot,
     closeSummary,
     openDetailFromSummary,

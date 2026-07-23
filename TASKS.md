@@ -6,8 +6,8 @@
 
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
-- **현재 버전:** `v0.2.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 06 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, Supabase Storage 사진 파일 연동 삭제, 3일 Soft Delete, Test 3분 자동삭제 파이프라인)
+- **현재 버전:** `v0.3.0`
+- **구현 완료 (Completed):** Task 01 ~ Task 07 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, 미래 데이트 플래닝 & Kakao Mobility API 코스 길찾기 시각화)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -83,3 +83,15 @@
   - 2단계 전체 자세히보기 팝업([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)): 10장 갤러리 슬라이더 캐러셀, 메모 전문, 📍 위경도, 🗑️ 핀 삭제 버튼
 - **상세 명세:** [`tasks/task-06-map-click-marker-modal.md`](file:///c:/dev/our-date-map/tasks/task-06-map-click-marker-modal.md)
 - **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx), [SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
+---
+
+### 7. [Task 07] 미래 데이트 플래닝 & Kakao Mobility API 코스 시각화
+- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.3.0`)
+- **개요:** 헤더 드롭다운 메뉴를 통해 '추억 데이트 지도'와 '미래 데이트 플래닝' 모드를 자유롭게 전환하고, 미래 방문할 데이트 장소를 순서대로 핀 찍어 Kakao Mobility API (`/api/directions`) 기반 경로 코스(Polyline) 및 거리/시간을 시각화하는 기능을 구현했습니다.
+- **주요 스펙:**
+  - Glassmorphic 인터랙티브 드롭다운 메뉴 헤더 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx))
+  - 미래 플래닝 코스 핀 추가 ([AddPlannedSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddPlannedSpotModal.tsx)) 및 순서 변경/삭제/초기화 제어 바텀 시트 ([FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx))
+  - Kakao Mobility 다중 경유지 Route Handler (`/api/directions/route.ts`) 연동, `Polyline` 경로선 시각화 및 `localStorage` 자동 보존
+- **상세 명세:** [`tasks/task-07-future-date-planning.md`](file:///c:/dev/our-date-map/tasks/task-07-future-date-planning.md)
+- **주요 파일:** [route.ts](file:///c:/dev/our-date-map/src/app/api/directions/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [useDirections.ts](file:///c:/dev/our-date-map/src/hooks/useDirections.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx)
