@@ -6,8 +6,8 @@
 
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
-- **현재 버전:** `v0.3.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 07 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, 미래 데이트 플래닝 & Kakao Mobility API 코스 길찾기 시각화)
+- **현재 버전:** `v0.4.0`
+- **구현 완료 (Completed):** Task 01 ~ Task 08 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, 미래 데이트 플래닝 & Kakao Mobility API 코스 길찾기 시각화, Kakao OAuth 로그인 & 작성자 추적)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -95,3 +95,15 @@
   - Kakao Mobility 다중 경유지 Route Handler (`/api/directions/route.ts`) 연동, `Polyline` 경로선 시각화 및 `localStorage` 자동 보존
 - **상세 명세:** [`tasks/task-07-future-date-planning.md`](file:///c:/dev/our-date-map/tasks/task-07-future-date-planning.md)
 - **주요 파일:** [route.ts](file:///c:/dev/our-date-map/src/app/api/directions/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [useDirections.ts](file:///c:/dev/our-date-map/src/hooks/useDirections.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx)
+
+---
+
+### 8. [Task 08] Kakao OAuth 인증 연동 & 데이트 장소 작성자 추적
+- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.4.0`)
+- **개요:** Kakao OAuth 간편 로그인 연동(`@supabase/ssr`)을 구축하고, 데이트 핀 추가 시 작성자의 ID 및 닉네임/프로필 사진을 자동으로 저장하며 상세 보기에서 작성자 정보를 시각화합니다.
+- **주요 스펙:**
+  - DB 컬럼 마이그레이션 (`created_by`, `creator_nickname`, `creator_avatar_url`) 적용
+  - Supabase Browser & Server Client (`src/lib/supabase/client.ts`, `server.ts`) 및 Auth Callback Route Handler (`/auth/callback/route.ts`) 구현
+  - 헤더 드롭다운 내 카카오 간편 로그인 / 프로필 & 로그아웃 UI 통합 및 상세 시트 작성자 배지 노출
+- **상세 명세:** [`tasks/task-08-kakao-auth-creator-tracking.md`](file:///c:/dev/our-date-map/tasks/task-08-kakao-auth-creator-tracking.md)
+- **주요 파일:** [client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [server.ts](file:///c:/dev/our-date-map/src/lib/supabase/server.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)

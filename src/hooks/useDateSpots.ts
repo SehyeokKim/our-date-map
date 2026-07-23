@@ -99,37 +99,18 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
       const now = Date.now();
 
-      const expiredSpots: DateSpot[] = data.filter((spot) => {
-        if (!spot.deleted_at) return false;
-        return now - new Date(spot.deleted_at).getTime() >= threeDaysMs;
-      });
-
-      if (expiredSpots.length === 0) return;
-
-      // 1. Extract all file paths from all expired spots and batch delete from Storage
-      const allFilePathsSet = new Set<string>();
-      expiredSpots.forEach((spot) => {
-        const paths = extractAllStoragePaths(spot);
-        paths.forEach((p) => allFilePathsSet.add(p));
-      });
-
-      const filePathsArray = Array.from(allFilePathsSet);
-      if (filePathsArray.length > 0) {
-        try {
-          await supabase.storage.from("date-photos").remove(filePathsArray);
-        } catch (storageErr) {
-          console.error("Failed to batch delete photos from Supabase Storage:", storageErr);
+      for (const spot of data) {
+        if (spot.deleted_at) {
+          const deletedTime = new Date(spot.deleted_at).getTime();
+          if (now - deletedTime >= threeDaysMs) {
+            await hardDeleteSpotInternal(spot as DateSpot);
+          }
         }
       }
-
-      // 2. Hard delete DB rows
-      const expiredIds = expiredSpots.map((s) => s.id);
-      await supabase.from("date_spots").delete().in("id", expiredIds);
-      setSpots((prev) => prev.filter((s) => !expiredIds.includes(s.id)));
     } catch (err) {
       console.error("Failed during purge of expired deleted spots:", err);
     }
-  }, []);
+  }, [hardDeleteSpotInternal]);
 
   // Soft Delete Function (sets deleted_at = NOW())
   const deleteDateSpot = useCallback(
@@ -176,10 +157,8 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
           const threeMinutesMs = 3 * 60 * 1000;
 
           if (elapsed >= threeMinutesMs) {
-            // Already past 3 minutes -> hard delete immediately from DB and Storage
             hardDeleteSpotInternal(spot, "⏱️ 'Test' 기록이 3분 경과하여 영구 삭제되었습니다.");
           } else if (!activeTimersRef.current.has(spot.id)) {
-            // Remaining time to 3 minutes
             const remainingMs = threeMinutesMs - elapsed;
             const timerId = setTimeout(() => {
               hardDeleteSpotInternal(spot, "⏱️ 'Test' 기록이 3분 경과하여 영구 삭제되었습니다.");
@@ -196,7 +175,6 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
   const loadDateSpots = useCallback(async () => {
     setLoadingSpots(true);
     try {
-      // Trigger background purge of 3-day old soft-deleted spots
       purgeExpiredDeletedSpots();
 
       const { data, error } = await supabase
@@ -225,7 +203,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     }
   }, [showToast, checkAndScheduleAutoDelete, purgeExpiredDeletedSpots]);
 
-  // Create a new Date Spot (with support for multiple image files up to 10)
+  // Create a new Date Spot (with support for multiple image files up to 10 & Creator tracking)
   const createDateSpot = useCallback(
     async (params: {
       title: string;
@@ -235,8 +213,22 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       imageFile?: File | null;
       visitedAt: string;
       address?: string;
+      createdBy?: string | null;
+      creatorNickname?: string | null;
+      creatorAvatarUrl?: string | null;
     }): Promise<boolean> => {
-      const { title, description, latLng, imageFiles, imageFile, visitedAt, address } = params;
+      const {
+        title,
+        description,
+        latLng,
+        imageFiles,
+        imageFile,
+        visitedAt,
+        address,
+        createdBy,
+        creatorNickname,
+        creatorAvatarUrl,
+      } = params;
 
       if (!title.trim()) {
         showToast("장소를 입력해 주세요.", "error");
@@ -253,7 +245,6 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       try {
         let uploadedUrls: string[] = [];
 
-        // Prepare files list (up to 10)
         let filesToUpload: File[] = [];
         if (imageFiles && imageFiles.length > 0) {
           filesToUpload = imageFiles.slice(0, 10);
@@ -278,6 +269,9 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             image_urls: uploadedUrls,
             address: address ? address.trim() : "",
             visited_at: new Date(visitedAt).toISOString(),
+            created_by: createdBy || null,
+            creator_nickname: creatorNickname || null,
+            creator_avatar_url: creatorAvatarUrl || null,
           })
           .select()
           .single();
@@ -287,7 +281,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         showToast("💖 소중한 추억이 기록되었습니다!", "success");
         const reloadedSpots = await loadDateSpots();
         if (data) {
-          checkAndScheduleAutoDelete([data, ...reloadedSpots]);
+          checkAndScheduleAutoDelete([data as DateSpot, ...reloadedSpots]);
         }
         return true;
       } catch (err: unknown) {

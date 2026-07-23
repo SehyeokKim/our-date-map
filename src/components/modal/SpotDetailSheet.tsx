@@ -89,11 +89,30 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
 
         {/* Content Body */}
         <div className="p-6 overflow-y-auto space-y-4">
-          {/* Place Title & Address */}
+          {/* Creator Badge & Place Title */}
           <div>
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-              📍 장소
-            </span>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                📍 장소
+              </span>
+
+              {/* Creator Info */}
+              {spot.creator_nickname && (
+                <div className="flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/80 rounded-full px-2.5 py-0.5 text-[11px] text-amber-900 font-semibold">
+                  {spot.creator_avatar_url ? (
+                    <img
+                      src={spot.creator_avatar_url}
+                      alt={spot.creator_nickname}
+                      className="w-4 h-4 rounded-full object-cover border border-amber-300"
+                    />
+                  ) : (
+                    <span className="text-[10px]">✍️</span>
+                  )}
+                  <span>작성자: {spot.creator_nickname}</span>
+                </div>
+              )}
+            </div>
+
             <h2 className="text-xl font-extrabold text-gray-900 mt-0.5 leading-snug">
               {spot.title}
             </h2>

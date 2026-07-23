@@ -16,8 +16,14 @@ interface AddSpotModalProps {
     imageFiles?: File[];
     visitedAt: string;
     address?: string;
+    createdBy?: string | null;
+    creatorNickname?: string | null;
+    creatorAvatarUrl?: string | null;
   }) => Promise<boolean>;
   isUploading: boolean;
+  currentUserId?: string | null;
+  currentUserNickname?: string | null;
+  currentUserAvatarUrl?: string | null;
 }
 
 export const AddSpotModal: React.FC<AddSpotModalProps> = ({
@@ -27,6 +33,9 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
   initialAddress = "",
   onSubmit,
   isUploading,
+  currentUserId,
+  currentUserNickname,
+  currentUserAvatarUrl,
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -88,6 +97,9 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
       imageFiles,
       visitedAt,
       address: initialAddress,
+      createdBy: currentUserId || null,
+      creatorNickname: currentUserNickname || null,
+      creatorAvatarUrl: currentUserAvatarUrl || null,
     });
 
     if (success) {
@@ -118,138 +130,142 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
 
         {/* Modal Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-          {/* Consolidated Single Field: 📍 장소 (Place Input) */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-              <span>📍 장소</span>
+          {/* Creator Badge Preview if logged in */}
+          {currentUserNickname && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl text-amber-900 text-xs font-semibold">
+              {currentUserAvatarUrl ? (
+                <img
+                  src={currentUserAvatarUrl}
+                  alt={currentUserNickname}
+                  className="w-5 h-5 rounded-full object-cover border border-amber-200"
+                />
+              ) : (
+                <span>✍️</span>
+              )}
+              <span>작성자: <strong>{currentUserNickname}</strong> 님으로 기록됩니다</span>
+            </div>
+          )}
+
+          {/* Extract address preview */}
+          {initialAddress && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 bg-rose-50/80 px-3 py-2 rounded-xl border border-rose-100">
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{initialAddress}</span>
+            </div>
+          )}
+
+          {/* Place Title */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">
+              장소 이름 <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
-              required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={initialAddress || "예: 서울특별시 마포구 독막로 123 예쁜 카페"}
+              placeholder={initialAddress || "예: 남산서울타워, 성수동 맛집"}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all"
               disabled={isUploading}
-              className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
-            />
-            {initialAddress && (
-              <p className="text-[11px] text-gray-400 flex items-center gap-1 font-medium pl-1 mt-1">
-                <MapPin className="w-3 h-3 text-rose-400 flex-shrink-0" />
-                자동 감지된 위치: {initialAddress}
-              </p>
-            )}
-          </div>
-
-          {/* Visit Date Field */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-rose-500" />
-              <span>방문한 날짜</span>
-            </label>
-            <input
-              type="date"
-              required
-              value={visitedAt}
-              onChange={(e) => setVisitedAt(e.target.value)}
-              disabled={isUploading}
-              className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
             />
           </div>
 
-          {/* Multiple Photo Upload (Up to 10 photos) */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-                <Upload className="w-3.5 h-3.5 text-rose-500" />
-                <span>추억 사진 (최대 10장)</span>
+          {/* Visited Date */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">데이트 날짜</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={visitedAt}
+                onChange={(e) => setVisitedAt(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all pr-10"
+                disabled={isUploading}
+              />
+              <Calendar className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Multiple Image Upload up to 10 */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-gray-700">
+                추억 사진 (최대 10장)
               </label>
-              <span className="text-[11px] font-semibold text-rose-500">
-                {imageFiles.length} / 10
-              </span>
+              <span className="text-[11px] font-bold text-rose-500">{imageFiles.length} / 10</span>
             </div>
 
-            {/* Thumbnail Preview Grid */}
+            {/* Photo Previews Slider */}
             {previewUrls.length > 0 && (
-              <div className="grid grid-cols-5 gap-2 mb-2">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none">
                 {previewUrls.map((url, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
-                    <img
-                      src={url}
-                      alt={`미리보기 ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                  <div
+                    key={idx}
+                    className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0 group"
+                  >
+                    <img src={url} alt={`미리보기 ${idx + 1}`} className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => removeImage(idx)}
                       disabled={isUploading}
-                      className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-white text-xs hover:bg-rose-600 transition-colors"
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-rose-600 transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
-                    {idx === 0 && (
-                      <span className="absolute bottom-0 inset-x-0 bg-rose-500 text-[9px] font-bold text-white text-center py-0.5">
-                        대표
-                      </span>
-                    )}
+                    <span className="absolute bottom-1 left-1 bg-black/50 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                      {idx + 1}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
 
             {imageFiles.length < 10 && (
-              <label className="flex flex-col items-center justify-center w-full h-24 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-rose-50/30 hover:border-rose-200 transition-all cursor-pointer">
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 hover:bg-gray-100/80 cursor-pointer transition-all">
                 <Upload className="w-5 h-5 text-gray-400 mb-1" />
-                <span className="text-xs text-gray-500 font-medium">
-                  사진 추가 선택하기 (최대 10장)
-                </span>
-                <span className="text-[10px] text-gray-400 mt-0.5">
-                  자동 압축 저장 (JPG, PNG)
+                <span className="text-xs text-gray-500 font-semibold">
+                  {imageFiles.length === 0 ? "사진 추가하기 (최대 10장)" : "사진 추가하기"}
                 </span>
                 <input
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={handleImageChange}
-                  disabled={isUploading}
                   className="hidden"
+                  disabled={isUploading}
                 />
               </label>
             )}
           </div>
 
-          {/* Description Story Field */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-              <span>우리의 이야기</span>
-            </label>
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">우리의 이야기 (메모)</label>
             <textarea
-              rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="이곳에서 함께한 소중한 추억을 적어주세요..."
+              placeholder="이곳에서 나눈 이야기를 남겨보세요."
+              rows={3}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all resize-none"
               disabled={isUploading}
-              className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium resize-none"
             />
           </div>
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isUploading}
-            className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white rounded-2xl font-bold text-sm shadow-lg shadow-rose-500/20 active:scale-98 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer mt-2"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>기록 저장 중...</span>
-              </>
-            ) : (
-              <>
-                <Heart className="w-4 h-4 fill-current" />
-                <span>데이트 기록 저장하기</span>
-              </>
-            )}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isUploading}
+              className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-extrabold text-sm transition-all shadow-md shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>소중한 추억을 등록하는 중...</span>
+                </>
+              ) : (
+                <span>데이트 기록 저장하기 💖</span>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

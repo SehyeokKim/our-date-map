@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-23
+
+### 추가
+- **Kakao OAuth 로그인 연동:** Supabase `@supabase/ssr` 라이브러리를 활용하여 카카오 OAuth 간편 로그인 기능 (`signInWithKakao`) 및 Auth Callback Route Handler ([route.ts](file:///c:/dev/our-date-map/src/app/auth/callback/route.ts))를 구현했습니다.
+- **데이트 장소 작성자 추적 (Creator Tracking):** `date_spots` 테이블 스키마에 작성자 추적 컬럼 (`created_by`, `creator_nickname`, `creator_avatar_url`) 마이그레이션 (`20260723000000_add_creator_to_date_spots.sql`)을 추가하고, 핀 등록 시 로그인된 카카오 사용자의 닉네임과 프로필 사진을 자동으로 연동하여 기록하도록 개선했습니다. ([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts))
+- **작성자 정보 시각화:** 핀 상세 보기 시트 ([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)) 상단에 작성자 닉네임과 프로필 배지("작성자: OO")를 노출하여 커플 간 누가 장소를 공유했는지 한눈에 확인할 수 있게 구현했습니다.
+
+### 변경
+- **헤더 카카오 프로필 & 로그아웃 UI 통합:** 헤더 드롭다운 메뉴 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)) 내에 로그인 미인증 시 '카카오로 3초 로그인' 버튼을, 인증 시 사용자 프로필 이미지/닉네임 및 로그아웃 버튼을 추가했습니다.
+
 ## [0.3.0] - 2026-07-23
 
 ### 추가
@@ -27,27 +37,3 @@
 ### 변경
 - **우측 하단 FAB 버튼 제거:** 지도 우측 하단에 위치했던 '데이트 사진 올리기' Floating Action Button([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx))을 제거하고, GPS 위치 버튼을 우측 하단(`bottom-6`)으로 재배치하여 깔끔한 풀스크린 지도 뷰를 제공합니다.
 - **요약 팝업 UI 개선:** 1단계 요약 팝업([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx)) 내 '우리의 이야기' 텍스트를 `\n` 기준 첫 줄만 깔끔하게 노출하도록 수정하고, 텍스트 라벨을 '우리의 이야기'로 다듬었으며, 중복되던 하단 자세히보기 버튼을 제거하여 더욱 직관적이고 깔끔한 카드 UX를 완성했습니다.
-- 기존 거대한 단일 파일 구조였던 메인 페이지([page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx))를 프로젝트 모듈화 표준 가이드라인에 맞춰 타입([types/](file:///c:/dev/our-date-map/src/types/)), 커스텀 훅([hooks/](file:///c:/dev/our-date-map/src/hooks/)), 컴포넌트([components/](file:///c:/dev/our-date-map/src/components/)) 단위로 가독성 높게 리팩토링했습니다.
-- `navigator.geolocation.watchPosition`을 이용한 실시간 GPS 위치 추적 기능을 추가하여 사용자의 움직임에 따라 지도의 위치가 실시간으로 자동 업데이트되도록 구현했습니다.
-- Kakao 지도 API 로드 실패 시(예: 미등록 도메인으로 호출 시) 해결 방법을 직관적으로 안내하는 글래스모피즘 스타일의 오류 안내 카드 UI를 추가했습니다.
-- 데이터베이스 테이블 및 스토리지 버킷 스키마 관리를 위해 [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql) 스키마 정의 파일을 프로젝트 루트 경로에 추가했습니다.
-- 데이트 장소를 기록할 수 있는 바텀 시트 폼(사진 첨부, 장소/제목, 날짜, 메모) 및 저장된 장소를 확인할 수 있는 상세 정보 뷰 바텀 시트 UI를 구현했습니다.
-- Supabase Database(`date_spots`) 연동을 통한 데이트 장소 목록 불러오기 및 신규 등록 기능을 구현하고, 업로드된 사진을 버킷에 저장하여 맵 마커와 연동했습니다.
-- 데이트 장소 추가 모드 시 지도를 터치하여 원하는 위치로 마커 핀을 미세 조정할 수 있는 위치 이동 선택 인터페이스를 구현했습니다.
-
-### 수정
-- **'Test' 기록 3분 자동 삭제 타이머 수정:** 'Test' 제목(대소문자 미구분)으로 등록된 데이트 기록이 생성 3분(180초) 후 Supabase DB 및 Storage 원본 사진에서 자동으로 영구 제거되도록 타이머 시간을 3분(180,000ms)으로 정확히 보완했습니다. ([useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts))
-- **모바일 핀 터치 인식 불량 버그 강력 해결:** 모바일(iOS Safari, Android Chrome, 카카오톡 인앱 브라우저 등) 환경에서 마커 핀 터치 시 카카오 지도 캔버스가 `touchstart`/`pointerdown` 이벤트를 상위로 전파받아 지도 드래그 세션을 실행하여 마커 핀의 터치 이벤트가 취소되던 버그를 분석했습니다. 마커 Wrapper의 `touchstart`, `touchmove`, `pointerdown`, `mousedown` 이벤트 발생 시 상위 전파를 완벽히 차단(`e.stopPropagation()`)하여 모바일 기기에서의 핀 터치 인식률 및 팝업 오픈 안정성을 100% 보증하도록 수정했습니다. ([useKakaoMap.ts](file:///c:/dev/our-date-map/src/hooks/useKakaoMap.ts))
-
----
-
-## [0.1.0] - 2026-07-21
-
-### 추가
-- Next.js (App Router, TypeScript) 프로젝트의 초기 구성을 시작했습니다.
-- Kakao 지도 JavaScript SDK를 연동하여 지도 컨테이너 렌더링 및 초기 위치 포커싱 기능을 통합했습니다.
-- Supabase 클라이언트 ([supabase.ts](file:///c:/dev/our-date-map/src/lib/supabase.ts)) 및 `browser-image-compression` 기반의 클라이언트 사이드 이미지 압축 업로드 헬퍼 ([upload.ts](file:///c:/dev/our-date-map/src/lib/upload.ts))를 추가했습니다.
-- PWA 단독 (standalone) 실행 환경 최적화를 위한 웹 앱 매니페스트 (`manifest.json`)와 Apple 메타 설정을 적용했습니다.
-
-### 변경
-- 메인 홈 페이지 ([page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)) 구조를 전체 화면 메인 지도 중심의 데이트 기록 인터페이스로 변경했습니다.

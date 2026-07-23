@@ -1,15 +1,18 @@
 export interface DateSpot {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   latitude: number;
   longitude: number;
-  image_url?: string;
-  image_urls?: string[];
-  address?: string;
+  image_url?: string | null;
+  image_urls?: string[] | null;
+  address?: string | null;
   visited_at: string;
   created_at: string;
   deleted_at?: string | null;
+  created_by?: string | null;
+  creator_nickname?: string | null;
+  creator_avatar_url?: string | null;
 }
 
 export interface LatLng {

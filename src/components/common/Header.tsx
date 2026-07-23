@@ -1,14 +1,20 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Heart, Calendar, ChevronDown, MapPin, Sparkles } from "lucide-react";
+import { Heart, Calendar, ChevronDown, MapPin, Sparkles, LogOut, User as UserIcon, MessageSquare } from "lucide-react";
 import { AppMode } from "@/types/planner";
+import { User } from "@supabase/supabase-js";
 
 interface HeaderProps {
   appMode: AppMode;
   onSelectMode: (mode: AppMode) => void;
   memoryCount?: number;
   planningCount?: number;
+  user?: User | null;
+  nickname?: string | null;
+  avatarUrl?: string | null;
+  onLoginWithKakao?: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +22,11 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectMode,
   memoryCount = 0,
   planningCount = 0,
+  user,
+  nickname,
+  avatarUrl,
+  onLoginWithKakao,
+  onLogout,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -80,16 +91,27 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 text-gray-400">
+        <div className="flex items-center gap-2">
+          {/* Active User Avatar Preview */}
+          {user && avatarUrl && (
+            <img
+              src={avatarUrl}
+              alt={nickname || "사용자 프로필"}
+              className="w-7 h-7 rounded-full border border-gray-200 object-cover shadow-sm"
+            />
+          )}
+
           <ChevronDown
-            className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180 text-gray-700" : ""}`}
+            className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${
+              isOpen ? "rotate-180 text-gray-700" : ""
+            }`}
           />
         </div>
       </header>
 
       {/* Interactive Dropdown Menu */}
       {isOpen && (
-        <div className="mt-2 bg-white/95 backdrop-blur-md border border-white/70 rounded-2xl shadow-xl p-2.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="mt-2 bg-white/95 backdrop-blur-md border border-white/70 rounded-2xl shadow-xl p-2.5 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="text-[10px] font-semibold text-gray-400 px-3 pt-1 uppercase tracking-wider">
             모드 선택
           </div>
@@ -139,6 +161,60 @@ export const Header: React.FC<HeaderProps> = ({
               {planningCount}개
             </span>
           </button>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-1" />
+
+          {/* Auth Section: Kakao Login / Profile & Logout */}
+          <div className="pt-0.5 px-1">
+            {user ? (
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/50 border border-amber-100">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={nickname || "프로필 이미지"}
+                      className="w-8 h-8 rounded-full border border-amber-200 object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-amber-200/80 flex items-center justify-center text-amber-800 font-bold text-xs">
+                      <UserIcon className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-gray-800 truncate">
+                      {nickname || "카카오 사용자"}님
+                    </div>
+                    <div className="text-[10px] text-amber-700 font-medium">
+                      작성자 추적 중 📍
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    onLogout?.();
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>로그아웃</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  onLoginWithKakao?.();
+                  setIsOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#FEE500] hover:bg-[#FDD800] text-[#191919] font-semibold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
+              >
+                <MessageSquare className="w-4 h-4 fill-[#191919]" />
+                <span>카카오로 3초 로그인 (작성자 기록)</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

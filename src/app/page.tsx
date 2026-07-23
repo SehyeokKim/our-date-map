@@ -7,6 +7,7 @@ import { useKakaoMap } from "@/hooks/useKakaoMap";
 import { useDateSpots } from "@/hooks/useDateSpots";
 import { useFuturePlanner } from "@/hooks/useFuturePlanner";
 import { useDirections } from "@/hooks/useDirections";
+import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/common/Header";
 import { Toast } from "@/components/common/Toast";
 import { MapContainer } from "@/components/map/MapContainer";
@@ -26,6 +27,9 @@ export default function Home() {
       setToast(null);
     }, 3000);
   }, []);
+
+  // Supabase Auth (Kakao OAuth)
+  const { user, nickname, avatarUrl, loginWithKakao, logout } = useAuth();
 
   // Supabase Memory Date Spots
   const { spots, isUploading, loadDateSpots, createDateSpot, deleteDateSpot } = useDateSpots(showToast);
@@ -130,12 +134,17 @@ export default function Home() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-gray-50">
-      {/* Header with Mode Selection Dropdown */}
+      {/* Header with Mode Selection Dropdown & Kakao Auth */}
       <Header
         appMode={appMode}
         onSelectMode={setAppMode}
         memoryCount={spots ? spots.length : 0}
         planningCount={plannedSpots.length}
+        user={user}
+        nickname={nickname}
+        avatarUrl={avatarUrl}
+        onLoginWithKakao={loginWithKakao}
+        onLogout={logout}
       />
 
       <Toast toast={toast} />
@@ -149,7 +158,7 @@ export default function Home() {
         handleFabClick={handleStartAddSpot}
       />
 
-      {/* Memory Spot Creation Modal */}
+      {/* Memory Spot Creation Modal with Creator Tracking */}
       {appMode === "memory" && (
         <AddSpotModal
           isOpen={isAddModalOpen}
@@ -158,6 +167,9 @@ export default function Home() {
           initialAddress={currentAddress}
           onSubmit={createDateSpot}
           isUploading={isUploading}
+          currentUserId={user?.id}
+          currentUserNickname={nickname}
+          currentUserAvatarUrl={avatarUrl}
         />
       )}
 
