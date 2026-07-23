@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### 변경
+- **과거 데이트 핀 작성자 일괄 변경 (!DB):** `date_spots` 테이블 내 기존 과거 핀들의 작성자(`created_by`, `user_id`)를 `public.profiles` 테이블의 '민소영' 님 프로필 ID(`811de361-25c0-4afc-b553-2864bbfe463a`)로 일괄 업데이트 마이그레이션 ([20260723234641_update_past_date_spots_creator_to_minsoyong.sql](file:///c:/dev/our-date-map/supabase/migrations/20260723234641_update_past_date_spots_creator_to_minsoyong.sql))을 적용했습니다.
 - **작성자 메타데이터 `profiles` 테이블 완전 분리 및 FK 관계 정의 (!DB):** `date_spots` 테이블에서 기존 하드코딩된 작성자 텍스트 컬럼들(`creator_nickname`, `creator_avatar_url`, `creator_profile_image`)을 완전히 제거하고, `auth.users(id)`와 연동되는 `public.profiles` 테이블 생성 마이그레이션 (`20260723233625_decouple_creator_data_to_profiles.sql`)을 적용했습니다. 신규 회원 가입 시 프로필 자동생성 DB 트리거(`on_auth_user_created`) 구축, `date_spots` 내 `created_by` (UUID)를 `public.profiles(id)` 외래키(FK)로 연결, Supabase relational JOIN (`select('*, profiles(id, nickname, profile_image_url)')`) 및 동적 프로필 접근(`spot.profiles.nickname`, `spot.profiles.profile_image_url`)으로 리팩토링했습니다. ([20260723233625_decouple_creator_data_to_profiles.sql](file:///c:/dev/our-date-map/supabase/migrations/20260723233625_decouple_creator_data_to_profiles.sql), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx))
 
 ### 추가
