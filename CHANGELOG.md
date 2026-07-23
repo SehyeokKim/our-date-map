@@ -18,7 +18,7 @@
 - **헤더 카카오 프로필 & 로그아웃 UI 통합:** 헤더 드롭다운 메뉴 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)) 내에 로그인 미인증 시 '카카오로 3초 로그인' 버튼을, 인증 시 사용자 프로필 이미지/닉네임 및 로그아웃 버튼을 추가했습니다.
 
 ### 수정
-- **카카오 로그인 KOE205 에러 해결:** Kakao OAuth 호출 시 카카오 개발자 콘솔에서 권한 설정되지 않은 이메일(`account_email`) 요청으로 발생하던 KOE205 동의 항목 에러를 해결하기 위해 로그인 옵션에 명시적 스코프 설정(`scopes: 'profile_nickname profile_image'`)을 적용했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts))
+- **카카오 로그인 KOE205 에러 강력 해결:** Supabase Auth 클라이언트가 카카오 OAuth 호출 시 기본값으로 `account_email` 스코프를 자동 첨부하여 발생하던 KOE205 에러를 완벽히 차단하기 위해, `queryParams.scope`를 명시적으로 재정의(`queryParams: { scope: 'profile_nickname profile_image' }`)했습니다. ([client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts))
 
 ## [0.3.0] - 2026-07-23
 
