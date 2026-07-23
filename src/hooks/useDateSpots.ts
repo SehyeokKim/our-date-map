@@ -91,7 +91,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     try {
       const { data, error } = await supabase
         .from("date_spots")
-        .select("*")
+        .select("*, profiles(id, nickname, profile_image_url)")
         .not("deleted_at", "is", null);
 
       if (error || !data || data.length === 0) return;
@@ -179,12 +179,12 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
 
       const { data, error } = await supabase
         .from("date_spots")
-        .select("*")
+        .select("*, profiles(id, nickname, profile_image_url)")
         .is("deleted_at", null)
         .order("visited_at", { ascending: false });
 
       if (error) throw error;
-      const loadedSpots: DateSpot[] = data || [];
+      const loadedSpots: DateSpot[] = (data as unknown as DateSpot[]) || [];
       setSpots(loadedSpots);
       checkAndScheduleAutoDelete(loadedSpots);
       return loadedSpots;
@@ -203,7 +203,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     }
   }, [showToast, checkAndScheduleAutoDelete, purgeExpiredDeletedSpots]);
 
-  // Create a new Date Spot (with support for multiple image files up to 10, user_id & Creator tracking)
+  // Create a new Date Spot (with support for multiple image files up to 10 & relational created_by FK)
   const createDateSpot = useCallback(
     async (params: {
       title: string;
@@ -215,8 +215,6 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       address?: string;
       userId?: string | null;
       createdBy?: string | null;
-      creatorNickname?: string | null;
-      creatorAvatarUrl?: string | null;
     }): Promise<boolean> => {
       const {
         title,
@@ -228,8 +226,6 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         address,
         userId,
         createdBy,
-        creatorNickname,
-        creatorAvatarUrl,
       } = params;
 
       if (!title.trim()) {
@@ -284,10 +280,8 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             visited_at: new Date(visitedAt).toISOString(),
             user_id: activeUserId,
             created_by: activeUserId,
-            creator_nickname: creatorNickname || null,
-            creator_avatar_url: creatorAvatarUrl || null,
           })
-          .select()
+          .select("*, profiles(id, nickname, profile_image_url)")
           .single();
 
         if (error) throw error;
@@ -295,7 +289,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         showToast("💖 소중한 추억이 기록되었습니다!", "success");
         const reloadedSpots = await loadDateSpots();
         if (data) {
-          checkAndScheduleAutoDelete([data as DateSpot, ...reloadedSpots]);
+          checkAndScheduleAutoDelete([data as unknown as DateSpot, ...reloadedSpots]);
         }
         return true;
       } catch (err: unknown) {

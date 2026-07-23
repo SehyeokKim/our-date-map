@@ -44,8 +44,6 @@ export type Database = {
           address: string | null
           created_at: string
           created_by: string | null
-          creator_avatar_url: string | null
-          creator_nickname: string | null
           deleted_at: string | null
           description: string | null
           id: string
@@ -61,8 +59,6 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by?: string | null
-          creator_avatar_url?: string | null
-          creator_nickname?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
@@ -78,8 +74,6 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by?: string | null
-          creator_avatar_url?: string | null
-          creator_nickname?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
@@ -91,7 +85,15 @@ export type Database = {
           user_id?: string | null
           visited_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "date_spots_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       photos: {
         Row: {
@@ -121,6 +123,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nickname: string | null
+          profile_image_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nickname?: string | null
+          profile_image_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          profile_image_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       push_subscriptions: {
         Row: {

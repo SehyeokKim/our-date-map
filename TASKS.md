@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.4.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 08 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, 미래 데이트 플래닝 & Kakao Mobility API 코스 길찾기 시각화, Kakao OAuth 로그인 & 작성자 추적)
+- **구현 완료 (Completed):** Task 01 ~ Task 10 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, 미래 데이트 플래닝 & Kakao Mobility API 코스 길찾기 시각화, Kakao OAuth 로그인 & 작성자 추적, Web Push 알림 토글 & 실시간 전송, 작성자 메타데이터 profiles 테이블 분리 및 동적 관계형 조인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -122,3 +122,17 @@
   - Web Push 서비스 워커 ([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 및 클릭 포커싱 처리
   - `push_subscriptions` DB 마이그레이션 및 Next.js Route Handler (`/api/push/send/route.ts`)
 - **주요 파일:** [sw.js](file:///c:/dev/our-date-map/public/sw.js), [useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)
+
+---
+
+### 10. [Task 10] 작성자 메타데이터 profiles 테이블 분리 및 동적 관계형 조인
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
+- **개요:** `date_spots` 테이블 내 하드코딩된 작성자 메타데이터 컬럼들(`creator_nickname`, `creator_avatar_url`)을 전면 제거하고, `auth.users(id)`와 1:1 대응되는 `public.profiles` 테이블을 신설하여 `created_by` (UUID) 외래키(FK) 기반 dynamic relational JOIN 구문으로 리팩토링했습니다.
+- **주요 스펙:**
+  - `public.profiles` 테이블 신설 및 RLS 정책(전체 조회 허용, 자가 수정 제한) 적용 (`20260723233625_decouple_creator_data_to_profiles.sql`)
+  - 회원가입 시 프로필 자동 생성 DB 트리거 (`on_auth_user_created`) 및 기존 유저 백필 로직 구현
+  - `date_spots` 테이블에서 작성자 텍스트 컬럼 삭제 및 `created_by REFERENCES public.profiles(id)` FK 정의
+  - Supabase 조회 쿼리 동적 JOIN 연동 (`.select('*, profiles(id, nickname, profile_image_url)')`)
+  - UI 컴포넌트 동적 프로필 접근 연동 (`spot.profiles.nickname`, `spot.profiles.profile_image_url`)
+- **주요 파일:** [20260723233625_decouple_creator_data_to_profiles.sql](file:///c:/dev/our-date-map/supabase/migrations/20260723233625_decouple_creator_data_to_profiles.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [supabase.ts](file:///c:/dev/our-date-map/src/types/supabase.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+

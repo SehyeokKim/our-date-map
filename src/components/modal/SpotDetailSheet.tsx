@@ -32,6 +32,9 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
       (spot.user_id === currentUserId || spot.created_by === currentUserId)
   );
 
+  const creatorNickname = spot.profiles?.nickname;
+  const creatorAvatarUrl = spot.profiles?.profile_image_url;
+
   const photos: string[] =
     spot.image_urls && spot.image_urls.length > 0
       ? spot.image_urls
@@ -104,19 +107,19 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
               </span>
 
               {/* Creator Info / Ownership Badge */}
-              {(spot.creator_nickname || isOwner) && (
+              {(creatorNickname || isOwner) && (
                 <div className="flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/80 rounded-full px-2.5 py-0.5 text-[11px] text-amber-900 font-semibold">
-                  {spot.creator_avatar_url ? (
+                  {creatorAvatarUrl ? (
                     <img
-                      src={spot.creator_avatar_url}
-                      alt={spot.creator_nickname || "작성자"}
+                      src={creatorAvatarUrl}
+                      alt={creatorNickname || "작성자"}
                       className="w-4 h-4 rounded-full object-cover border border-amber-300"
                     />
                   ) : (
                     <span className="text-[10px]">✍️</span>
                   )}
                   <span>
-                    작성자: {spot.creator_nickname || "카카오 사용자"}
+                    작성자: {creatorNickname || "카카오 사용자"}
                     {isOwner ? " (내 기록)" : ""}
                   </span>
                 </div>
