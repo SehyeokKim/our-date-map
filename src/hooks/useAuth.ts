@@ -14,6 +14,13 @@ export function useAuth() {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get("code");
+      const authError = urlParams.get("auth_error");
+      const errorDesc = urlParams.get("error_description");
+
+      if (authError) {
+        console.error("[useAuth] OAuth callback error detected:", authError, errorDesc || "");
+      }
+
       if (code && !window.location.pathname.startsWith("/auth/callback")) {
         window.location.href = `/auth/callback${window.location.search}`;
         return;

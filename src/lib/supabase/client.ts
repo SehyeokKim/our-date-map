@@ -22,30 +22,19 @@ export function createClient() {
 export const supabase = createClient();
 
 export async function signInWithKakao() {
-  const origin =
-    typeof window !== 'undefined' && window.location.origin
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const cleanOrigin = origin.replace(/\/$/, '');
-
-  const redirectTo =
-    typeof window !== 'undefined' && window.location?.origin
-      ? `${window.location.origin}/auth/callback`
-      : `${cleanOrigin}/auth/callback`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const redirectTo = origin ? `${origin}/auth/callback` : undefined;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
     options: {
       redirectTo,
       scopes: 'profile_nickname profile_image',
-      queryParams: {
-        scope: 'profile_nickname profile_image',
-      },
     },
   });
 
   if (error) {
-    console.error('Kakao OAuth error:', error);
+    console.error('Kakao OAuth sign-in error:', error);
     return { data, error };
   }
 

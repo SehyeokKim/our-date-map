@@ -104,7 +104,7 @@
 - **주요 스펙:**
   - DB 컬럼 마이그레이션 (`created_by`, `creator_nickname`, `creator_avatar_url`) 적용
   - Supabase Browser & Server Client (`src/lib/supabase/client.ts`, `server.ts`) 및 Auth Callback Route Handler (`/auth/callback/route.ts`) 구현
-  - Kakao OAuth `redirectTo` 대상을 `${window.location.origin}/auth/callback`으로 명시적 설정하여 `exchangeCodeForSession` 세션 처리 보장
+  - Kakao OAuth `redirectTo` (`${origin}/auth/callback`) 및 `scopes` 동적 설정과 세션 교환 추적 서버/클라이언트 로깅 추가
   - 헤더 드롭다운 내 카카오 간편 로그인 / 프로필 & 로그아웃 UI 통합 및 상세 시트 작성자 배지 노출
 - **상세 명세:** [`tasks/task-08-kakao-auth-creator-tracking.md`](file:///c:/dev/our-date-map/tasks/task-08-kakao-auth-creator-tracking.md)
 - **주요 파일:** [client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [server.ts](file:///c:/dev/our-date-map/src/lib/supabase/server.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
