@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Navigation, AlertCircle, Loader2 } from "lucide-react";
 
 interface MapContainerProps {
@@ -24,6 +24,42 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   onSendInstantPush,
   pushLoading = false,
 }) => {
+  const [isPopcatOpen, setIsPopcatOpen] = useState<boolean>(false);
+  const [isCooldown, setIsCooldown] = useState<boolean>(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleSendPush = async () => {
+    if (isCooldown || pushLoading) return;
+
+    setIsCooldown(true);
+    setIsPopcatOpen(true);
+
+    if (onSendInstantPush) {
+      try {
+        await onSendInstantPush();
+      } catch (err) {
+        console.error("[MapContainer] Error sending push:", err);
+      }
+    }
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(() => {
+      setIsPopcatOpen(false);
+      setIsCooldown(false);
+    }, 1000);
+  };
+
   return (
     <>
       {/* Loading & Error Screen */}
@@ -85,19 +121,20 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       {/* Map Floating Control Area (Bottom Right) */}
       {!loading && (
         <div className="absolute bottom-6 right-6 z-10 flex flex-col items-center gap-3">
-          {/* 2번 Floating Push Send Button (ONLY rendered when Push Toggle 1번 is ON) */}
+          {/* Floating Push Send Button (Popcat Animation & Cooldown) */}
           {pushEnabled && (
             <button
-              onClick={onSendInstantPush}
-              disabled={pushLoading}
+              type="button"
+              onClick={handleSendPush}
+              disabled={isCooldown || pushLoading}
               title="상대방에게 실시간 데이트 알림 보내기 💌"
               aria-label="상대방에게 데이트 알림 전송"
-              className="w-12 h-12 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 border border-white/60 text-white flex items-center justify-center shadow-xl shadow-violet-500/30 hover:from-violet-700 hover:to-indigo-600 active:scale-95 transition-all duration-200 cursor-pointer group"
+              className="bg-transparent border-none p-0 outline-none active:scale-90 transition-transform cursor-pointer flex items-center justify-center drop-shadow-md"
             >
               <img
-                src="/icons/send-alert.svg"
-                alt="Send Alert"
-                className="w-6 h-6 object-contain filter invert drop-shadow-sm group-hover:scale-110 transition-transform"
+                src={isPopcatOpen ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
+                alt={isPopcatOpen ? "Popcat Open" : "Popcat Close"}
+                className="w-12 h-12 object-contain select-none pointer-events-none"
               />
             </button>
           )}
