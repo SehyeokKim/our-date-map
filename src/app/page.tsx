@@ -188,6 +188,7 @@ export default function Home() {
         pushEnabled={pushEnabled}
         onTogglePush={togglePushNotification}
         pushLoading={pushLoading}
+        onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
       />
 
       <Toast toast={toast} />

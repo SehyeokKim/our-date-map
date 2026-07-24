@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navigation, AlertCircle, Loader2, Pencil } from "lucide-react";
+import { Navigation, AlertCircle, Loader2 } from "lucide-react";
 
 interface MapContainerProps {
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -28,13 +28,16 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 }) => {
   const [isPopcatOpen, setIsPopcatOpen] = useState<boolean>(false);
   const [isCooldown, setIsCooldown] = useState<boolean>(false);
+  const [isPressing, setIsPressing] = useState<boolean>(false);
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = useRef<boolean>(false);
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
     };
   }, []);
 
@@ -52,14 +55,51 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       }
     }
 
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-
+    if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setIsPopcatOpen(false);
       setIsCooldown(false);
     }, 1000);
+  };
+
+  const handlePressStart = () => {
+    isLongPressRef.current = false;
+    setIsPressing(true);
+
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+
+    pressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      setIsPressing(false);
+
+      if (typeof window !== "undefined" && window.navigator?.vibrate) {
+        try {
+          window.navigator.vibrate(50);
+        } catch (err) {}
+      }
+
+      onOpenCustomPushModal?.();
+    }, 1000);
+  };
+
+  const handlePressEnd = () => {
+    setIsPressing(false);
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (isLongPressRef.current) {
+      e.preventDefault();
+      isLongPressRef.current = false;
+      return;
+    }
+
+    handleSendPush();
   };
 
   return (
@@ -123,39 +163,30 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       {/* Map Floating Control Area (Bottom Right) */}
       {!loading && (
         <div className="absolute bottom-6 right-6 z-10 flex flex-col items-center gap-3">
-          {/* Floating Push Send Button (Popcat Animation & Cooldown) */}
+          {/* Floating Push Send Button (Popcat Animation & 1s Long Press) */}
           {pushEnabled && (
-            <div className="relative group">
-              <button
-                type="button"
-                onClick={handleSendPush}
-                disabled={isCooldown || pushLoading}
-                title="상대방에게 실시간 데이트 알림 보내기 💌 (설정 아이콘으로 문구 변경)"
-                aria-label="상대방에게 데이트 알림 전송"
-                className="bg-transparent border-none p-0 outline-none active:scale-90 transition-transform cursor-pointer flex items-center justify-center drop-shadow-md"
-              >
-                <img
-                  src={isPopcatOpen ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
-                  alt={isPopcatOpen ? "Popcat Open" : "Popcat Close"}
-                  className="w-12 h-12 object-contain select-none pointer-events-none"
-                />
-              </button>
-
-              {/* Mini Settings Button on Top Right of Popcat */}
-              {onOpenCustomPushModal && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenCustomPushModal();
-                  }}
-                  title="알림 문구 수정하기"
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white border border-rose-200 text-gray-600 hover:text-rose-500 hover:border-rose-400 flex items-center justify-center shadow-xs cursor-pointer transition-transform active:scale-95 z-10"
-                >
-                  <Pencil className="w-2.5 h-2.5" />
-                </button>
-              )}
-            </div>
+            <button
+              type="button"
+              onMouseDown={handlePressStart}
+              onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
+              onTouchStart={handlePressStart}
+              onTouchEnd={handlePressEnd}
+              onTouchCancel={handlePressEnd}
+              onClick={handleClick}
+              disabled={isCooldown || pushLoading}
+              title="상대방에게 알림 보내기 💌 (1초간 길게 누르면 문구 수정)"
+              aria-label="상대방에게 알림 전송 (길게 누르면 문구 수정)"
+              className={`bg-transparent border-none p-0 outline-none transition-transform cursor-pointer flex items-center justify-center drop-shadow-md ${
+                isPressing ? "scale-90 opacity-80" : "active:scale-90"
+              }`}
+            >
+              <img
+                src={isPopcatOpen ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
+                alt={isPopcatOpen ? "Popcat Open" : "Popcat Close"}
+                className="w-12 h-12 object-contain select-none pointer-events-none"
+              />
+            </button>
           )}
 
           {/* GPS Locate Button */}
