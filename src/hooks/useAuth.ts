@@ -184,12 +184,16 @@ export function useAuth() {
     user?.user_metadata?.name ||
     (user?.email ? user.email.split("@")[0] : null);
 
-  const avatarUrl =
+  const rawAvatarUrl =
     profile?.profile_image_url ||
     user?.user_metadata?.avatar_url ||
     user?.user_metadata?.picture ||
     user?.user_metadata?.avatar_url_https ||
     null;
+
+  const avatarUrl = rawAvatarUrl
+    ? rawAvatarUrl.replace(/^http:\/\//i, "https://")
+    : null;
 
   return {
     user,

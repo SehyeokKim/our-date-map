@@ -33,7 +33,10 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
   );
 
   const creatorNickname = spot.profiles?.nickname;
-  const creatorAvatarUrl = spot.profiles?.profile_image_url;
+  const rawCreatorAvatar = spot.profiles?.profile_image_url;
+  const creatorAvatarUrl = rawCreatorAvatar
+    ? rawCreatorAvatar.replace(/^http:\/\//i, "https://")
+    : null;
 
   const photos: string[] =
     spot.image_urls && spot.image_urls.length > 0

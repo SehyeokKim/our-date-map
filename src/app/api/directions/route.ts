@@ -13,6 +13,10 @@ export async function POST(request: NextRequest) {
         }
 
         const REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+        if (!REST_API_KEY) {
+            console.error("Missing KAKAO_REST_API_KEY in environment variables");
+            return NextResponse.json({ error: "KAKAO_REST_API_KEY is not configured" }, { status: 500 });
+        }
 
         // 카카오모빌리티 다중 경유지 API 호출 규격에 맞춰 페이로드 구성
         const requestPayload = {

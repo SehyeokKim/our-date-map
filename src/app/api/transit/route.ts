@@ -17,9 +17,9 @@ export async function GET(request: NextRequest) {
 
   const apiKey = process.env.ODSAY_API_KEY;
   if (!apiKey) {
-    console.error("[ODsay Transit API] ODSAY_API_KEY가 설정되지 않았습니다.");
+    console.error("Missing ODSAY_API_KEY in environment variables");
     return NextResponse.json(
-      { error: "서버에 ODsay API 키가 설정되지 않았습니다." },
+      { error: "ODSAY_API_KEY is not configured" },
       { status: 500 }
     );
   }
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(routeInfo);
   } catch (err: any) {
-    console.error("[ODsay Transit API] 예외 발생:", err);
+    console.error("Transit API Error:", err);
     return NextResponse.json(
       { error: err.message || "대중교통 경로 조회 중 오류가 발생했습니다." },
       { status: 500 }

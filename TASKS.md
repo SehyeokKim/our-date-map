@@ -168,10 +168,11 @@
 - **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.6.0`)
 - **개요:** ODsay 대중교통 길찾기 API(`searchPubTransPathT`) 프록시 API 핸들러를 구축하고, 미래 데이트 코스에 등록된 장소 간 이동 대중교통 경로(소요시간, 요금, 이동 수단 정보) 카드 UI 및 인메모리 캐싱을 구현했습니다.
 - **주요 스펙:**
-  - 서버 사이드 API Route Handler (`/api/transit/route.ts`) 구현: `ODSAY_API_KEY` 보안 래핑 및 ODsay API 호출
-  - 인메모리 Map 캐싱 기반 `useTransitRoute` 훅 작성: 동일 구간 중복 API 호출 방지
-  - 미래 데이트 플래너 UI 연동 (`FuturePlanSheet.tsx`): 핀과 핀 사이에 대중교통 이동 정보 카드(⏱️ 소요시간, 💳 요금, <ctrl42> 지하철/버스 노선) 시각화 및 단거리 도보 예외 처리
-- **주요 파일:** [route.ts](file:///c:/dev/our-date-map/src/app/api/transit/route.ts), [useTransitRoute.ts](file:///c:/dev/our-date-map/src/hooks/useTransitRoute.ts), [transit.ts](file:///c:/dev/our-date-map/src/types/transit.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+  - 서버 사이드 API Route Handler (`/api/transit/route.ts`) 구현: `ODSAY_API_KEY` 보안 래핑 및 `console.error('Transit API Error:', err)` 예외 로그/500 응답 명확화
+  - Kakao OAuth 프로필 이미지 Mixed Content 경고 해결: `http://` 카카오 CDN 프로필 주소를 `https://`로 안전하게 자동 전환 (`useAuth.ts`, `SpotDetailSheet.tsx`)
+  - 인메모리 Map 캐싱 기반 `useTransitRoute` 훅 작성: 동일 구간 중복 API 호출 방지 및 비상시 도보/직선 경로 클라이언트 안정적 폴백 처리
+  - 미래 데이트 플래너 UI 연동 (`FuturePlanSheet.tsx`): 핀과 핀 사이에 대중교통 이동 정보 카드(⏱️ 소요시간, 💳 요금, 🚉 지하철/버스 노선) 시각화 및 단거리 도보 예외 처리
+- **주요 파일:** [route.ts](file:///c:/dev/our-date-map/src/app/api/transit/route.ts), [useTransitRoute.ts](file:///c:/dev/our-date-map/src/hooks/useTransitRoute.ts), [transit.ts](file:///c:/dev/our-date-map/src/types/transit.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
 
 ---
 
