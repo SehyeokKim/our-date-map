@@ -6,8 +6,8 @@
 
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
-- **현재 버전:** `v0.4.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 12 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림, profiles 테이블 분리, 프로필 수정 모달, 삭제 핀 휴지통 테이블 & 소프트 삭제 파이프라인)
+- **현재 버전:** `v0.5.0`
+- **구현 완료 (Completed):** Task 01 ~ Task 12 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림 & Popcat 롱프레스, profiles 테이블 분리, 프로필 수정 모달, 삭제 핀 휴지통 테이블 & 소프트 삭제 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -122,6 +122,7 @@
   - 지도 플로팅 팝캣 전송 위치 ([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)): 독립 수정 버튼 제거, 푸시 ON 시 우측 하단 노출, 숏 터치 시 사용자 커스텀 페이로드로 즉시 상대방 알림 전송 및 1초간 입 벌리는 애니메이션(`popcat_open.png`), 1초 롱프레스 시 문구 설정 모달 오픈
   - Web Push 서비스 워커 ([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 및 클릭 포커싱 처리
   - `push_subscriptions` DB 마이그레이션 및 Next.js Route Handler (`/api/push/send/route.ts`)
+- **상세 명세:** [`tasks/task-09-web-push-popcat-profile.md`](file:///c:/dev/our-date-map/tasks/task-09-web-push-popcat-profile.md)
 - **주요 파일:** [sw.js](file:///c:/dev/our-date-map/public/sw.js), [useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx), [CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx)
 
 ---
