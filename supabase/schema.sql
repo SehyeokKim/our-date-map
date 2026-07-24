@@ -94,6 +94,43 @@ USING (auth.uid() = user_id OR auth.uid() = created_by OR user_id IS NULL);
 -- 테이블 권한 부여
 GRANT ALL ON public.date_spots TO anon, authenticated, service_role;
 
+-- date_spots 테이블의 deleted_at 트리거 설정 (휴지통 deleted_date_spots 자동 동기화)
+CREATE OR REPLACE FUNCTION public.handle_date_spot_soft_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.deleted_at IS NOT NULL AND (OLD.deleted_at IS NULL OR OLD.deleted_at IS DISTINCT FROM NEW.deleted_at) THEN
+    INSERT INTO public.deleted_date_spots (
+      original_spot_id,
+      spot_data,
+      deleted_by,
+      deleted_at,
+      reason
+    )
+    VALUES (
+      NEW.id,
+      to_jsonb(NEW),
+      COALESCE(auth.uid(), NEW.created_by, NEW.user_id),
+      NEW.deleted_at,
+      '소프트 삭제 요청'
+    )
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  IF NEW.deleted_at IS NULL AND OLD.deleted_at IS NOT NULL THEN
+    DELETE FROM public.deleted_date_spots
+    WHERE original_spot_id = NEW.id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_date_spot_soft_deleted ON public.date_spots;
+CREATE TRIGGER on_date_spot_soft_deleted
+  AFTER UPDATE OF deleted_at ON public.date_spots
+  FOR EACH ROW EXECUTE FUNCTION public.handle_date_spot_soft_delete();
+
+
 -- 2. Supabase Storage 스토리지 버킷 및 권한 설정
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('date-photos', 'date-photos', true)
