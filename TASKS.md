@@ -114,10 +114,10 @@
 ---
 
 ### 9. [Task 09] Web Push 알림 토글 UI & 실시간 전송 파이프라인
-- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.5.0`)
-- **개요:** 1번 헤더 프로필 영역 푸시 알림 ON/OFF 토글 및 1번 토글 ON 조건 시 지도 우측 하단 2번 플로팅 알림 전송 버튼을 구현하고, Web Push API 및 서비스 워커를 연동하여 실시간 알림을 발송합니다.
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.5.0`)
+- **개요:** 헤더 드롭다운 하단 프로필 카드 내 Popcat 커스텀 이미지 버튼(`popcat_close.png` / `popcat_open.png`)을 통한 웹 푸시 알림 ON/OFF 토글 및 토글 ON 조건 시 지도 우측 하단 2번 플로팅 알림 전송 버튼을 구현하고, Web Push API 및 서비스 워커를 연동하여 실시간 알림을 발송합니다.
 - **주요 스펙:**
-  - 1번 위치 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)): 푸시 알림 ON/OFF 토글 버튼, 커스텀 아이콘 (`push-on.svg`, `push-off.svg`), 권한 요청 및 구독 상태 `localStorage` & Supabase DB 동기화
+  - 프로필 카드 하단 팝캣 위치 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)): `[로그아웃]` 좌측 보더리스 transparent 버튼, Popcat 커스텀 이미지 (`popcat_close.png` / `popcat_open.png`), 권한 요청 및 구독 상태 `localStorage` & Supabase DB 동기화
   - 2번 위치 ([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)): 1번 토글 ON 시 우측 하단 노출 커스텀 플로팅 전송 버튼 (`send-alert.svg`)
   - Web Push 서비스 워커 ([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 및 클릭 포커싱 처리
   - `push_subscriptions` DB 마이그레이션 및 Next.js Route Handler (`/api/push/send/route.ts`)

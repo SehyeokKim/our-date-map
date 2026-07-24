@@ -100,31 +100,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Push Notification Toggle (1번 위치) */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onTogglePush?.();
-            }}
-            disabled={pushLoading}
-            title={pushEnabled ? "웹 푸시 알림 켜짐 (클릭하여 끄기)" : "웹 푸시 알림 꺼짐 (클릭하여 켜기)"}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 ${
-              pushEnabled
-                ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
-                : "bg-gray-100 border-gray-200 text-gray-400 hover:bg-gray-200"
-            }`}
-          >
-            <img
-              src={pushEnabled ? "/icons/push-on.svg" : "/icons/push-off.svg"}
-              alt={pushEnabled ? "Push ON" : "Push OFF"}
-              className="w-4 h-4 object-contain"
-            />
-            <span className="text-[11px]">
-              {pushEnabled ? "ON" : "OFF"}
-            </span>
-          </button>
-
           {/* Active User Avatar Preview */}
           {user && avatarUrl && (
             <img
@@ -195,36 +170,6 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* Push Notification Toggle Setting Item inside Dropdown */}
-          <div className="flex items-center justify-between px-3.5 py-2 bg-gray-50/80 rounded-xl border border-gray-100/80">
-            <div className="flex items-center gap-2.5">
-              <img
-                src={pushEnabled ? "/icons/push-on.svg" : "/icons/push-off.svg"}
-                alt="Push Icon"
-                className="w-5 h-5 object-contain"
-              />
-              <div>
-                <div className="text-xs font-semibold text-gray-800">웹 푸시 알림 설정</div>
-                <div className="text-[10px] text-gray-500">
-                  {pushEnabled ? "상대방 데이트 알림 수신 중 🔔" : "푸시 알림 수신 꺼짐 🔕"}
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={onTogglePush}
-              disabled={pushLoading}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                pushEnabled
-                  ? "bg-rose-500 text-white hover:bg-rose-600"
-                  : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-              }`}
-            >
-              {pushEnabled ? "ON" : "OFF"}
-            </button>
-          </div>
-
           {/* Divider */}
           <div className="border-t border-gray-100 my-1" />
 
@@ -262,18 +207,42 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onLogout?.();
-                    setIsOpen(false);
-                  }}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>로그아웃</span>
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Web Push Notification Popcat Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePush?.();
+                    }}
+                    disabled={pushLoading}
+                    title={pushEnabled ? "웹 푸시 알림 켜짐 (클릭하여 끄기)" : "웹 푸시 알림 꺼짐 (클릭하여 켜기)"}
+                    aria-label={pushEnabled ? "웹 푸시 알림 끄기" : "웹 푸시 알림 켜기"}
+                    className="border-none bg-transparent outline-none p-0 cursor-pointer active:scale-95 transition-transform flex items-center justify-center relative"
+                  >
+                    <img
+                      src={pushEnabled ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
+                      alt={pushEnabled ? "Push ON" : "Push OFF"}
+                      className="w-7 h-7 object-contain select-none pointer-events-none"
+                    />
+                    {pushEnabled && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border border-white" />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onLogout?.();
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>로그아웃</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <button
