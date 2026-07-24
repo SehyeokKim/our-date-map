@@ -8,6 +8,7 @@ import { useDateSpots } from "@/hooks/useDateSpots";
 import { useFuturePlanner } from "@/hooks/useFuturePlanner";
 import { useDirections } from "@/hooks/useDirections";
 import { useAuth } from "@/hooks/useAuth";
+import { useWebPush } from "@/hooks/useWebPush";
 import { Header } from "@/components/common/Header";
 import { Toast } from "@/components/common/Toast";
 import { MapContainer } from "@/components/map/MapContainer";
@@ -16,10 +17,12 @@ import { SpotSummarySheet } from "@/components/modal/SpotSummarySheet";
 import { SpotDetailSheet } from "@/components/modal/SpotDetailSheet";
 import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
+import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [routeStats, setRouteStats] = useState<{ distance?: number; duration?: number }>({});
+  const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setToast({ message, type });
@@ -28,8 +31,16 @@ export default function Home() {
     }, 3000);
   }, []);
 
-  // Supabase Auth (Kakao OAuth)
-  const { user, nickname, avatarUrl, loginWithKakao, logout } = useAuth();
+  // Supabase Auth (Kakao OAuth & Profile Management)
+  const { user, nickname, avatarUrl, loginWithKakao, logout, updateProfile } = useAuth();
+
+  // Web Push Notifications
+  const {
+    pushEnabled,
+    loading: pushLoading,
+    togglePushNotification,
+    sendInstantPushNotification,
+  } = useWebPush(showToast, user?.id);
 
   // Supabase Memory Date Spots
   const { spots, isUploading, loadDateSpots, createDateSpot, deleteDateSpot } = useDateSpots(showToast);
@@ -134,7 +145,7 @@ export default function Home() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-gray-50">
-      {/* Header with Mode Selection Dropdown & Kakao Auth */}
+      {/* Header with Mode Selection Dropdown, Kakao Auth & Profile Edit */}
       <Header
         appMode={appMode}
         onSelectMode={setAppMode}
@@ -145,6 +156,10 @@ export default function Home() {
         avatarUrl={avatarUrl}
         onLoginWithKakao={loginWithKakao}
         onLogout={logout}
+        onOpenProfileEdit={() => setIsProfileEditOpen(true)}
+        pushEnabled={pushEnabled}
+        onTogglePush={togglePushNotification}
+        pushLoading={pushLoading}
       />
 
       <Toast toast={toast} />
@@ -156,6 +171,27 @@ export default function Home() {
         mapError={mapError}
         locateUser={locateUser}
         handleFabClick={handleStartAddSpot}
+        pushEnabled={pushEnabled}
+        onSendInstantPush={() => sendInstantPushNotification()}
+        pushLoading={pushLoading}
+      />
+
+      {/* User Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={isProfileEditOpen}
+        onClose={() => setIsProfileEditOpen(false)}
+        currentNickname={nickname}
+        currentAvatarUrl={avatarUrl}
+        onSave={async (newNickname, imageFile) => {
+          const success = await updateProfile(newNickname, imageFile);
+          if (success) {
+            showToast("✨ 프로필 정보가 성공적으로 수정되었습니다!", "success");
+            await loadDateSpots();
+          } else {
+            showToast("프로필 수정 중 오류가 발생했습니다.", "error");
+          }
+          return success;
+        }}
       />
 
       {/* Memory Spot Creation Modal with Creator Tracking */}

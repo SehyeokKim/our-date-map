@@ -18,9 +18,8 @@ interface AddSpotModalProps {
     address?: string;
     userId?: string | null;
     createdBy?: string | null;
-    creatorNickname?: string | null;
-    creatorAvatarUrl?: string | null;
   }) => Promise<boolean>;
+
   isUploading: boolean;
   currentUserId?: string | null;
   currentUserNickname?: string | null;
@@ -100,8 +99,6 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
       address: initialAddress,
       userId: currentUserId || null,
       createdBy: currentUserId || null,
-      creatorNickname: currentUserNickname || null,
-      creatorAvatarUrl: currentUserAvatarUrl || null,
     });
 
     if (success) {

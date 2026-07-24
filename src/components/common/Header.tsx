@@ -15,6 +15,10 @@ interface HeaderProps {
   avatarUrl?: string | null;
   onLoginWithKakao?: () => void;
   onLogout?: () => void;
+  onOpenProfileEdit?: () => void;
+  pushEnabled?: boolean;
+  onTogglePush?: () => void;
+  pushLoading?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,6 +31,10 @@ export const Header: React.FC<HeaderProps> = ({
   avatarUrl,
   onLoginWithKakao,
   onLogout,
+  onOpenProfileEdit,
+  pushEnabled = false,
+  onTogglePush,
+  pushLoading = false,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -92,6 +100,31 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Push Notification Toggle (1번 위치) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePush?.();
+            }}
+            disabled={pushLoading}
+            title={pushEnabled ? "웹 푸시 알림 켜짐 (클릭하여 끄기)" : "웹 푸시 알림 꺼짐 (클릭하여 켜기)"}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 ${
+              pushEnabled
+                ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
+                : "bg-gray-100 border-gray-200 text-gray-400 hover:bg-gray-200"
+            }`}
+          >
+            <img
+              src={pushEnabled ? "/icons/push-on.svg" : "/icons/push-off.svg"}
+              alt={pushEnabled ? "Push ON" : "Push OFF"}
+              className="w-4 h-4 object-contain"
+            />
+            <span className="text-[11px]">
+              {pushEnabled ? "ON" : "OFF"}
+            </span>
+          </button>
+
           {/* Active User Avatar Preview */}
           {user && avatarUrl && (
             <img
@@ -162,19 +195,56 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* Push Notification Toggle Setting Item inside Dropdown */}
+          <div className="flex items-center justify-between px-3.5 py-2 bg-gray-50/80 rounded-xl border border-gray-100/80">
+            <div className="flex items-center gap-2.5">
+              <img
+                src={pushEnabled ? "/icons/push-on.svg" : "/icons/push-off.svg"}
+                alt="Push Icon"
+                className="w-5 h-5 object-contain"
+              />
+              <div>
+                <div className="text-xs font-semibold text-gray-800">웹 푸시 알림 설정</div>
+                <div className="text-[10px] text-gray-500">
+                  {pushEnabled ? "상대방 데이트 알림 수신 중 🔔" : "푸시 알림 수신 꺼짐 🔕"}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onTogglePush}
+              disabled={pushLoading}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                pushEnabled
+                  ? "bg-rose-500 text-white hover:bg-rose-600"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+              }`}
+            >
+              {pushEnabled ? "ON" : "OFF"}
+            </button>
+          </div>
+
           {/* Divider */}
           <div className="border-t border-gray-100 my-1" />
 
           {/* Auth Section: Kakao Login / Profile & Logout */}
           <div className="pt-0.5 px-1">
             {user ? (
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/50 border border-amber-100">
+              <div
+                onClick={() => {
+                  onOpenProfileEdit?.();
+                  setIsOpen(false);
+                }}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 transition-all cursor-pointer group active:scale-[0.98]"
+                title="클릭하여 프로필 수정하기"
+              >
                 <div className="flex items-center gap-2.5 min-w-0">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
                       alt={nickname || "프로필 이미지"}
-                      className="w-8 h-8 rounded-full border border-amber-200 object-cover flex-shrink-0"
+                      className="w-8 h-8 rounded-full border border-amber-300 object-cover flex-shrink-0 group-hover:scale-105 transition-transform"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-amber-200/80 flex items-center justify-center text-amber-800 font-bold text-xs">
@@ -182,21 +252,24 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-gray-800 truncate">
-                      {nickname || "카카오 사용자"}님
+                    <div className="text-xs font-bold text-gray-800 truncate flex items-center gap-1">
+                      <span>{nickname || "카카오 사용자"}님</span>
+                      <span className="text-[10px] text-amber-600 font-normal">✏️</span>
                     </div>
                     <div className="text-[10px] text-amber-700 font-medium">
-                      작성자 추적 중 📍
+                      프로필 수정하기
                     </div>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onLogout?.();
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>로그아웃</span>
@@ -204,6 +277,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             ) : (
               <button
+                type="button"
                 onClick={() => {
                   onLoginWithKakao?.();
                   setIsOpen(false);

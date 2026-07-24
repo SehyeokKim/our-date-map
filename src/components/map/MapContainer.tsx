@@ -9,6 +9,9 @@ interface MapContainerProps {
   mapError: string | null;
   locateUser: () => void;
   handleFabClick: () => void;
+  pushEnabled?: boolean;
+  onSendInstantPush?: () => void;
+  pushLoading?: boolean;
 }
 
 export const MapContainer: React.FC<MapContainerProps> = ({
@@ -17,6 +20,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   mapError,
   locateUser,
   handleFabClick,
+  pushEnabled = false,
+  onSendInstantPush,
+  pushLoading = false,
 }) => {
   return (
     <>
@@ -76,15 +82,35 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         style={{ opacity: loading ? 0 : 1 }}
       />
 
-      {/* GPS Locate Button */}
+      {/* Map Floating Control Area (Bottom Right) */}
       {!loading && (
-        <button
-          onClick={locateUser}
-          className="absolute bottom-6 right-6 z-10 w-12 h-12 rounded-full bg-white/95 border border-gray-100/50 text-gray-700 flex items-center justify-center shadow-lg shadow-black/5 hover:text-rose-500 hover:border-rose-100 hover:bg-white active:scale-95 transition-all duration-200 cursor-pointer"
-          aria-label="현재 위치 찾기"
-        >
-          <Navigation className="w-5 h-5 fill-current" />
-        </button>
+        <div className="absolute bottom-6 right-6 z-10 flex flex-col items-center gap-3">
+          {/* 2번 Floating Push Send Button (ONLY rendered when Push Toggle 1번 is ON) */}
+          {pushEnabled && (
+            <button
+              onClick={onSendInstantPush}
+              disabled={pushLoading}
+              title="상대방에게 실시간 데이트 알림 보내기 💌"
+              aria-label="상대방에게 데이트 알림 전송"
+              className="w-12 h-12 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 border border-white/60 text-white flex items-center justify-center shadow-xl shadow-violet-500/30 hover:from-violet-700 hover:to-indigo-600 active:scale-95 transition-all duration-200 cursor-pointer group"
+            >
+              <img
+                src="/icons/send-alert.svg"
+                alt="Send Alert"
+                className="w-6 h-6 object-contain filter invert drop-shadow-sm group-hover:scale-110 transition-transform"
+              />
+            </button>
+          )}
+
+          {/* GPS Locate Button */}
+          <button
+            onClick={locateUser}
+            className="w-12 h-12 rounded-full bg-white/95 border border-gray-100/50 text-gray-700 flex items-center justify-center shadow-lg shadow-black/5 hover:text-rose-500 hover:border-rose-100 hover:bg-white active:scale-95 transition-all duration-200 cursor-pointer"
+            aria-label="현재 위치 찾기"
+          >
+            <Navigation className="w-5 h-5 fill-current" />
+          </button>
+        </div>
       )}
     </>
   );

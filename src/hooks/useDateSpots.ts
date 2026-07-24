@@ -3,7 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { uploadCompressedPhotos } from "@/lib/upload";
-import { DateSpot, LatLng } from "@/types/spot";
+import { DateSpot, LatLng, DeletedDateSpot } from "@/types/spot";
+import { Json } from "@/types/supabase";
 
 // Helper to extract relative storage file path from photo URL
 function extractStoragePath(imageUrl: string | null): string | null {
@@ -72,7 +73,10 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
           }
         }
 
-        // 2. Hard delete row from Database
+        // 2. Remove from deleted_date_spots trash table
+        await supabase.from("deleted_date_spots").delete().eq("original_spot_id", spot.id);
+
+        // 3. Hard delete row from Database
         await supabase.from("date_spots").delete().eq("id", spot.id);
         setSpots((prev) => prev.filter((s) => s.id !== spot.id));
 
@@ -91,7 +95,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     try {
       const { data, error } = await supabase
         .from("date_spots")
-        .select("*")
+        .select("*, profiles(id, nickname, profile_image_url)")
         .not("deleted_at", "is", null);
 
       if (error || !data || data.length === 0) return;
@@ -112,16 +116,39 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     }
   }, [hardDeleteSpotInternal]);
 
-  // Soft Delete Function (sets deleted_at = NOW())
+  // Soft Delete Function (moves record to deleted_date_spots & sets deleted_at = NOW())
   const deleteDateSpot = useCallback(
-    async (spot: DateSpot): Promise<boolean> => {
+    async (spot: DateSpot, reason?: string): Promise<boolean> => {
       try {
         if (activeTimersRef.current.has(spot.id)) {
           clearTimeout(activeTimersRef.current.get(spot.id));
           activeTimersRef.current.delete(spot.id);
         }
 
+        let activeUserId: string | null = null;
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) activeUserId = user.id;
+        } catch (e) {
+          console.warn("Could not retrieve active session user for deletion:", e);
+        }
+
         const nowIso = new Date().toISOString();
+
+        // 1. Insert into deleted_date_spots trash table
+        const { error: trashError } = await supabase.from("deleted_date_spots").insert({
+          original_spot_id: spot.id,
+          spot_data: spot as unknown as Json,
+          deleted_by: activeUserId || spot.created_by || spot.user_id || null,
+          deleted_at: nowIso,
+          reason: reason || "사용자 핀 삭제 요청",
+        });
+
+        if (trashError) {
+          console.error("Failed to archive spot into deleted_date_spots:", trashError);
+        }
+
+        // 2. Mark spot as soft-deleted in date_spots
         const { error } = await supabase
           .from("date_spots")
           .update({ deleted_at: nowIso })
@@ -129,7 +156,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
 
         if (error) throw error;
 
-        showToast("핀이 삭제 처리되었습니다 (3일 후 완전히 영구 삭제됩니다).", "success");
+        showToast("핀이 휴지통으로 이동되었습니다 (3일 후 영구 삭제).", "success");
         setSpots((prev) => prev.filter((s) => s.id !== spot.id));
         return true;
       } catch (err: unknown) {
@@ -146,6 +173,57 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     },
     [showToast]
   );
+
+  // Restore a soft-deleted spot back to active date_spots
+  const restoreDateSpot = useCallback(
+    async (originalSpotId: string): Promise<boolean> => {
+      try {
+        // 1. Reset deleted_at in date_spots
+        const { error: updateError } = await supabase
+          .from("date_spots")
+          .update({ deleted_at: null })
+          .eq("id", originalSpotId);
+
+        if (updateError) throw updateError;
+
+        // 2. Remove record from deleted_date_spots
+        await supabase
+          .from("deleted_date_spots")
+          .delete()
+          .eq("original_spot_id", originalSpotId);
+
+        showToast("💖 핀이 성공적으로 복원되었습니다!", "success");
+        return true;
+      } catch (err: unknown) {
+        let message = "핀 복원 중 오류가 발생했습니다.";
+        if (err instanceof Error) {
+          message = err.message;
+        } else if (typeof err === "object" && err !== null && "message" in err) {
+          message = String((err as { message: unknown }).message);
+        }
+        console.error("Failed to restore date spot:", err);
+        showToast(message, "error");
+        return false;
+      }
+    },
+    [showToast]
+  );
+
+  // Fetch list of deleted spots from deleted_date_spots trash table
+  const fetchDeletedSpots = useCallback(async (): Promise<DeletedDateSpot[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("deleted_date_spots")
+        .select("*")
+        .order("deleted_at", { ascending: false });
+
+      if (error) throw error;
+      return (data as unknown as DeletedDateSpot[]) || [];
+    } catch (err) {
+      console.error("Failed to fetch deleted spots:", err);
+      return [];
+    }
+  }, []);
 
   // Schedule auto-deletion for "Test" spots after 3 minutes (180,000 ms)
   const checkAndScheduleAutoDelete = useCallback(
@@ -179,12 +257,12 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
 
       const { data, error } = await supabase
         .from("date_spots")
-        .select("*")
+        .select("*, profiles(id, nickname, profile_image_url)")
         .is("deleted_at", null)
         .order("visited_at", { ascending: false });
 
       if (error) throw error;
-      const loadedSpots: DateSpot[] = data || [];
+      const loadedSpots: DateSpot[] = (data as unknown as DateSpot[]) || [];
       setSpots(loadedSpots);
       checkAndScheduleAutoDelete(loadedSpots);
       return loadedSpots;
@@ -203,7 +281,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     }
   }, [showToast, checkAndScheduleAutoDelete, purgeExpiredDeletedSpots]);
 
-  // Create a new Date Spot (with support for multiple image files up to 10, user_id & Creator tracking)
+  // Create a new Date Spot (with support for multiple image files up to 10 & relational created_by FK)
   const createDateSpot = useCallback(
     async (params: {
       title: string;
@@ -215,8 +293,6 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       address?: string;
       userId?: string | null;
       createdBy?: string | null;
-      creatorNickname?: string | null;
-      creatorAvatarUrl?: string | null;
     }): Promise<boolean> => {
       const {
         title,
@@ -228,8 +304,6 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         address,
         userId,
         createdBy,
-        creatorNickname,
-        creatorAvatarUrl,
       } = params;
 
       if (!title.trim()) {
@@ -284,10 +358,8 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             visited_at: new Date(visitedAt).toISOString(),
             user_id: activeUserId,
             created_by: activeUserId,
-            creator_nickname: creatorNickname || null,
-            creator_avatar_url: creatorAvatarUrl || null,
           })
-          .select()
+          .select("*, profiles(id, nickname, profile_image_url)")
           .single();
 
         if (error) throw error;
@@ -295,7 +367,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         showToast("💖 소중한 추억이 기록되었습니다!", "success");
         const reloadedSpots = await loadDateSpots();
         if (data) {
-          checkAndScheduleAutoDelete([data as DateSpot, ...reloadedSpots]);
+          checkAndScheduleAutoDelete([data as unknown as DateSpot, ...reloadedSpots]);
         }
         return true;
       } catch (err: unknown) {
@@ -330,5 +402,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
     loadDateSpots,
     createDateSpot,
     deleteDateSpot,
+    restoreDateSpot,
+    fetchDeletedSpots,
   };
 }

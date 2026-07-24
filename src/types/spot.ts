@@ -1,3 +1,11 @@
+export interface Profile {
+  id: string;
+  nickname?: string | null;
+  profile_image_url?: string | null;
+  updated_at?: string;
+  created_at?: string;
+}
+
 export interface DateSpot {
   id: string;
   user_id?: string | null;
@@ -12,8 +20,16 @@ export interface DateSpot {
   created_at: string;
   deleted_at?: string | null;
   created_by?: string | null;
-  creator_nickname?: string | null;
-  creator_avatar_url?: string | null;
+  profiles?: Profile | null;
+}
+
+export interface DeletedDateSpot {
+  id: string;
+  original_spot_id: string;
+  spot_data: DateSpot;
+  deleted_by?: string | null;
+  deleted_at: string;
+  reason?: string | null;
 }
 
 export interface LatLng {

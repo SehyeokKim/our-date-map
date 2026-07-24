@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.4.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 08 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드 최대 10장, 2단계 요약/자세히보기 팝업, 미래 데이트 플래닝 & Kakao Mobility API 코스 길찾기 시각화, Kakao OAuth 로그인 & 작성자 추적)
+- **구현 완료 (Completed):** Task 01 ~ Task 12 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림, profiles 테이블 분리, 프로필 수정 모달, 삭제 핀 휴지통 테이블 & 소프트 삭제 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -110,3 +110,55 @@
   - 헤더 드롭다운 내 카카오 간편 로그인 / 프로필 & 로그아웃 UI 통합 및 상세 시트 작성자 배지 노출
 - **상세 명세:** [`tasks/task-08-kakao-auth-creator-tracking.md`](file:///c:/dev/our-date-map/tasks/task-08-kakao-auth-creator-tracking.md)
 - **주요 파일:** [client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [server.ts](file:///c:/dev/our-date-map/src/lib/supabase/server.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
+---
+
+### 9. [Task 09] Web Push 알림 토글 UI & 실시간 전송 파이프라인
+- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.5.0`)
+- **개요:** 1번 헤더 프로필 영역 푸시 알림 ON/OFF 토글 및 1번 토글 ON 조건 시 지도 우측 하단 2번 플로팅 알림 전송 버튼을 구현하고, Web Push API 및 서비스 워커를 연동하여 실시간 알림을 발송합니다.
+- **주요 스펙:**
+  - 1번 위치 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)): 푸시 알림 ON/OFF 토글 버튼, 커스텀 아이콘 (`push-on.svg`, `push-off.svg`), 권한 요청 및 구독 상태 `localStorage` & Supabase DB 동기화
+  - 2번 위치 ([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)): 1번 토글 ON 시 우측 하단 노출 커스텀 플로팅 전송 버튼 (`send-alert.svg`)
+  - Web Push 서비스 워커 ([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 및 클릭 포커싱 처리
+  - `push_subscriptions` DB 마이그레이션 및 Next.js Route Handler (`/api/push/send/route.ts`)
+- **주요 파일:** [sw.js](file:///c:/dev/our-date-map/public/sw.js), [useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)
+
+---
+
+### 10. [Task 10] 작성자 메타데이터 profiles 테이블 분리 및 동적 관계형 조인
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
+- **개요:** `date_spots` 테이블 내 하드코딩된 작성자 메타데이터 컬럼들(`creator_nickname`, `creator_avatar_url`)을 전면 제거하고, `auth.users(id)`와 1:1 대응되는 `public.profiles` 테이블을 신설하여 `created_by` (UUID) 외래키(FK) 기반 dynamic relational JOIN 구문으로 리팩토링했습니다.
+- **주요 스펙:**
+  - `public.profiles` 테이블 신설 및 RLS 정책(전체 조회 허용, 자가 수정 제한) 적용 (`20260723233625_decouple_creator_data_to_profiles.sql`)
+  - 회원가입 시 프로필 자동 생성 DB 트리거 (`on_auth_user_created`) 및 기존 유저 백필 로직 구현
+  - `date_spots` 테이블에서 작성자 텍스트 컬럼 삭제 및 `created_by REFERENCES public.profiles(id)` FK 정의
+  - Supabase 조회 쿼리 동적 JOIN 연동 (`.select('*, profiles(id, nickname, profile_image_url)')`)
+  - UI 컴포넌트 동적 프로필 접근 연동 (`spot.profiles.nickname`, `spot.profiles.profile_image_url`)
+- **주요 파일:** [20260723233625_decouple_creator_data_to_profiles.sql](file:///c:/dev/our-date-map/supabase/migrations/20260723233625_decouple_creator_data_to_profiles.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [supabase.ts](file:///c:/dev/our-date-map/src/types/supabase.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
+---
+
+### 11. [Task 11] 프로필 수정 모달 UI 구축 & DB/스토리지 동기화
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
+- **개요:** 헤더 드롭다운의 사용자 카드를 클릭하여 닉네임과 프로필 사진을 직접 변경할 수 있는 프로필 수정 모달 UI([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))를 구현하고, Supabase Storage `avatars` 버킷 및 `public.profiles` DB 동기화 파이프라인을 구축했습니다.
+- **주요 스펙:**
+  - 헤더 드롭다운 하단 유저 프로필 카드 클릭 트리거 및 호버 인터랙션 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx))
+  - `ProfileEditModal` UI: 프로필 사진 300KB 압축 및 실시간 미리보기, 닉네임 입력, `취소`/`저장` 버튼 ([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))
+  - Supabase Storage `avatars` 퍼블릭 버킷 마이그레이션 (`20260723235156_add_avatars_storage_bucket.sql`)
+  - `useAuth` 훅 강화: `profiles` 조회/upsert, Kakao OAuth 기본값 자동 폴백, 실시간 전역 프로필 동기화 ([useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts))
+- **주요 파일:** [ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [upload.ts](file:///c:/dev/our-date-map/src/lib/upload.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql)
+
+---
+
+### 12. [Task 12] 삭제된 데이트 핀 휴지통 테이블 (deleted_date_spots) & 소프트 삭제 메커니즘
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
+- **개요:** 핀 삭제 시 원본 데이터의 하드 삭제를 방지하고 휴지통에 보존 및 복원할 수 있도록 `deleted_date_spots` 전용 테이블 및 RLS 정책을 구축하고, 소프트 삭제 워크플로우를 완성했습니다.
+- **주요 스펙:**
+  - `deleted_date_spots` 휴지통 테이블 신설 마이그레이션 (`20260724000135_create_deleted_date_spots_table.sql`)
+  - 컬럼: `id`, `original_spot_id`, `spot_data` (JSONB), `deleted_by`, `deleted_at`, `reason`
+  - 핀 삭제 시 스팟 전체 데이터를 `deleted_date_spots`에 아카이빙하고 `date_spots` 내 `deleted_at = NOW()` 처리
+  - 소프트 삭제된 핀 복원 메서드 (`restoreDateSpot`) 및 휴지통 목록 패칭 (`fetchDeletedSpots`) 구현
+- **주요 파일:** [20260724000135_create_deleted_date_spots_table.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724000135_create_deleted_date_spots_table.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
+
+
