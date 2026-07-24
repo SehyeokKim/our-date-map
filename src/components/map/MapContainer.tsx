@@ -28,16 +28,14 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 }) => {
   const [isPopcatOpen, setIsPopcatOpen] = useState<boolean>(false);
   const [isCooldown, setIsCooldown] = useState<boolean>(false);
-  const [isPressing, setIsPressing] = useState<boolean>(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressRef = useRef<boolean>(false);
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     };
   }, []);
 
@@ -62,44 +60,19 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     }, 1000);
   };
 
-  const handlePressStart = () => {
-    isLongPressRef.current = false;
-    setIsPressing(true);
-
-    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-
-    pressTimerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      setIsPressing(false);
-
-      if (typeof window !== "undefined" && window.navigator?.vibrate) {
-        try {
-          window.navigator.vibrate(50);
-        } catch (err) {}
-      }
-
-      onOpenCustomPushModal?.();
-    }, 1000);
-  };
-
-  const handlePressEnd = () => {
-    setIsPressing(false);
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
-  };
-
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (isLongPressRef.current) {
-      e.preventDefault();
-      isLongPressRef.current = false;
-      return;
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      onOpenCustomPushModal?.();
+    } else {
+      clickTimerRef.current = setTimeout(() => {
+        clickTimerRef.current = null;
+        handleSendPush();
+      }, 250);
     }
-
-    handleSendPush();
   };
 
   return (
@@ -163,23 +136,15 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       {/* Map Floating Control Area (Bottom Right) */}
       {!loading && (
         <div className="absolute bottom-6 right-6 z-10 flex flex-col items-center gap-3">
-          {/* Floating Push Send Button (Popcat Animation & 1s Long Press) */}
+          {/* Floating Push Send Button (Popcat Animation & Double Click to Open Settings) */}
           {pushEnabled && (
             <button
               type="button"
-              onMouseDown={handlePressStart}
-              onMouseUp={handlePressEnd}
-              onMouseLeave={handlePressEnd}
-              onTouchStart={handlePressStart}
-              onTouchEnd={handlePressEnd}
-              onTouchCancel={handlePressEnd}
               onClick={handleClick}
               disabled={isCooldown || pushLoading}
-              title="상대방에게 알림 보내기 💌 (1초간 길게 누르면 문구 수정)"
-              aria-label="상대방에게 알림 전송 (길게 누르면 문구 수정)"
-              className={`bg-transparent border-none p-0 outline-none transition-transform cursor-pointer flex items-center justify-center drop-shadow-md ${
-                isPressing ? "scale-90 opacity-80" : "active:scale-90"
-              }`}
+              title="상대방에게 알림 보내기 💌 (더블클릭 하면 설정창 열림)"
+              aria-label="상대방에게 알림 전송 (더블클릭 하면 설정창 열림)"
+              className="bg-transparent border-none p-0 outline-none transition-transform cursor-pointer flex items-center justify-center drop-shadow-md active:scale-90"
             >
               <img
                 src={isPopcatOpen ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}

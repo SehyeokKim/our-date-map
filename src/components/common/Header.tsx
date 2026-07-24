@@ -39,55 +39,28 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCustomPushModal,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isPressing, setIsPressing] = useState<boolean>(false);
   const headerRef = useRef<HTMLDivElement>(null);
-  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressRef = useRef<boolean>(false);
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
-      if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     };
   }, []);
-
-  const handlePressStart = () => {
-    isLongPressRef.current = false;
-    setIsPressing(true);
-
-    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-
-    pressTimerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      setIsPressing(false);
-
-      if (typeof window !== "undefined" && window.navigator?.vibrate) {
-        try {
-          window.navigator.vibrate(50);
-        } catch (err) {}
-      }
-
-      onOpenCustomPushModal?.();
-    }, 1000);
-  };
-
-  const handlePressEnd = () => {
-    setIsPressing(false);
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
-  };
 
   const handlePopcatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (isLongPressRef.current) {
-      e.preventDefault();
-      isLongPressRef.current = false;
-      return;
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      onOpenCustomPushModal?.();
+    } else {
+      clickTimerRef.current = setTimeout(() => {
+        clickTimerRef.current = null;
+        onTogglePush?.();
+      }, 250);
     }
-
-    onTogglePush?.();
   };
 
   // Close dropdown when clicking outside
@@ -259,26 +232,18 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Web Push Notification Popcat Toggle Button (1s Long Press to Edit) */}
+                  {/* Web Push Notification Popcat Toggle Button (Double Click to Open Settings) */}
                   <button
                     type="button"
-                    onMouseDown={handlePressStart}
-                    onMouseUp={handlePressEnd}
-                    onMouseLeave={handlePressEnd}
-                    onTouchStart={handlePressStart}
-                    onTouchEnd={handlePressEnd}
-                    onTouchCancel={handlePressEnd}
                     onClick={handlePopcatClick}
                     disabled={pushLoading}
                     title={
                       pushEnabled
-                        ? "웹 푸시 알림 켜짐 (1초간 길게 누르면 문구 수정)"
-                        : "웹 푸시 알림 꺼짐 (1초간 길게 누르면 문구 수정)"
+                        ? "웹 푸시 알림 켜짐 (더블클릭 하면 설정창 열림)"
+                        : "웹 푸시 알림 꺼짐 (더블클릭 하면 설정창 열림)"
                     }
                     aria-label={pushEnabled ? "웹 푸시 알림 끄기" : "웹 푸시 알림 켜기"}
-                    className={`border-none bg-transparent outline-none p-0 cursor-pointer transition-transform flex items-center justify-center relative ${
-                      isPressing ? "scale-90 opacity-80" : "active:scale-95"
-                    }`}
+                    className="border-none bg-transparent outline-none p-0 cursor-pointer transition-transform flex items-center justify-center relative active:scale-95"
                   >
                     <img
                       src={pushEnabled ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
