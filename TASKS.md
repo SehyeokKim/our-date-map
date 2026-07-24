@@ -6,8 +6,8 @@
 
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
-- **현재 버전:** `v0.5.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 12 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림 & Popcat 롱프레스, profiles 테이블 분리, 프로필 수정 모달, 삭제 핀 휴지통 테이블 & 소프트 삭제 파이프라인)
+- **현재 버전:** `v0.8.0`
+- **구현 완료 (Completed):** Task 01 ~ Task 15 (PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push & Popcat, profiles 분리, 프로필 수정, 삭제 핀 휴지통, ODsay 대중교통 경로, 날짜 선택 기반 미래 데이트 플랜 DB 저장, 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -161,6 +161,45 @@
   - 핀 삭제 시 스팟 전체 데이터를 `deleted_date_spots`에 아카이빙하고 `date_spots` 내 `deleted_at = NOW()` 처리
   - 소프트 삭제된 핀 복원 메서드 (`restoreDateSpot`) 및 휴지통 목록 패칭 (`fetchDeletedSpots`) 구현
 - **주요 파일:** [20260724000135_create_deleted_date_spots_table.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724000135_create_deleted_date_spots_table.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
+---
+
+### 13. [Task 13] ODsay 대중교통 길찾기 API 연동 및 미래 데이트 플래너 경로 카드 연동
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.6.0`)
+- **개요:** ODsay 대중교통 길찾기 API(`searchPubTransPathT`) 프록시 API 핸들러를 구축하고, 미래 데이트 코스에 등록된 장소 간 이동 대중교통 경로(소요시간, 요금, 이동 수단 정보) 카드 UI 및 인메모리 캐싱을 구현했습니다.
+- **주요 스펙:**
+  - 서버 사이드 API Route Handler (`/api/transit/route.ts`) 구현: `ODSAY_API_KEY` 보안 래핑 및 ODsay API 호출
+  - 인메모리 Map 캐싱 기반 `useTransitRoute` 훅 작성: 동일 구간 중복 API 호출 방지
+  - 미래 데이트 플래너 UI 연동 (`FuturePlanSheet.tsx`): 핀과 핀 사이에 대중교통 이동 정보 카드(⏱️ 소요시간, 💳 요금, <ctrl42> 지하철/버스 노선) 시각화 및 단거리 도보 예외 처리
+- **주요 파일:** [route.ts](file:///c:/dev/our-date-map/src/app/api/transit/route.ts), [useTransitRoute.ts](file:///c:/dev/our-date-map/src/hooks/useTransitRoute.ts), [transit.ts](file:///c:/dev/our-date-map/src/types/transit.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+
+---
+
+### 14. [Task 14] 날짜 선택 기반 미래 데이트 플랜 생성 및 Supabase DB 영구 저장 파이프라인 (!DB)
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.7.0`)
+- **개요:** 미래 데이트 플래닝 모드에서 날짜(`plan_date`)를 선택하여 코스를 구성하고, 작성된 플랜을 Supabase PostgreSQL `public.date_plans` 테이블에 영구 저장 및 언제든지 원터치 복원/삭제할 수 있는 파이프라인을 구사했습니다.
+- **주요 스펙:**
+  - `public.date_plans` DB 테이블 마이그레이션 (`20260724074000_create_date_plans_table.sql`) 및 RLS 정책 정의
+  - HTML5 날짜 선택 컨트롤 (`selectedDate`, 기본값: 오늘) 및 저장된 DB 플랜 복원 칩 목록 UI 구축 ([FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx))
+  - `useFuturePlanner` 훅 강화: Supabase `date_plans` DB CRUD sync (`savePlanToDb`, `fetchPlansForDate`, `loadPlanFromDb`, `deletePlanFromDb`)
+- **상세 명세:** [`tasks/task-14-date-plan-persistence.md`](file:///c:/dev/our-date-map/tasks/task-14-date-plan-persistence.md)
+- **주요 파일:** [20260724074000_create_date_plans_table.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724074000_create_date_plans_table.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [supabase.ts](file:///c:/dev/our-date-map/src/types/supabase.ts), [planner.ts](file:///c:/dev/our-date-map/src/types/planner.ts), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+
+---
+
+### 15. [Task 15] 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인 (!DB)
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.8.0`)
+- **개요:** 앱 진입 시 순수 지도 화면을 기본으로 노출하고, 기간 설정(`start_date` ~ `end_date`) 데이트 추가 모달과 과거/미래 전체 데이트 일정 목록 모달(`DateItineraryModal`)을 구현했습니다.
+- **주요 스펙:**
+  - `public.date_plans` 테이블에 `start_date` 및 `end_date` 컬럼 추가 마이그레이션 (`20260724074500_add_date_range_to_date_plans.sql`)
+  - 기본 진입 시 하단 드로어를 접힌 상태(`isExpanded = false`)로 유지하여 순수 풀스크린 지도 뷰 보장
+  - 과거 데이트(`end_date < today`) 및 미래 데이트(`start_date >= today`) 탭 분리 일정 목록 모달 (`DateItineraryModal.tsx`)
+  - 당일치기/1박2일/2박3일 퀵 칩 지원 기간 선택 데이트 생성 모달 (`CreateDatePlanModal.tsx`)
+- **상세 명세:** [`tasks/task-15-pure-map-date-itineraries.md`](file:///c:/dev/our-date-map/tasks/task-15-pure-map-date-itineraries.md)
+- **주요 파일:** [20260724074500_add_date_range_to_date_plans.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724074500_add_date_range_to_date_plans.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [DateItineraryModal.tsx](file:///c:/dev/our-date-map/src/components/modal/DateItineraryModal.tsx), [CreateDatePlanModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CreateDatePlanModal.tsx), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+
+
+
 
 
 

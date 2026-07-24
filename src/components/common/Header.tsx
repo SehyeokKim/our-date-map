@@ -20,6 +20,8 @@ interface HeaderProps {
   onTogglePush?: () => void;
   pushLoading?: boolean;
   onOpenCustomPushModal?: () => void;
+  onOpenScheduleModal?: () => void;
+  onOpenCreateModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -37,6 +39,8 @@ export const Header: React.FC<HeaderProps> = ({
   onTogglePush,
   pushLoading = false,
   onOpenCustomPushModal,
+  onOpenScheduleModal,
+  onOpenCreateModal,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -193,6 +197,20 @@ export const Header: React.FC<HeaderProps> = ({
               {planningCount}개
             </span>
           </button>
+
+          {/* Quick Schedule List Button */}
+          <div className="pt-1">
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onOpenScheduleModal?.();
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold rounded-xl border border-violet-100 transition-all active:scale-95 cursor-pointer"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>일정 목록</span>
+            </button>
+          </div>
 
           {/* Divider */}
           <div className="border-t border-gray-100 my-1" />

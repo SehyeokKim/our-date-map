@@ -1,7 +1,6 @@
-"use client";
-
 import React, { useState } from "react";
-import { PlannedSpot } from "@/types/planner";
+import { PlannedSpot, DatePlan } from "@/types/planner";
+import { TransitRouteResult } from "@/types/transit";
 import {
   Calendar,
   ChevronUp,
@@ -13,6 +12,7 @@ import {
   RefreshCw,
   Clock,
   Route,
+  Bus,
 } from "lucide-react";
 
 interface FuturePlanSheetProps {
@@ -24,6 +24,22 @@ interface FuturePlanSheetProps {
   routeDistance?: number;
   routeDuration?: number;
   loadingRoute?: boolean;
+  transitRoutes?: Record<string, TransitRouteResult>;
+  loadingTransit?: boolean;
+
+  // Date selection & DB persistence props
+  selectedDate?: string;
+  onSelectDate?: (date: string) => void;
+  savedPlans?: DatePlan[];
+  isSavingDb?: boolean;
+  isLoadingDb?: boolean;
+  onSavePlanToDb?: () => void;
+  onLoadPlanFromDb?: (plan: DatePlan) => void;
+  onDeletePlanFromDb?: (planId: string) => void;
+  onOpenScheduleModal?: () => void;
+  onOpenCreateModal?: () => void;
+  onClose?: () => void;
+  onPanToSpot?: (lat: number, lng: number) => void;
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
@@ -35,8 +51,22 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   routeDistance,
   routeDuration,
   loadingRoute,
+  transitRoutes,
+  loadingTransit,
+  selectedDate = new Date().toISOString().split("T")[0],
+  onSelectDate,
+  savedPlans = [],
+  isSavingDb = false,
+  isLoadingDb = false,
+  onSavePlanToDb,
+  onLoadPlanFromDb,
+  onDeletePlanFromDb,
+  onOpenScheduleModal,
+  onOpenCreateModal,
+  onClose,
+  onPanToSpot,
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   // Helper for formatting distance (meters to km)
   const formatDistance = (meters?: number) => {
@@ -82,20 +112,8 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {plannedSpots.length > 0 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClearAll();
-                }}
-                title="플랜 전체 삭제"
-                className="p-1.5 rounded-full hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button className="p-1 text-gray-400 hover:text-gray-600">
+          <div className="flex items-center gap-1.5">
+            <button className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
               <ChevronUp
                 className={`w-4 h-4 transition-transform duration-300 ${
                   isExpanded ? "rotate-180" : ""
@@ -125,10 +143,6 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                     <span>{formatDuration(routeDuration)}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1 text-[10px] text-violet-600 bg-white px-2 py-0.5 rounded-full font-semibold border border-violet-200">
-                  <Navigation className="w-3 h-3 fill-violet-600" />
-                  <span>카카오 네비</span>
-                </div>
               </div>
             )}
 
@@ -145,63 +159,116 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
               </div>
             ) : (
               <div className="space-y-2">
-                {plannedSpots.map((spot, index) => (
-                  <div
-                    key={spot.id}
-                    className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100 hover:border-violet-200 hover:bg-violet-50/30 transition-all"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {/* Order Badge */}
-                      <div className="w-7 h-7 rounded-full bg-violet-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm shadow-violet-200">
-                        {spot.order}
-                      </div>
+                {plannedSpots.map((spot, index) => {
+                  const nextSpot = plannedSpots[index + 1];
+                  const pairKey = nextSpot ? `${spot.id}->${nextSpot.id}` : null;
+                  const transit = pairKey && transitRoutes ? transitRoutes[pairKey] : null;
 
-                      <div className="min-w-0">
-                        <div className="font-semibold text-xs text-gray-800 truncate">
-                          {spot.title}
+                  return (
+                    <React.Fragment key={spot.id}>
+                      <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100 hover:border-violet-300 hover:bg-violet-50/50 transition-all shadow-2xs group">
+                        {/* Clickable spot info area -> pans map to spot */}
+                        <div
+                          onClick={() => onPanToSpot?.(spot.latitude, spot.longitude)}
+                          className="flex items-center gap-3 min-w-0 cursor-pointer flex-1"
+                          title="클릭 시 지도 위치로 이동"
+                        >
+                          {/* Order Badge */}
+                          <div className="w-7 h-7 rounded-full bg-violet-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm shadow-violet-200 group-hover:scale-110 transition-transform">
+                            {spot.order}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="font-bold text-xs text-gray-800 group-hover:text-violet-700 transition-colors truncate">
+                              {spot.title}
+                            </div>
+                            {spot.address && (
+                              <div className="text-[10px] text-gray-400 truncate flex items-center gap-1">
+                                <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">{spot.address}</span>
+                              </div>
+                            )}
+                            {spot.memo && (
+                              <div className="text-[10px] text-violet-600 font-medium truncate mt-0.5">
+                                💬 {spot.memo}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        {spot.address && (
-                          <div className="text-[10px] text-gray-400 truncate flex items-center gap-1">
-                            <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
-                            <span className="truncate">{spot.address}</span>
-                          </div>
-                        )}
-                        {spot.memo && (
-                          <div className="text-[10px] text-violet-600 font-medium truncate mt-0.5">
-                            💬 {spot.memo}
-                          </div>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Actions: Reorder & Delete */}
-                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                      <button
-                        onClick={() => onMoveUp(index)}
-                        disabled={index === 0}
-                        title="순서 올리기"
-                        className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"
-                      >
-                        <ChevronUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onMoveDown(index)}
-                        disabled={index === plannedSpots.length - 1}
-                        title="순서 내리기"
-                        className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onRemoveSpot(spot.id)}
-                        title="핀 삭제"
-                        className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                        {/* Actions: Reorder & Delete */}
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          <button
+                            onClick={() => onMoveUp(index)}
+                            disabled={index === 0}
+                            title="순서 올리기"
+                            className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors cursor-pointer"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onMoveDown(index)}
+                            disabled={index === plannedSpots.length - 1}
+                            title="순서 내리기"
+                            className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors cursor-pointer"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onRemoveSpot(spot.id)}
+                            title="핀 삭제"
+                            className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Public Transit Route Card between Spot A and Spot B */}
+                      {nextSpot && (
+                        <div className="my-1 mx-2 p-2.5 rounded-xl bg-violet-50/80 border border-violet-100 flex items-center justify-between text-xs text-violet-900 shadow-xs animate-in fade-in duration-200">
+                          {transit?.routeInfo ? (
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-violet-200">
+                                <Bus className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-bold flex items-center gap-2 text-violet-950 text-[11px]">
+                                  <span>⏱️ 약 {transit.routeInfo.totalTime}분 소요</span>
+                                  <span className="text-violet-300">|</span>
+                                  <span>
+                                    💳{" "}
+                                    {transit.routeInfo.payment > 0
+                                      ? `${transit.routeInfo.payment.toLocaleString()}원`
+                                      : "도보 / 무료"}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-violet-700 font-medium truncate mt-0.5 flex items-center gap-1">
+                                  <span>🚉</span>
+                                  <span className="truncate">
+                                    {transit.routeInfo.subpaths
+                                      .map((sp) => sp.transportName)
+                                      .filter(Boolean)
+                                      .join(" ➔ ") || "대중교통 이동"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-violet-600 text-[11px]">
+                              <Bus className="w-3.5 h-3.5 text-violet-500" />
+                              <span>
+                                {loadingTransit
+                                  ? "대중교통 경로 계산 중..."
+                                  : transit?.error || "대중교통 경로 탐색 불가"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             )}
           </div>

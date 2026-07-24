@@ -524,6 +524,31 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     };
   }, []);
 
+  // Fit map bounds to encompass given coordinate array
+  const fitBounds = useCallback(
+    (coords: { lat: number; lng: number }[]) => {
+      const kakao = window.kakao;
+      if (!kakao || !kakao.maps || !map || coords.length === 0) return;
+
+      const bounds = new (kakao.maps as any).LatLngBounds();
+      coords.forEach((c) => {
+        bounds.extend(new kakao.maps.LatLng(c.lat, c.lng));
+      });
+      map.setBounds(bounds);
+    },
+    [map]
+  );
+
+  // Pan map smooth transition to single coordinate
+  const panToSpot = useCallback(
+    (lat: number, lng: number) => {
+      const kakao = window.kakao;
+      if (!kakao || !kakao.maps || !map) return;
+      map.panTo(new kakao.maps.LatLng(lat, lng));
+    },
+    [map]
+  );
+
   return {
     mapContainerRef,
     map,
@@ -533,6 +558,8 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     setLoadingMap,
     initKakaoMap,
     locateUser,
+    fitBounds,
+    panToSpot,
     renderSpotMarkers,
     clearMemorySpotMarkers,
     renderPlannedSpotMarkers,

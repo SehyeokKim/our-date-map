@@ -7,6 +7,7 @@ import { useKakaoMap } from "@/hooks/useKakaoMap";
 import { useDateSpots } from "@/hooks/useDateSpots";
 import { useFuturePlanner } from "@/hooks/useFuturePlanner";
 import { useDirections } from "@/hooks/useDirections";
+import { useTransitRoute } from "@/hooks/useTransitRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebPush } from "@/hooks/useWebPush";
 import { Header } from "@/components/common/Header";
@@ -19,6 +20,9 @@ import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
 import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
 import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModal";
+import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
+import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
+import { DatePlan, PlannedSpot } from "@/types/planner";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -87,15 +91,34 @@ export default function Home() {
     appMode,
     setAppMode,
     plannedSpots,
+    selectedDate,
+    setSelectedDate,
+    allDatePlans,
+    savedPlans,
+    isSavingDb,
+    isLoadingDb,
+    isScheduleModalOpen,
+    setIsScheduleModalOpen,
+    isCreateModalOpen,
+    setIsCreateModalOpen,
+    isPlanSheetOpen,
+    setIsPlanSheetOpen,
+    startNewDatePlan,
+    savePlanToDb,
+    loadPlanFromDb,
+    deletePlanFromDb,
     addSpot,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
     clearAllPlans,
-  } = useFuturePlanner(showToast);
+  } = useFuturePlanner(showToast, user?.id);
 
   // Kakao Mobility Directions API
   const { fetchRoute, loadingRoute } = useDirections();
+
+  // ODsay Public Transit Route API
+  const { transitRoutes, loadingTransit } = useTransitRoute(plannedSpots);
 
   // Kakao Maps Instance & Markers
   const {
@@ -107,6 +130,8 @@ export default function Home() {
     setLoadingMap,
     initKakaoMap,
     locateUser,
+    fitBounds,
+    panToSpot,
     renderSpotMarkers,
     clearMemorySpotMarkers,
     renderPlannedSpotMarkers,
@@ -124,6 +149,17 @@ export default function Home() {
     handleStartAddSpot,
     closeAddModal,
   } = useKakaoMap(showToast);
+
+  // Load plan and auto-fit map bounds to encompass all course spots
+  const handleLoadPlanWithFit = useCallback(
+    (plan: DatePlan) => {
+      loadPlanFromDb(plan);
+      if (plan.spots && plan.spots.length > 0) {
+        fitBounds(plan.spots.map((s: PlannedSpot) => ({ lat: s.latitude, lng: s.longitude })));
+      }
+    },
+    [loadPlanFromDb, fitBounds]
+  );
 
   // Load date spots from Supabase when map is ready
   useEffect(() => {
@@ -198,6 +234,8 @@ export default function Home() {
         onTogglePush={togglePushNotification}
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
+        onOpenScheduleModal={() => setIsScheduleModalOpen(true)}
+        onOpenCreateModal={() => setIsCreateModalOpen(true)}
       />
 
       <Toast toast={toast} />
@@ -302,8 +340,8 @@ export default function Home() {
         />
       )}
 
-      {/* Future Planning Control Sheet */}
-      {appMode === "planning" && (
+      {/* Future Planning Control Sheet (Only shown when user loads or creates a course) */}
+      {appMode === "planning" && isPlanSheetOpen && (
         <FuturePlanSheet
           plannedSpots={plannedSpots}
           onRemoveSpot={removeSpot}
@@ -313,8 +351,39 @@ export default function Home() {
           routeDistance={routeStats.distance}
           routeDuration={routeStats.duration}
           loadingRoute={loadingRoute}
+          transitRoutes={transitRoutes}
+          loadingTransit={loadingTransit}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          savedPlans={savedPlans}
+          isSavingDb={isSavingDb}
+          isLoadingDb={isLoadingDb}
+          onSavePlanToDb={() => savePlanToDb(undefined, routeStats)}
+          onLoadPlanFromDb={loadPlanFromDb}
+          onDeletePlanFromDb={deletePlanFromDb}
+          onOpenScheduleModal={() => setIsScheduleModalOpen(true)}
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+          onClose={() => setIsPlanSheetOpen(false)}
+          onPanToSpot={(lat, lng) => panToSpot(lat, lng)}
         />
       )}
+
+      {/* Date Itineraries List Modal (Past & Future) */}
+      <DateItineraryModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        allPlans={allDatePlans}
+        onLoadPlan={handleLoadPlanWithFit}
+        onDeletePlan={deletePlanFromDb}
+        onOpenCreateModal={() => setIsCreateModalOpen(true)}
+      />
+
+      {/* Create New Date Plan Modal (Date Range Selection) */}
+      <CreateDatePlanModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onStartPlan={startNewDatePlan}
+      />
 
       {/* Dynamic Kakao Map SDK Script Loading */}
       <Script
