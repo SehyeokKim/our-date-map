@@ -39,10 +39,15 @@ export async function POST(request: Request) {
       }
     );
 
+    const targetUserId = body.targetUserId || body.target_user_id || body.partnerId || null;
+
+    let query = supabase.from('push_subscriptions').select('*');
+    if (targetUserId) {
+      query = query.eq('user_id', targetUserId);
+    }
+
     // Fetch active push subscriptions from DB
-    const { data: subscriptions, error } = await supabase
-      .from('push_subscriptions')
-      .select('*');
+    const { data: subscriptions, error } = await query;
 
     if (error) {
       console.error('[Push Route] Error fetching subscriptions:', error);
@@ -51,7 +56,13 @@ export async function POST(request: Request) {
 
     if (!subscriptions || subscriptions.length === 0) {
       return NextResponse.json(
-        { success: true, sentCount: 0, message: '등록된 알림 기기가 없습니다.' },
+        {
+          success: true,
+          sentCount: 0,
+          message: targetUserId
+            ? '선택한 상대방의 등록된 푸시 알림 기기가 없습니다.'
+            : '등록된 알림 기기가 없습니다.',
+        },
         { status: 200 }
       );
     }

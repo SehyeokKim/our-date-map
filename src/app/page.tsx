@@ -38,7 +38,16 @@ export default function Home() {
   }, []);
 
   // Supabase Auth (Kakao OAuth & Profile Management)
-  const { user, nickname, avatarUrl, loginWithKakao, logout, updateProfile } = useAuth();
+  const {
+    user,
+    profile,
+    nickname,
+    avatarUrl,
+    loginWithKakao,
+    logout,
+    updateProfile,
+    fetchAvailablePartners,
+  } = useAuth();
 
   // Load custom push message from localStorage on mount
   useEffect(() => {
@@ -204,7 +213,12 @@ export default function Home() {
         onSendInstantPush={() => {
           const finalTitle = customPushMessage.title || "DateMap😘";
           const finalBody = customPushMessage.body || "뽁!";
-          sendInstantPushNotification(finalTitle, finalBody);
+          const targetPartnerId =
+            profile?.partner_id ||
+            (typeof window !== "undefined"
+              ? localStorage.getItem("our_date_map_target_partner_id")
+              : null);
+          sendInstantPushNotification(finalTitle, finalBody, targetPartnerId);
         }}
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
@@ -216,8 +230,10 @@ export default function Home() {
         onClose={() => setIsProfileEditOpen(false)}
         currentNickname={nickname}
         currentAvatarUrl={avatarUrl}
-        onSave={async (newNickname, imageFile) => {
-          const success = await updateProfile(newNickname, imageFile);
+        currentPartnerId={profile?.partner_id}
+        fetchAvailablePartners={fetchAvailablePartners}
+        onSave={async (newNickname, imageFile, partnerId) => {
+          const success = await updateProfile(newNickname, imageFile, partnerId);
           if (success) {
             showToast("✨ 프로필 정보가 성공적으로 수정되었습니다!", "success");
             await loadDateSpots();

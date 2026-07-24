@@ -46,9 +46,10 @@
 - **`public.profiles` DB 마이그레이션 (`20260723233625_decouple_creator_data_to_profiles.sql`)**:
   - `date_spots` 테이블 내 하드코딩된 작성자 컬럼들을 제거하고, `auth.users(id)`와 1:1 매핑되는 `public.profiles` 테이블 신설.
   - 신규 유저 가입 시 프로필 자동 생성 DB 트리거(`on_auth_user_created`) 구축 및 `created_by REFERENCES public.profiles(id)` 외래키(FK) 기반 dynamic relational JOIN 구문으로 리팩토링.
-- **프로필 수정 모달 ([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))**:
-  - 헤더 드롭다운 유저 카드 터치 시 닉네임 및 프로필 사진 변경 모달 제공.
-  - `browser-image-compression`으로 사진을 300KB 이하로 압축 후 Supabase Storage `avatars` 퍼블릭 버킷에 업로드하고 `public.profiles` DB 동기화.
+- **프로필 수정 모달 & 파트너 선택 기능 ([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))**:
+  - 헤더 드롭다운 유저 카드 터치 시 닉네임, 프로필 사진 및 알림 수신 상대방(커플 파트너) 선택 기능 제공.
+  - `public.profiles` 테이블에 `partner_id` 컬럼 마이그레이션 (`20260724013000_add_partner_id_to_profiles.sql`) 및 `browser-image-compression`으로 사진을 300KB 이하로 압축 후 Supabase Storage `avatars` 퍼블릭 버킷에 업로드하여 `public.profiles` DB 동기화.
+  - 푸시 알림 전송 시 지정된 파트너(`targetUserId`) 기기로만 조준 발송 처리.
 
 ---
 
