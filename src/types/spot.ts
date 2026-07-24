@@ -23,6 +23,15 @@ export interface DateSpot {
   profiles?: Profile | null;
 }
 
+export interface DeletedDateSpot {
+  id: string;
+  original_spot_id: string;
+  spot_data: DateSpot;
+  deleted_by?: string | null;
+  deleted_at: string;
+  reason?: string | null;
+}
+
 export interface LatLng {
   lat: number;
   lng: number;

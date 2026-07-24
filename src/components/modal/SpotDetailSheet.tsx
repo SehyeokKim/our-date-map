@@ -63,7 +63,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
 
   const handleDelete = async () => {
     if (!onDelete) return;
-    const confirmed = window.confirm("이 데이트 핀을 삭제하시겠습니까?\n(삭제 시 3일 동안 보관된 후 영구 삭제됩니다)");
+    const confirmed = window.confirm("이 데이트 핀을 삭제하시겠습니까?\n(삭제 시 휴지통으로 이동하며 3일 동안 보관된 후 영구 삭제됩니다)");
     if (!confirmed) return;
 
     setIsDeleting(true);

@@ -154,3 +154,21 @@ CREATE POLICY "Allow public update access to push_subscriptions" ON public.push_
 CREATE POLICY "Allow public delete access to push_subscriptions" ON public.push_subscriptions FOR DELETE USING (true);
 
 GRANT ALL ON public.push_subscriptions TO anon, authenticated, service_role;
+
+-- 4. 삭제된 데이트 장소 휴지통 테이블 (deleted_date_spots) 생성
+CREATE TABLE IF NOT EXISTS public.deleted_date_spots (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    original_spot_id UUID NOT NULL,
+    spot_data JSONB NOT NULL,
+    deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    deleted_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    reason TEXT
+);
+
+ALTER TABLE public.deleted_date_spots ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to deleted_date_spots" ON public.deleted_date_spots FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access to deleted_date_spots" ON public.deleted_date_spots FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow users to delete own deleted_date_spots" ON public.deleted_date_spots FOR DELETE USING (auth.uid() = deleted_by OR deleted_by IS NULL);
+
+GRANT ALL ON public.deleted_date_spots TO anon, authenticated, service_role;

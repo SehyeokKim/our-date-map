@@ -95,6 +95,33 @@ export type Database = {
           },
         ]
       }
+      deleted_date_spots: {
+        Row: {
+          deleted_at: string
+          deleted_by: string | null
+          id: string
+          original_spot_id: string
+          reason: string | null
+          spot_data: Json
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          original_spot_id: string
+          reason?: string | null
+          spot_data: Json
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          original_spot_id?: string
+          reason?: string | null
+          spot_data?: Json
+        }
+        Relationships: []
+      }
       photos: {
         Row: {
           created_at: string | null

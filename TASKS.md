@@ -7,7 +7,7 @@
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
 - **현재 버전:** `v0.4.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 11 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림, profiles 테이블 분리, 프로필 수정 모달 & DB/스토리지 동기화)
+- **구현 완료 (Completed):** Task 01 ~ Task 12 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림, profiles 테이블 분리, 프로필 수정 모달, 삭제 핀 휴지통 테이블 & 소프트 삭제 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -147,5 +147,18 @@
   - Supabase Storage `avatars` 퍼블릭 버킷 마이그레이션 (`20260723235156_add_avatars_storage_bucket.sql`)
   - `useAuth` 훅 강화: `profiles` 조회/upsert, Kakao OAuth 기본값 자동 폴백, 실시간 전역 프로필 동기화 ([useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts))
 - **주요 파일:** [ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [upload.ts](file:///c:/dev/our-date-map/src/lib/upload.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql)
+
+---
+
+### 12. [Task 12] 삭제된 데이트 핀 휴지통 테이블 (deleted_date_spots) & 소프트 삭제 메커니즘
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
+- **개요:** 핀 삭제 시 원본 데이터의 하드 삭제를 방지하고 휴지통에 보존 및 복원할 수 있도록 `deleted_date_spots` 전용 테이블 및 RLS 정책을 구축하고, 소프트 삭제 워크플로우를 완성했습니다.
+- **주요 스펙:**
+  - `deleted_date_spots` 휴지통 테이블 신설 마이그레이션 (`20260724000135_create_deleted_date_spots_table.sql`)
+  - 컬럼: `id`, `original_spot_id`, `spot_data` (JSONB), `deleted_by`, `deleted_at`, `reason`
+  - 핀 삭제 시 스팟 전체 데이터를 `deleted_date_spots`에 아카이빙하고 `date_spots` 내 `deleted_at = NOW()` 처리
+  - 소프트 삭제된 핀 복원 메서드 (`restoreDateSpot`) 및 휴지통 목록 패칭 (`fetchDeletedSpots`) 구현
+- **주요 파일:** [20260724000135_create_deleted_date_spots_table.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724000135_create_deleted_date_spots_table.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+
 
 
