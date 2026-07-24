@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navigation, AlertCircle, Loader2 } from "lucide-react";
+import { Navigation, AlertCircle, Loader2, Pencil } from "lucide-react";
 
 interface MapContainerProps {
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -12,6 +12,7 @@ interface MapContainerProps {
   pushEnabled?: boolean;
   onSendInstantPush?: () => void;
   pushLoading?: boolean;
+  onOpenCustomPushModal?: () => void;
 }
 
 export const MapContainer: React.FC<MapContainerProps> = ({
@@ -23,6 +24,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   pushEnabled = false,
   onSendInstantPush,
   pushLoading = false,
+  onOpenCustomPushModal,
 }) => {
   const [isPopcatOpen, setIsPopcatOpen] = useState<boolean>(false);
   const [isCooldown, setIsCooldown] = useState<boolean>(false);
@@ -123,20 +125,37 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         <div className="absolute bottom-6 right-6 z-10 flex flex-col items-center gap-3">
           {/* Floating Push Send Button (Popcat Animation & Cooldown) */}
           {pushEnabled && (
-            <button
-              type="button"
-              onClick={handleSendPush}
-              disabled={isCooldown || pushLoading}
-              title="상대방에게 실시간 데이트 알림 보내기 💌"
-              aria-label="상대방에게 데이트 알림 전송"
-              className="bg-transparent border-none p-0 outline-none active:scale-90 transition-transform cursor-pointer flex items-center justify-center drop-shadow-md"
-            >
-              <img
-                src={isPopcatOpen ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
-                alt={isPopcatOpen ? "Popcat Open" : "Popcat Close"}
-                className="w-12 h-12 object-contain select-none pointer-events-none"
-              />
-            </button>
+            <div className="relative group">
+              <button
+                type="button"
+                onClick={handleSendPush}
+                disabled={isCooldown || pushLoading}
+                title="상대방에게 실시간 데이트 알림 보내기 💌 (설정 아이콘으로 문구 변경)"
+                aria-label="상대방에게 데이트 알림 전송"
+                className="bg-transparent border-none p-0 outline-none active:scale-90 transition-transform cursor-pointer flex items-center justify-center drop-shadow-md"
+              >
+                <img
+                  src={isPopcatOpen ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
+                  alt={isPopcatOpen ? "Popcat Open" : "Popcat Close"}
+                  className="w-12 h-12 object-contain select-none pointer-events-none"
+                />
+              </button>
+
+              {/* Mini Settings Button on Top Right of Popcat */}
+              {onOpenCustomPushModal && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenCustomPushModal();
+                  }}
+                  title="알림 문구 수정하기"
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white border border-rose-200 text-gray-600 hover:text-rose-500 hover:border-rose-400 flex items-center justify-center shadow-xs cursor-pointer transition-transform active:scale-95 z-10"
+                >
+                  <Pencil className="w-2.5 h-2.5" />
+                </button>
+              )}
+            </div>
           )}
 
           {/* GPS Locate Button */}

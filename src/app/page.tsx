@@ -18,11 +18,17 @@ import { SpotDetailSheet } from "@/components/modal/SpotDetailSheet";
 import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
 import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
+import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModal";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [routeStats, setRouteStats] = useState<{ distance?: number; duration?: number }>({});
   const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
+  const [isCustomPushModalOpen, setIsCustomPushModalOpen] = useState<boolean>(false);
+  const [customPushMessage, setCustomPushMessage] = useState<{ title: string; body: string }>({
+    title: "💕 데이트 알림",
+    body: "",
+  });
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setToast({ message, type });
@@ -33,6 +39,28 @@ export default function Home() {
 
   // Supabase Auth (Kakao OAuth & Profile Management)
   const { user, nickname, avatarUrl, loginWithKakao, logout, updateProfile } = useAuth();
+
+  // Load custom push message from localStorage on mount
+  useEffect(() => {
+    const savedMsg = localStorage.getItem("our_date_map_custom_push_message");
+    if (savedMsg) {
+      try {
+        const parsed = JSON.parse(savedMsg);
+        if (parsed && (parsed.title || parsed.body)) {
+          setCustomPushMessage(parsed);
+        }
+      } catch (e) {
+        console.warn("Failed parsing saved push message", e);
+      }
+    }
+  }, []);
+
+  const handleSaveCustomPushMessage = (title: string, body: string) => {
+    const newMsg = { title, body };
+    setCustomPushMessage(newMsg);
+    localStorage.setItem("our_date_map_custom_push_message", JSON.stringify(newMsg));
+    showToast("💌 푸시 알림 문구가 저장되었습니다!", "success");
+  };
 
   // Web Push Notifications
   const {
@@ -172,8 +200,15 @@ export default function Home() {
         locateUser={locateUser}
         handleFabClick={handleStartAddSpot}
         pushEnabled={pushEnabled}
-        onSendInstantPush={() => sendInstantPushNotification()}
+        onSendInstantPush={() => {
+          const finalTitle = customPushMessage.title || "💕 데이트 알림";
+          const finalBody =
+            customPushMessage.body ||
+            `${nickname ? nickname + "님" : "상대방"}이 콕 찔렀어요! 🐾`;
+          sendInstantPushNotification(finalTitle, finalBody);
+        }}
         pushLoading={pushLoading}
+        onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
       />
 
       {/* User Profile Edit Modal */}
@@ -192,6 +227,16 @@ export default function Home() {
           }
           return success;
         }}
+      />
+
+      {/* Custom Push Notification Message Modal */}
+      <CustomPushMessageModal
+        isOpen={isCustomPushModalOpen}
+        onClose={() => setIsCustomPushModalOpen(false)}
+        currentTitle={customPushMessage.title}
+        currentBody={customPushMessage.body}
+        defaultNickname={nickname}
+        onSave={handleSaveCustomPushMessage}
       />
 
       {/* Memory Spot Creation Modal with Creator Tracking */}
