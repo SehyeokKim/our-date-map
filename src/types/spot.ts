@@ -2,6 +2,7 @@ export interface Profile {
   id: string;
   nickname?: string | null;
   profile_image_url?: string | null;
+  partner_id?: string | null;
   updated_at?: string;
   created_at?: string;
 }

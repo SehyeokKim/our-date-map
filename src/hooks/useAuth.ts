@@ -101,9 +101,13 @@ export function useAuth() {
     }
   }, []);
 
-  // Update profile nickname and profile image in Supabase
+  // Update profile nickname, profile image, and partner_id in Supabase
   const updateProfile = useCallback(
-    async (newNickname: string, imageFile?: File | null): Promise<boolean> => {
+    async (
+      newNickname: string,
+      imageFile?: File | null,
+      partnerId?: string | null
+    ): Promise<boolean> => {
       if (!user) return false;
 
       try {
@@ -117,10 +121,14 @@ export function useAuth() {
         }
 
         const nowIso = new Date().toISOString();
+        const finalPartnerId =
+          partnerId !== undefined ? partnerId : profile?.partner_id || null;
+
         const payload = {
           id: user.id,
           nickname: newNickname.trim(),
           profile_image_url: avatarUrlToSave,
+          partner_id: finalPartnerId,
           updated_at: nowIso,
         };
 
@@ -134,6 +142,11 @@ export function useAuth() {
 
         if (data) {
           setProfile(data as Profile);
+          if (finalPartnerId) {
+            localStorage.setItem("our_date_map_target_partner_id", finalPartnerId);
+          } else {
+            localStorage.removeItem("our_date_map_target_partner_id");
+          }
         }
         return true;
       } catch (err) {
@@ -143,6 +156,26 @@ export function useAuth() {
     },
     [user, profile]
   );
+
+  // Fetch all registered partner profiles except the logged in user
+  const fetchAvailablePartners = useCallback(async (): Promise<Profile[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("nickname", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        return [];
+      }
+
+      return ((data as Profile[]) || []).filter((p) => p.id !== user?.id);
+    } catch (err) {
+      console.error("Failed to fetch available partners:", err);
+      return [];
+    }
+  }, [user?.id]);
 
   // Default Fallback: If profiles table has no custom values, fallback to Kakao OAuth metadata
   const nickname =
@@ -167,6 +200,7 @@ export function useAuth() {
     loginWithKakao,
     logout,
     updateProfile,
+    fetchAvailablePartners,
     refetchProfile: () => user && fetchProfile(user.id),
   };
 }

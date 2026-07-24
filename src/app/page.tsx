@@ -18,11 +18,17 @@ import { SpotDetailSheet } from "@/components/modal/SpotDetailSheet";
 import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
 import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
+import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModal";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [routeStats, setRouteStats] = useState<{ distance?: number; duration?: number }>({});
   const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
+  const [isCustomPushModalOpen, setIsCustomPushModalOpen] = useState<boolean>(false);
+  const [customPushMessage, setCustomPushMessage] = useState<{ title: string; body: string }>({
+    title: "DateMap😘",
+    body: "뽁!",
+  });
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setToast({ message, type });
@@ -32,7 +38,38 @@ export default function Home() {
   }, []);
 
   // Supabase Auth (Kakao OAuth & Profile Management)
-  const { user, nickname, avatarUrl, loginWithKakao, logout, updateProfile } = useAuth();
+  const {
+    user,
+    profile,
+    nickname,
+    avatarUrl,
+    loginWithKakao,
+    logout,
+    updateProfile,
+    fetchAvailablePartners,
+  } = useAuth();
+
+  // Load custom push message from localStorage on mount
+  useEffect(() => {
+    const savedMsg = localStorage.getItem("our_date_map_custom_push_message");
+    if (savedMsg) {
+      try {
+        const parsed = JSON.parse(savedMsg);
+        if (parsed && (parsed.title || parsed.body)) {
+          setCustomPushMessage(parsed);
+        }
+      } catch (e) {
+        console.warn("Failed parsing saved push message", e);
+      }
+    }
+  }, []);
+
+  const handleSaveCustomPushMessage = (title: string, body: string) => {
+    const newMsg = { title, body };
+    setCustomPushMessage(newMsg);
+    localStorage.setItem("our_date_map_custom_push_message", JSON.stringify(newMsg));
+    showToast("💌 푸시 알림 문구가 저장되었습니다!", "success");
+  };
 
   // Web Push Notifications
   const {
@@ -160,6 +197,7 @@ export default function Home() {
         pushEnabled={pushEnabled}
         onTogglePush={togglePushNotification}
         pushLoading={pushLoading}
+        onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
       />
 
       <Toast toast={toast} />
@@ -172,8 +210,18 @@ export default function Home() {
         locateUser={locateUser}
         handleFabClick={handleStartAddSpot}
         pushEnabled={pushEnabled}
-        onSendInstantPush={() => sendInstantPushNotification()}
+        onSendInstantPush={() => {
+          const finalTitle = customPushMessage.title || "DateMap😘";
+          const finalBody = customPushMessage.body || "뽁!";
+          const targetPartnerId =
+            profile?.partner_id ||
+            (typeof window !== "undefined"
+              ? localStorage.getItem("our_date_map_target_partner_id")
+              : null);
+          sendInstantPushNotification(finalTitle, finalBody, targetPartnerId);
+        }}
         pushLoading={pushLoading}
+        onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
       />
 
       {/* User Profile Edit Modal */}
@@ -182,8 +230,10 @@ export default function Home() {
         onClose={() => setIsProfileEditOpen(false)}
         currentNickname={nickname}
         currentAvatarUrl={avatarUrl}
-        onSave={async (newNickname, imageFile) => {
-          const success = await updateProfile(newNickname, imageFile);
+        currentPartnerId={profile?.partner_id}
+        fetchAvailablePartners={fetchAvailablePartners}
+        onSave={async (newNickname, imageFile, partnerId) => {
+          const success = await updateProfile(newNickname, imageFile, partnerId);
           if (success) {
             showToast("✨ 프로필 정보가 성공적으로 수정되었습니다!", "success");
             await loadDateSpots();
@@ -192,6 +242,16 @@ export default function Home() {
           }
           return success;
         }}
+      />
+
+      {/* Custom Push Notification Message Modal */}
+      <CustomPushMessageModal
+        isOpen={isCustomPushModalOpen}
+        onClose={() => setIsCustomPushModalOpen(false)}
+        currentTitle={customPushMessage.title}
+        currentBody={customPushMessage.body}
+        defaultNickname={nickname}
+        onSave={handleSaveCustomPushMessage}
       />
 
       {/* Memory Spot Creation Modal with Creator Tracking */}

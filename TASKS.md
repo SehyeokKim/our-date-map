@@ -6,8 +6,8 @@
 
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
-- **현재 버전:** `v0.4.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 12 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림, profiles 테이블 분리, 프로필 수정 모달, 삭제 핀 휴지통 테이블 & 소프트 삭제 파이프라인)
+- **현재 버전:** `v0.5.0`
+- **구현 완료 (Completed):** Task 01 ~ Task 12 (기본 PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 마커 & 상세 보기, 다중 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push 알림 & Popcat 롱프레스, profiles 테이블 분리, 프로필 수정 모달, 삭제 핀 휴지통 테이블 & 소프트 삭제 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -114,14 +114,16 @@
 ---
 
 ### 9. [Task 09] Web Push 알림 토글 UI & 실시간 전송 파이프라인
-- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.5.0`)
-- **개요:** 1번 헤더 프로필 영역 푸시 알림 ON/OFF 토글 및 1번 토글 ON 조건 시 지도 우측 하단 2번 플로팅 알림 전송 버튼을 구현하고, Web Push API 및 서비스 워커를 연동하여 실시간 알림을 발송합니다.
+- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.5.0`)
+- **개요:** 헤더 프로필 카드 내 Popcat 이미지 버튼(`popcat_close.png` / `popcat_open.png`)을 통한 웹 푸시 알림 ON/OFF 토글, 1초 롱프레스 제스처 기반 커스텀 알림 문구 설정 모달([CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx)), 및 지도 우측 하단 Popcat 알림 전송 버튼(1초 오픈 애니메이션 & 쿨다운)을 구현하고, Web Push API 및 서비스 워커를 연동하여 실시간 알림을 발송합니다.
 - **주요 스펙:**
-  - 1번 위치 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)): 푸시 알림 ON/OFF 토글 버튼, 커스텀 아이콘 (`push-on.svg`, `push-off.svg`), 권한 요청 및 구독 상태 `localStorage` & Supabase DB 동기화
-  - 2번 위치 ([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)): 1번 토글 ON 시 우측 하단 노출 커스텀 플로팅 전송 버튼 (`send-alert.svg`)
+  - 프로필 카드 하단 팝캣 위치 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)): `[로그아웃]` 좌측 보더리스 transparent 버튼, Popcat 커스텀 이미지 (`popcat_close.png` / `popcat_open.png`), 1초 롱프레스 시 문구 설정 모달 오픈
+  - 커스텀 메시지 설정 모달 ([CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx)): Popcat 버튼 1초 롱프레스 시 햅틱 진동 피드백과 함께 오픈, 제목/본문 입력, 퀵 프리셋 칩("지금 뭐해? 🤔", "보고 싶어 💖" 등), `localStorage` (`our_date_map_custom_push_message`) 저장
+  - 지도 플로팅 팝캣 전송 위치 ([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)): 독립 수정 버튼 제거, 푸시 ON 시 우측 하단 노출, 숏 터치 시 사용자 커스텀 페이로드로 즉시 상대방 알림 전송 및 1초간 입 벌리는 애니메이션(`popcat_open.png`), 1초 롱프레스 시 문구 설정 모달 오픈
   - Web Push 서비스 워커 ([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 및 클릭 포커싱 처리
   - `push_subscriptions` DB 마이그레이션 및 Next.js Route Handler (`/api/push/send/route.ts`)
-- **주요 파일:** [sw.js](file:///c:/dev/our-date-map/public/sw.js), [useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)
+- **상세 명세:** [`tasks/task-09-web-push-popcat-profile.md`](file:///c:/dev/our-date-map/tasks/task-09-web-push-popcat-profile.md)
+- **주요 파일:** [sw.js](file:///c:/dev/our-date-map/public/sw.js), [useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx), [CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx)
 
 ---
 

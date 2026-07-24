@@ -172,15 +172,20 @@ export function useWebPush(
 
   // Trigger Instant Push Message to Counterpart / Partner
   const sendInstantPushNotification = useCallback(
-    async (customTitle?: string, customBody?: string): Promise<boolean> => {
+    async (
+      customTitle?: string,
+      customBody?: string,
+      targetUserId?: string | null
+    ): Promise<boolean> => {
       setLoading(true);
       try {
         const res = await fetch("/api/push/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: customTitle || "💕 데이트 알림 소식",
-            body: customBody || "상대방이 소중한 데이트 알림을 보냈습니다! 지도에서 확인해 보세요 💖",
+            title: customTitle || "DateMap😘",
+            body: customBody || "뽁!",
+            targetUserId: targetUserId || null,
             url: "/",
           }),
         });
