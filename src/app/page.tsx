@@ -26,8 +26,8 @@ export default function Home() {
   const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
   const [isCustomPushModalOpen, setIsCustomPushModalOpen] = useState<boolean>(false);
   const [customPushMessage, setCustomPushMessage] = useState<{ title: string; body: string }>({
-    title: "💕 데이트 알림",
-    body: "",
+    title: "DateMap😘",
+    body: "뽁!",
   });
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
@@ -202,10 +202,8 @@ export default function Home() {
         handleFabClick={handleStartAddSpot}
         pushEnabled={pushEnabled}
         onSendInstantPush={() => {
-          const finalTitle = customPushMessage.title || "💕 데이트 알림";
-          const finalBody =
-            customPushMessage.body ||
-            `${nickname ? nickname + "님" : "상대방"}이 콕 찔렀어요! 🐾`;
+          const finalTitle = customPushMessage.title || "DateMap😘";
+          const finalBody = customPushMessage.body || "뽁!";
           sendInstantPushNotification(finalTitle, finalBody);
         }}
         pushLoading={pushLoading}

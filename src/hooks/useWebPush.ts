@@ -179,8 +179,8 @@ export function useWebPush(
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: customTitle || "💕 데이트 알림 소식",
-            body: customBody || "상대방이 소중한 데이트 알림을 보냈습니다! 지도에서 확인해 보세요 💖",
+            title: customTitle || "DateMap😘",
+            body: customBody || "뽁!",
             url: "/",
           }),
         });

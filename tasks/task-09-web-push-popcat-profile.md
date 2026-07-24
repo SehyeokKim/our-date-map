@@ -38,7 +38,7 @@
   - 1초 이상 길게 누름: 햅틱 진동 피드백(`vibrate(50)`)과 함께 커스텀 문구 설정 모달 오픈.
 - **커스텀 푸시 문구 설정 모달 ([CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx))**:
   - 알림 제목 및 본문 입력, 빠른 프리셋 칩("지금 뭐해? 🤔", "보고 싶어 💖", "어디쯤 왔어? 📍", "오늘 데이트 할까? ☕", "콕 찔렀어요! 🐾", "사랑해 💖") 클릭 입력 지원.
-  - 설정 문구를 `localStorage` (`our_date_map_custom_push_message`)에 영구 저장하고, 푸시 전송 시 dynamic payload로 대입하여 상대방 기기 상단 알림 팝업에 노출.
+  - 기본 디폴트 문구: 제목 `"DateMap😘"`, 본문 `"뽁!"`. 설정 문구를 `localStorage` (`our_date_map_custom_push_message`)에 영구 저장하고, 푸시 전송 시 dynamic payload로 대입하여 상대방 기기 상단 알림 팝업에 노출.
 
 ---
 

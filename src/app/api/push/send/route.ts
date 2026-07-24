@@ -21,8 +21,8 @@ try {
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const messageTitle = body.title || '💕 데이트 알림 소식';
-    const messageBody = body.body || '상대방이 소중한 데이트 알림을 보냈습니다! 지금 확인해 보세요 💖';
+    const messageTitle = body.title || 'DateMap😘';
+    const messageBody = body.body || '뽁!';
     const targetUrl = body.url || '/';
 
     const cookieStore = await cookies();
