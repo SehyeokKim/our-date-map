@@ -99,7 +99,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-gray-800 text-sm">미래 데이트 코스 플랜</h2>
+                <h2 className="font-bold text-gray-800 text-sm">데이트 코스 상세</h2>
                 <span className="bg-violet-100 text-violet-700 font-bold text-[11px] px-2 py-0.5 rounded-full">
                   총 {plannedSpots.length}곳
                 </span>
@@ -178,18 +178,18 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                             {spot.order}
                           </div>
 
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="font-bold text-xs text-gray-800 group-hover:text-violet-700 transition-colors truncate">
                               {spot.title}
                             </div>
                             {spot.address && (
-                              <div className="text-[10px] text-gray-400 truncate flex items-center gap-1">
+                              <div className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
                                 <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="truncate">{spot.address}</span>
                               </div>
                             )}
                             {spot.memo && (
-                              <div className="text-[10px] text-violet-600 font-medium truncate mt-0.5">
+                              <div className="text-[10px] text-violet-600 font-medium whitespace-pre-wrap break-words mt-1 bg-violet-50/60 p-1.5 rounded-lg border border-violet-100/50">
                                 💬 {spot.memo}
                               </div>
                             )}
@@ -235,13 +235,6 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                               <div className="min-w-0">
                                 <div className="font-bold flex items-center gap-2 text-violet-950 text-[11px]">
                                   <span>⏱️ 약 {transit.routeInfo.totalTime}분 소요</span>
-                                  <span className="text-violet-300">|</span>
-                                  <span>
-                                    💳{" "}
-                                    {transit.routeInfo.payment > 0
-                                      ? `${transit.routeInfo.payment.toLocaleString()}원`
-                                      : "도보 / 무료"}
-                                  </span>
                                 </div>
                                 <div className="text-[10px] text-violet-700 font-medium truncate mt-0.5 flex items-center gap-1">
                                   <span>🚉</span>
