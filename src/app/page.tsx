@@ -91,6 +91,8 @@ export default function Home() {
     appMode,
     setAppMode,
     plannedSpots,
+    currentRouteSummary,
+    updateRouteSummary,
     selectedDate,
     setSelectedDate,
     allDatePlans,
@@ -118,7 +120,10 @@ export default function Home() {
   const { fetchRoute, loadingRoute } = useDirections();
 
   // ODsay Public Transit Route API
-  const { transitRoutes, loadingTransit } = useTransitRoute(plannedSpots);
+  const { transitRoutes, loadingTransit } = useTransitRoute(
+    plannedSpots,
+    currentRouteSummary?.transitRoutes
+  );
 
   // Kakao Maps Instance & Markers
   const {
@@ -177,12 +182,27 @@ export default function Home() {
       renderPlannedSpotMarkers(plannedSpots);
 
       if (plannedSpots.length >= 2) {
-        fetchRoute(plannedSpots).then((res) => {
-          if (res.path && res.path.length > 0) {
-            renderRoutePolyline(res.path);
-          }
-          setRouteStats({ distance: res.distance, duration: res.duration });
-        });
+        // Use cached/saved route path if available, avoiding redundant Kakao API calls
+        if (currentRouteSummary?.path && currentRouteSummary.path.length > 0) {
+          renderRoutePolyline(currentRouteSummary.path);
+          setRouteStats({
+            distance: currentRouteSummary.distance,
+            duration: currentRouteSummary.duration,
+          });
+        } else {
+          fetchRoute(plannedSpots).then((res) => {
+            if (res.path && res.path.length > 0) {
+              renderRoutePolyline(res.path);
+              updateRouteSummary({
+                distance: res.distance,
+                duration: res.duration,
+                path: res.path,
+                transitRoutes: transitRoutes,
+              });
+            }
+            setRouteStats({ distance: res.distance, duration: res.duration });
+          });
+        }
       } else {
         clearRoutePolyline();
         setRouteStats({});
@@ -200,7 +220,10 @@ export default function Home() {
     map,
     spots,
     plannedSpots,
+    currentRouteSummary,
     fetchRoute,
+    updateRouteSummary,
+    transitRoutes,
     renderSpotMarkers,
     clearMemorySpotMarkers,
     renderPlannedSpotMarkers,
@@ -358,7 +381,14 @@ export default function Home() {
           savedPlans={savedPlans}
           isSavingDb={isSavingDb}
           isLoadingDb={isLoadingDb}
-          onSavePlanToDb={() => savePlanToDb(undefined, routeStats)}
+          onSavePlanToDb={() =>
+            savePlanToDb(undefined, {
+              distance: routeStats.distance,
+              duration: routeStats.duration,
+              path: currentRouteSummary?.path,
+              transitRoutes,
+            })
+          }
           onLoadPlanFromDb={loadPlanFromDb}
           onDeletePlanFromDb={deletePlanFromDb}
           onOpenScheduleModal={() => setIsScheduleModalOpen(true)}

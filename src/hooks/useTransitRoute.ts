@@ -4,7 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { PlannedSpot } from "@/types/planner";
 import { TransitRouteInfo, TransitRouteResult } from "@/types/transit";
 
-export function useTransitRoute(plannedSpots: PlannedSpot[]) {
+export function useTransitRoute(
+  plannedSpots: PlannedSpot[],
+  savedTransitRoutes?: Record<string, TransitRouteResult> | null
+) {
   const [transitRoutes, setTransitRoutes] = useState<Record<string, TransitRouteResult>>({});
   const [loadingTransit, setLoadingTransit] = useState<boolean>(false);
   const cacheRef = useRef<Map<string, TransitRouteInfo>>(new Map());
@@ -45,6 +48,24 @@ export function useTransitRoute(plannedSpots: PlannedSpot[]) {
       return;
     }
 
+    // Check if savedTransitRoutes covers all spot pairs
+    let hasAllSaved = !!savedTransitRoutes && Object.keys(savedTransitRoutes).length > 0;
+    if (hasAllSaved && savedTransitRoutes) {
+      for (let i = 0; i < plannedSpots.length - 1; i++) {
+        const pairKey = `${plannedSpots[i].id}->${plannedSpots[i + 1].id}`;
+        if (!savedTransitRoutes[pairKey]) {
+          hasAllSaved = false;
+          break;
+        }
+      }
+    }
+
+    if (hasAllSaved && savedTransitRoutes) {
+      setTransitRoutes(savedTransitRoutes);
+      setLoadingTransit(false);
+      return;
+    }
+
     let isMounted = true;
 
     const loadAllRoutes = async () => {
@@ -78,7 +99,7 @@ export function useTransitRoute(plannedSpots: PlannedSpot[]) {
     return () => {
       isMounted = false;
     };
-  }, [plannedSpots, fetchPairTransitRoute]);
+  }, [plannedSpots, savedTransitRoutes, fetchPairTransitRoute]);
 
   return {
     transitRoutes,

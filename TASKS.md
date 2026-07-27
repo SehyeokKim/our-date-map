@@ -6,8 +6,8 @@
 
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
-- **현재 버전:** `v0.8.0`
-- **구현 완료 (Completed):** Task 01 ~ Task 15 (PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push & Popcat, profiles 분리, 프로필 수정, 삭제 핀 휴지통, ODsay 대중교통 경로, 날짜 선택 기반 미래 데이트 플랜 DB 저장, 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인)
+- **현재 버전:** `v0.8.1`
+- **구현 완료 (Completed):** Task 01 ~ Task 16 (PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push & Popcat, profiles 분리, 프로필 수정, 삭제 핀 휴지통, ODsay 대중교통 경로, 날짜 선택 기반 미래 데이트 플랜 DB 저장, 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인, 미래 데이트 코스 경로 영구 저장 및 재사용 파이프라인)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -196,8 +196,15 @@
   - 기본 진입 시 하단 드로어를 접힌 상태(`isExpanded = false`)로 유지하여 순수 풀스크린 지도 뷰 보장
   - 과거 데이트(`end_date < today`) 및 미래 데이트(`start_date >= today`) 탭 분리 일정 목록 모달 (`DateItineraryModal.tsx`)
   - 당일치기/1박2일/2박3일 퀵 칩 지원 기간 선택 데이트 생성 모달 (`CreateDatePlanModal.tsx`)
-- **상세 명세:** [`tasks/task-15-pure-map-date-itineraries.md`](file:///c:/dev/our-date-map/tasks/task-15-pure-map-date-itineraries.md)
-- **주요 파일:** [20260724074500_add_date_range_to_date_plans.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724074500_add_date_range_to_date_plans.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [DateItineraryModal.tsx](file:///c:/dev/our-date-map/src/components/modal/DateItineraryModal.tsx), [CreateDatePlanModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CreateDatePlanModal.tsx), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+### 16. [Task 16] 미래 데이트 코스 경로 영구 저장 및 재사용 파이프라인
+- **상태:** `Completed` (완료일: 2026-07-27 / 적용 버전: `v0.8.1`)
+- **개요:** 미래 데이트 코스 플랜 생성 시 계산된 경로(Polyline 좌표, 대중교통 노선 정보, 거리, 소요시간)를 영구 기억하여 페이지 새로고침이나 다시 불러올 때 불필요한 Kakao Mobility 및 ODsay API 재호출 없이 동일한 길을 즉시 복원 시각화하도록 파이프라인을 개선했습니다.
+- **주요 스펙:**
+  - `DatePlan`의 `route_summary` (JSONB) 및 `localStorage`에 `path` 및 `transitRoutes` 영구 보관
+  - 저장된 경로가 있는 플랜 로드 시 API 호출을 방지하고 기억된 Polyline 및 대중교통 정보 카드 즉시 렌더링
+  - 코스 장소 추가/삭제/동선 변경 시에만 최신 경로 탐색 후 갱신 및 DB 저장 연동
+- **주요 파일:** [planner.ts](file:///c:/dev/our-date-map/src/types/planner.ts), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [useTransitRoute.ts](file:///c:/dev/our-date-map/src/hooks/useTransitRoute.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+
 
 
 

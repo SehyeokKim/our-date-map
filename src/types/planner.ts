@@ -18,6 +18,13 @@ export interface RouteDirectionsResult {
   error?: string;
 }
 
+export interface RouteSummaryData {
+  distance?: number;
+  duration?: number;
+  path?: { lat: number; lng: number }[];
+  transitRoutes?: Record<string, any>;
+}
+
 export interface DatePlan {
   id: string;
   user_id?: string | null;
@@ -27,10 +34,7 @@ export interface DatePlan {
   start_date?: string; // YYYY-MM-DD
   end_date?: string; // YYYY-MM-DD
   spots: PlannedSpot[];
-  route_summary?: {
-    distance?: number;
-    duration?: number;
-  } | null;
+  route_summary?: RouteSummaryData | null;
   created_at: string;
   updated_at: string;
 }

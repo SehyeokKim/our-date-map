@@ -49,14 +49,16 @@
 
 ---
 
-## 6. Git & Vibe Coding Workflow (Branch Strategy)
+## 6. Git & Vibe Coding Workflow & Command Flags
 1. **Default Branching Strategy (Without `!main`):**
    - By default, ALWAYS create and work on a new feature branch (e.g., `feature/description` or `fix/description`).
    - Push the feature branch to `origin` and output the PR link upon completion.
 2. **Direct Main Strategy (With `!main`):**
    - ONLY when the user explicitly includes the `!main` flag in their prompt/command, skip branch creation and commit/push directly to `origin main`.
-3. **Conventional Commits:** Write clear commit messages using standard types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
-4. **Verification before Push:** Ensure code compiles without TypeScript errors (`npx tsc --noEmit`), update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push.
+3. **Explain-Only Mode (With `!explain`):**
+   - ONLY when the user prompt starts with or contains the `!explain` command (e.g. `!explain ...`), DO NOT make any code modifications. Act as if the user explicitly requested "코드를 변경하지말고 설명만 해줘", providing clear analysis and explanations only.
+4. **Conventional Commits:** Write clear commit messages using standard types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
+5. **Verification before Push:** Ensure code compiles without TypeScript errors (`npx tsc --noEmit`), update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push.
 
 ---
 

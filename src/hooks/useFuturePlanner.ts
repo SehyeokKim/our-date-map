@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { PlannedSpot, AppMode, DatePlan } from "@/types/planner";
+import { PlannedSpot, AppMode, DatePlan, RouteSummaryData } from "@/types/planner";
 import { supabase } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "our_date_map_planned_spots";
+const STORAGE_ROUTE_KEY = "our_date_map_route_summary";
 
 export function useFuturePlanner(
   showToast: (message: string, type?: "success" | "error" | "info") => void,
@@ -12,6 +13,7 @@ export function useFuturePlanner(
 ) {
   const [appMode, setAppMode] = useState<AppMode>("memory");
   const [plannedSpots, setPlannedSpots] = useState<PlannedSpot[]>([]);
+  const [currentRouteSummary, setCurrentRouteSummary] = useState<RouteSummaryData | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -47,8 +49,15 @@ export function useFuturePlanner(
           setPlannedSpots(parsed);
         }
       }
+      const savedRoute = localStorage.getItem(STORAGE_ROUTE_KEY);
+      if (savedRoute) {
+        const parsedRoute = JSON.parse(savedRoute);
+        if (parsedRoute && typeof parsedRoute === "object") {
+          setCurrentRouteSummary(parsedRoute);
+        }
+      }
     } catch (e) {
-      console.error("Failed to load planned spots from localStorage:", e);
+      console.error("Failed to load planned spots or route summary from localStorage:", e);
     }
   }, []);
 
@@ -142,11 +151,24 @@ export function useFuturePlanner(
     }
   }, []);
 
+  const updateRouteSummary = useCallback((routeSummary: RouteSummaryData | null) => {
+    setCurrentRouteSummary(routeSummary);
+    try {
+      if (routeSummary) {
+        localStorage.setItem(STORAGE_ROUTE_KEY, JSON.stringify(routeSummary));
+      } else {
+        localStorage.removeItem(STORAGE_ROUTE_KEY);
+      }
+    } catch (e) {
+      console.error("Failed to update route summary in localStorage:", e);
+    }
+  }, []);
+
   // Save active plan to Supabase DB
   const savePlanToDb = useCallback(
     async (
       customTitle?: string,
-      routeSummary?: { distance?: number; duration?: number },
+      routeSummary?: RouteSummaryData,
       customStartDate?: string,
       customEndDate?: string
     ) => {
@@ -163,6 +185,8 @@ export function useFuturePlanner(
         currentTitle.trim() ||
         (start === end ? `${start} 데이트 코스` : `${start} ~ ${end} 데이트 코스`);
 
+      const finalRouteSummary = routeSummary || currentRouteSummary;
+
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload: any = {
@@ -173,7 +197,7 @@ export function useFuturePlanner(
           start_date: start,
           end_date: end,
           spots: plannedSpots,
-          route_summary: routeSummary || null,
+          route_summary: finalRouteSummary || null,
           updated_at: new Date().toISOString(),
         };
 
@@ -205,6 +229,9 @@ export function useFuturePlanner(
 
         if (resultData) {
           setActivePlanId(resultData.id);
+          if (finalRouteSummary) {
+            updateRouteSummary(finalRouteSummary);
+          }
           showToast(`📅 '${title}' 플랜이 DB에 성공적으로 저장되었습니다!`, "success");
           fetchAllDatePlans();
           fetchPlansForDate(selectedDate);
@@ -218,6 +245,7 @@ export function useFuturePlanner(
     },
     [
       plannedSpots,
+      currentRouteSummary,
       selectedDate,
       startDate,
       endDate,
@@ -225,6 +253,7 @@ export function useFuturePlanner(
       activePlanId,
       userId,
       showToast,
+      updateRouteSummary,
       fetchAllDatePlans,
       fetchPlansForDate,
     ]
@@ -238,13 +267,14 @@ export function useFuturePlanner(
       setSelectedDate(start);
       setCurrentTitle(title || `${start} ~ ${end} 데이트`);
       saveSpots([]);
+      updateRouteSummary(null);
       setActivePlanId(null);
       setAppMode("planning");
       setIsCreateModalOpen(false);
       setIsPlanSheetOpen(true);
       showToast(`'${title || start + " 데이트"}' 플래닝이 시작되었습니다. 지도를 터치해 장소를 추가하세요!`, "success");
     },
-    [saveSpots, showToast]
+    [saveSpots, updateRouteSummary, showToast]
   );
 
   // Load a saved plan from DB into current active canvas
@@ -258,12 +288,13 @@ export function useFuturePlanner(
       setSelectedDate(start);
       setCurrentTitle(plan.title);
       saveSpots(plan.spots || []);
+      updateRouteSummary(plan.route_summary || null);
       setAppMode("planning");
       setIsScheduleModalOpen(false);
       setIsPlanSheetOpen(true);
       showToast(`'${plan.title}' 플랜을 불러왔습니다!`, "success");
     },
-    [saveSpots, showToast]
+    [saveSpots, updateRouteSummary, showToast]
   );
 
   // Delete plan from DB
@@ -357,9 +388,10 @@ export function useFuturePlanner(
   // Clear all planned spots
   const clearAllPlans = useCallback(() => {
     saveSpots([]);
+    updateRouteSummary(null);
     setActivePlanId(null);
     showToast("미래 데이트 플랜이 모두 초기화되었습니다.", "info");
-  }, [saveSpots, showToast]);
+  }, [saveSpots, updateRouteSummary, showToast]);
 
   // Handle map click in planning mode
   const handleMapClickForPlanning = useCallback((lat: number, lng: number, address: string) => {
@@ -377,6 +409,8 @@ export function useFuturePlanner(
     appMode,
     setAppMode,
     plannedSpots,
+    currentRouteSummary,
+    updateRouteSummary,
     selectedDate,
     setSelectedDate,
     startDate,
