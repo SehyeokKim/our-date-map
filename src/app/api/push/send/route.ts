@@ -40,6 +40,23 @@ export async function POST(request: Request) {
     );
 
     const targetUserId = body.targetUserId || body.target_user_id || body.partnerId || null;
+    const senderId = body.senderId || body.sender_id || null;
+    const senderName = body.senderName || body.sender_nickname || body.nickname || '익명';
+
+    // Log push message to Supabase DB
+    try {
+      await supabase.from('push_messages').insert({
+        sender_id: senderId,
+        receiver_id: targetUserId,
+        sender_name: senderName,
+        title: messageTitle,
+        body: messageBody,
+        url: targetUrl,
+        created_at: new Date().toISOString(),
+      });
+    } catch (logErr) {
+      console.warn('[Push Route] Failed logging push message to DB:', logErr);
+    }
 
     let query = supabase.from('push_subscriptions').select('*');
     if (targetUserId) {

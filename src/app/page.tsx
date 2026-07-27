@@ -279,7 +279,7 @@ export default function Home() {
             (typeof window !== "undefined"
               ? localStorage.getItem("our_date_map_target_partner_id")
               : null);
-          sendInstantPushNotification(finalTitle, finalBody, targetPartnerId);
+          sendInstantPushNotification(finalTitle, finalBody, targetPartnerId, nickname, user?.id);
         }}
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
