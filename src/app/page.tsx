@@ -116,6 +116,8 @@ export default function Home() {
     clearAllPlans,
   } = useFuturePlanner(showToast, user?.id);
 
+  const [showRouteOnMap, setShowRouteOnMap] = useState<boolean>(false);
+
   // Kakao Mobility Directions API
   const { fetchRoute, loadingRoute } = useDirections();
 
@@ -159,6 +161,7 @@ export default function Home() {
   const handleLoadPlanWithFit = useCallback(
     (plan: DatePlan) => {
       loadPlanFromDb(plan);
+      setShowRouteOnMap(true);
       if (plan.spots && plan.spots.length > 0) {
         fitBounds(plan.spots.map((s: PlannedSpot) => ({ lat: s.latitude, lng: s.longitude })));
       }
@@ -181,7 +184,8 @@ export default function Home() {
       clearMemorySpotMarkers();
       renderPlannedSpotMarkers(plannedSpots);
 
-      if (plannedSpots.length >= 2) {
+      // Only render route polyline on map if explicit route display is requested ('지도에서 코스 보기')
+      if (showRouteOnMap && plannedSpots.length >= 2) {
         // Use cached/saved route path if available, avoiding redundant Kakao API calls
         if (currentRouteSummary?.path && currentRouteSummary.path.length > 0) {
           renderRoutePolyline(currentRouteSummary.path);
@@ -220,6 +224,7 @@ export default function Home() {
     map,
     spots,
     plannedSpots,
+    showRouteOnMap,
     currentRouteSummary,
     fetchRoute,
     updateRouteSummary,
@@ -244,9 +249,14 @@ export default function Home() {
       {/* Header with Mode Selection Dropdown, Kakao Auth & Profile Edit */}
       <Header
         appMode={appMode}
-        onSelectMode={setAppMode}
+        onSelectMode={(mode) => {
+          setAppMode(mode);
+          if (mode === "planning") {
+            setShowRouteOnMap(false);
+          }
+        }}
         memoryCount={spots ? spots.length : 0}
-        planningCount={plannedSpots.length}
+        planningCount={allDatePlans ? allDatePlans.length : 0}
         user={user}
         nickname={nickname}
         avatarUrl={avatarUrl}
