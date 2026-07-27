@@ -175,10 +175,18 @@ export function useWebPush(
     async (
       customTitle?: string,
       customBody?: string,
-      targetUserId?: string | null
+      targetUserId?: string | null,
+      senderName?: string | null,
+      senderId?: string | null
     ): Promise<boolean> => {
       setLoading(true);
       try {
+        let activeSenderId = senderId || userId;
+        if (!activeSenderId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) activeSenderId = user.id;
+        }
+
         const res = await fetch("/api/push/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -186,6 +194,8 @@ export function useWebPush(
             title: customTitle || "DateMap😘",
             body: customBody || "뽁!",
             targetUserId: targetUserId || null,
+            senderId: activeSenderId || null,
+            senderName: senderName || "익명",
             url: "/",
           }),
         });
@@ -207,7 +217,7 @@ export function useWebPush(
         setLoading(false);
       }
     },
-    [showToast]
+    [showToast, userId]
   );
 
   return {

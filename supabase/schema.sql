@@ -233,3 +233,23 @@ CREATE POLICY "Allow users to update own date_plans" ON public.date_plans FOR UP
 CREATE POLICY "Allow users to delete own date_plans" ON public.date_plans FOR DELETE USING (auth.uid() = user_id OR auth.uid() = created_by OR user_id IS NULL);
 
 GRANT ALL ON public.date_plans TO anon, authenticated, service_role;
+
+-- 6. 푸시 알림 메세지 이력 테이블 (push_messages) 생성
+CREATE TABLE IF NOT EXISTS public.push_messages (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    sender_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    receiver_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    sender_name VARCHAR(255) NOT NULL DEFAULT '익명',
+    title VARCHAR(255) NOT NULL DEFAULT 'DateMap😘',
+    body TEXT NOT NULL DEFAULT '뽁!',
+    url VARCHAR(500) DEFAULT '/',
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+ALTER TABLE public.push_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to push_messages" ON public.push_messages FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated and public insert to push_messages" ON public.push_messages FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow users to delete own sent or received push_messages" ON public.push_messages FOR DELETE USING (auth.uid() = sender_id OR auth.uid() = receiver_id OR sender_id IS NULL);
+
+GRANT ALL ON public.push_messages TO anon, authenticated, service_role;
