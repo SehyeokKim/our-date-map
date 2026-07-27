@@ -15,6 +15,9 @@
 - **ODsay 대중교통 길찾기 API 연동 및 미래 데이트 플래너 대중교통 경로 카드 시각화:** ODsay API (`searchPubTransPathT`) 서버 프록시 GET Route Handler ([route.ts](file:///c:/dev/our-date-map/src/app/api/transit/route.ts))를 구축하여 `ODSAY_API_KEY`를 백엔드에서 안전하게 로드하도록 구현했습니다. 인메모리 Map 캐싱 기반 `useTransitRoute` 훅 ([useTransitRoute.ts](file:///c:/dev/our-date-map/src/hooks/useTransitRoute.ts))을 작성하여 동일 구간 중복 호출을 방지하고, 미래 데이트 플래너 드로어 ([FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx)) 내 핀과 핀 사이에 대중교통 이동 정보 카드(⏱️ 소요시간, 💳 요금, 🚉 지하철/버스 노선)를 자동 표시하도록 연동했습니다. 700m 이내 단거리 이동 시 도보 안내로 자동 예외 처리됩니다. ([transit.ts](file:///c:/dev/our-date-map/src/types/transit.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/transit/route.ts), [useTransitRoute.ts](file:///c:/dev/our-date-map/src/hooks/useTransitRoute.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx))
 
 ### 변경
+- **메모 들여쓰기 정렬 개선 & 미래 데이트 플래닝 핀/경로 은닉 제어:**
+  1) 하단 드로어 장소 카드 내 메모(`memo`)의 말풍선 이모지(💬)와 텍스트를 Flex 레이아웃으로 분리하여, 2줄 이상 줄바꿈 발생 시 둘째 줄부터 첫째 줄 텍스트 시작 위치에 일정한 들여쓰기(Indent) 정렬이 유지되도록 개선했습니다.
+  2) 상단 헤더 메뉴의 '미래 데이트 플래닝' 모드로 진입 시 경로선뿐만 아니라 지도상 코스 핀(`plannedSpotMarkers`)까지 모두 은닉 처리되도록 렌더링 제어를 적용했습니다. '일정 목록' 모달에서 **'지도에서 코스 보기'** 버튼을 클릭했을 때만 해당 데이트 코스의 핀과 연결 경로선이 지도에 함께 노출됩니다. ([FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx))
 - **데이트 코스 상세 드로어 UI 개선 및 경로 표시 제어 튜닝:**
   1) 하단 드로어 헤더 제목을 `"미래 데이트 코스 플랜"`에서 `"데이트 코스 상세"`로 변경했습니다.
   2) 대중교통 이동 정보 카드에서 교통비(요금) 표시를 완전히 제거했습니다.

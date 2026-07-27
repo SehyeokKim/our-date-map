@@ -182,32 +182,39 @@ export default function Home() {
 
     if (appMode === "planning") {
       clearMemorySpotMarkers();
-      renderPlannedSpotMarkers(plannedSpots);
 
-      // Only render route polyline on map if explicit route display is requested ('지도에서 코스 보기')
-      if (showRouteOnMap && plannedSpots.length >= 2) {
-        // Use cached/saved route path if available, avoiding redundant Kakao API calls
-        if (currentRouteSummary?.path && currentRouteSummary.path.length > 0) {
-          renderRoutePolyline(currentRouteSummary.path);
-          setRouteStats({
-            distance: currentRouteSummary.distance,
-            duration: currentRouteSummary.duration,
-          });
+      // Only render planned spot markers & route polyline on map if explicit course display is requested ('지도에서 코스 보기')
+      if (showRouteOnMap) {
+        renderPlannedSpotMarkers(plannedSpots);
+
+        if (plannedSpots.length >= 2) {
+          // Use cached/saved route path if available, avoiding redundant Kakao API calls
+          if (currentRouteSummary?.path && currentRouteSummary.path.length > 0) {
+            renderRoutePolyline(currentRouteSummary.path);
+            setRouteStats({
+              distance: currentRouteSummary.distance,
+              duration: currentRouteSummary.duration,
+            });
+          } else {
+            fetchRoute(plannedSpots).then((res) => {
+              if (res.path && res.path.length > 0) {
+                renderRoutePolyline(res.path);
+                updateRouteSummary({
+                  distance: res.distance,
+                  duration: res.duration,
+                  path: res.path,
+                  transitRoutes: transitRoutes,
+                });
+              }
+              setRouteStats({ distance: res.distance, duration: res.duration });
+            });
+          }
         } else {
-          fetchRoute(plannedSpots).then((res) => {
-            if (res.path && res.path.length > 0) {
-              renderRoutePolyline(res.path);
-              updateRouteSummary({
-                distance: res.distance,
-                duration: res.duration,
-                path: res.path,
-                transitRoutes: transitRoutes,
-              });
-            }
-            setRouteStats({ distance: res.distance, duration: res.duration });
-          });
+          clearRoutePolyline();
+          setRouteStats({});
         }
       } else {
+        clearPlannedSpotMarkers();
         clearRoutePolyline();
         setRouteStats({});
       }

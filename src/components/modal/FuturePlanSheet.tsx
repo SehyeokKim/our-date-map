@@ -189,8 +189,11 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                               </div>
                             )}
                             {spot.memo && (
-                              <div className="text-[10px] text-violet-600 font-medium whitespace-pre-wrap break-words mt-1 bg-violet-50/60 p-1.5 rounded-lg border border-violet-100/50">
-                                💬 {spot.memo}
+                              <div className="text-[10px] text-violet-600 font-medium bg-violet-50/60 p-1.5 rounded-lg border border-violet-100/50 flex items-start gap-1 mt-1">
+                                <span className="flex-shrink-0 select-none">💬</span>
+                                <span className="whitespace-pre-wrap break-words flex-1 leading-relaxed">
+                                  {spot.memo}
+                                </span>
                               </div>
                             )}
                           </div>

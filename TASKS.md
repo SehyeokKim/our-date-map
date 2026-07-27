@@ -6,8 +6,8 @@
 
 ## 📌 전체 진행 상황 요약 (Overall Status)
 
-- **현재 버전:** `v0.9.1`
-- **구현 완료 (Completed):** Task 01 ~ Task 18 (PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push & Popcat, profiles 분리, 프로필 수정, 삭제 핀 휴지통, ODsay 대중교통 경로, 날짜 선택 기반 미래 데이트 플랜 DB 저장, 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인, 미래 데이트 코스 경로 영구 저장 및 재사용 파이프라인, 푸시 알림 메세지 이력 DB 저장 파이프라인, 데이트 코스 상세 드로어 UI 개선 및 경로 표시 제어 튜닝)
+- **현재 버전:** `v0.9.2`
+- **구현 완료 (Completed):** Task 01 ~ Task 19 (PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push & Popcat, profiles 분리, 프로필 수정, 삭제 핀 휴지통, ODsay 대중교통 경로, 날짜 선택 기반 미래 데이트 플랜 DB 저장, 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인, 미래 데이트 코스 경로 영구 저장 및 재사용 파이프라인, 푸시 알림 메세지 이력 DB 저장 파이프라인, 데이트 코스 상세 드로어 UI 개선 및 경로 표시 제어 튜닝, 메모 들여쓰기 정렬 개선 & 미래 데이트 플래닝 핀/경로 은닉 제어)
 - **진행 예정 (Planned):** 추후 추가 예정 피처
 
 ---
@@ -196,16 +196,15 @@
   - 기본 진입 시 하단 드로어를 접힌 상태(`isExpanded = false`)로 유지하여 순수 풀스크린 지도 뷰 보장
   - 과거 데이트(`end_date < today`) 및 미래 데이트(`start_date >= today`) 탭 분리 일정 목록 모달 (`DateItineraryModal.tsx`)
   - 당일치기/1박2일/2박3일 퀵 칩 지원 기간 선택 데이트 생성 모달 (`CreateDatePlanModal.tsx`)
-### 18. [Task 18] 데이트 코스 상세 드로어 UI 개선 및 경로 표시 제어 튜닝
-- **상태:** `Completed` (완료일: 2026-07-27 / 적용 버전: `v0.9.1`)
-- **개요:** 미래 데이트 코스 플래닝 UI 및 경로 렌더링 제어 조건 개선 요청을 반영했습니다.
+### 19. [Task 19] 메모 들여쓰기 정렬 개선 & 미래 데이트 플래닝 핀/경로 은닉 제어
+- **상태:** `Completed` (완료일: 2026-07-27 / 적용 버전: `v0.9.2`)
+- **개요:** 메모 개행 시 들여쓰기 정렬 스타일 이슈 및 미래 데이트 플래닝 진입 시 핀 은닉 요청을 반영했습니다.
 - **주요 스펙:**
-  - 대중교통 이동 카드에서 교통비(요금) 표시 영역 완전히 제거
-  - 하단 드로어의 헤더 타이틀을 `"미래 데이트 코스 플랜"`에서 `"데이트 코스 상세"`로 변경
-  - 코스 장소 핀의 메모(`memo`)가 말줄임표 없이 전체 텍스트로 보이도록 UI 래핑 개선
-  - 헤더 드롭다운의 "미래 데이트 플래닝" 표시 수량이 핀 개수가 아닌 전체 **'일정' 개수(`allDatePlans.length`)**를 가리키도록 연결
-  - '미래 데이트 플래닝' 진입 시에는 지도 경로선이 노출되지 않고, '일정 목록'의 **'지도에서 코스 보기'** 선택 시에만 지도에 경로(Polyline)가 보이도록 표시 조건 제어 로직 적용
-- **주요 파일:** [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+  - 코스 장소 카드 내 메모(`memo`)의 말풍선 아이콘(💬)과 본문 텍스트 영역을 Flex 레이아웃으로 완벽 분리하여, 2줄 이상 줄바꿈 출력 시에도 둘째 줄 이하 텍스트가 첫째 줄 텍스트 시작점에 맞춰 정렬되도록 개선
+  - 상단 메뉴의 '미래 데이트 플래닝' 모드로 진입 시 경로선뿐만 아니라 지도 위 핀(`plannedSpotMarkers`)도 함께 은닉 처리 적용
+  - '일정 목록' 모달 내의 **'지도에서 코스 보기'** 버튼을 터치했을 때만 해당 코스의 장소 핀과 최적 경로(Polyline)가 지도에 함께 렌더링되도록 튜닝
+- **주요 파일:** [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+
 
 
 
