@@ -1,22 +1,22 @@
 # task-02-kakao-map-integration
 
-🎯 **목표 (Goal)**
-- Kakao Maps JavaScript SDK를 Next.js App Router 환경에서 비동기로 안전하게 로드합니다.
-- API 키 누락, 미등록 도메인 접근 등 SDK 로드 실패 시 애플리케이션 크래시를 방지하고, 직관적인 글래스모피즘 에러 안내 카드 UI를 노출하여 문제 해결 방법을 제시합니다.
+?�� **목표 (Goal)**
+- Kakao Maps JavaScript SDK�?Next.js App Router ?�경?�서 비동기로 ?�전?�게 로드?�니??
+- API ???�락, 미등�??�메???�근 ??SDK 로드 ?�패 ???�플리�??�션 ?�래?��? 방�??�고, 직�??�인 글?�스모피�??�러 ?�내 카드 UI�??�출?�여 문제 ?�결 방법???�시?�니??
 
-✅ **진행 상태 (Status)**
-- `Completed` (완료일: 2026-07-21 / 적용 버전: `v0.1.1`)
+??**진행 ?�태 (Status)**
+- `Completed` (?�료?? 2026-07-21 / ?�용 버전: `v0.1.1`)
 
-🛠️ **관련 코드 및 파일 경로 (Implemented Files)**
-- `src/app/page.tsx`: Kakao Map SDK `<Script>` 태그 연동, `onLoad`/`onError` 이벤트 핸들러, `initKakaoMap()` 초기화 및 예외 UI
-- `.env.local`: `NEXT_PUBLIC_KAKAO_MAP_KEY` 환경 변수 관리
+?���?**관??코드 �??�일 경로 (Implemented Files)**
+- `src/app/page.tsx`: Kakao Map SDK `<Script>` ?�그 ?�동, `onLoad`/`onError` ?�벤???�들?? `initKakaoMap()` 초기??�??�외 UI
+- `.env.local`: `NEXT_PUBLIC_KAKAO_MAP_KEY` ?�경 변??관�?
+?�� **구현 ?��? ?�펙 (Specifications)**
+- **비동�??�크립트 로딩:** `next/script` 컴포?�트 (`strategy="afterInteractive"`)�??�용?�여 메인 ?�더링을 방해?��? ?�고 ?�이?��? 로드.
+- **?�전??초기???�핑:** `window.kakao.maps.load()` 콜백 ?��??�서 지??객체 ?�성 (`new kakao.maps.Map()`).
+- **기본 ?�커??** 초기 ?�터 좌표�??�산?�울?�??(`37.551172, 126.988226`), �??�벨 3 ?�정.
+- **?�외 처리 UI:** 카카??개발???�터 ???�랫???�메???�정 ?�내 링크 �?가?�드�??��? ?�러 카드 UI 반환.
 
-📐 **구현 세부 스펙 (Specifications)**
-- **비동기 스크립트 로딩:** `next/script` 컴포넌트 (`strategy="afterInteractive"`)를 활용하여 메인 렌더링을 방해하지 않고 다이내믹 로드.
-- **안전한 초기화 래핑:** `window.kakao.maps.load()` 콜백 내부에서 지도 객체 생성 (`new kakao.maps.Map()`).
-- **기본 포커싱:** 초기 센터 좌표로 남산서울타워 (`37.551172, 126.988226`), 줌 레벨 3 설정.
-- **예외 처리 UI:** 카카오 개발자 센터 웹 플랫폼 도메인 설정 안내 링크 및 가이드를 담은 에러 카드 UI 반환.
+?�️ **?��? 관�???주의?�항 (Caveats & Constraints)**
+- 카카??개발??콘솔?????�랫???�메?�에 개발 �?배포 ?�경 URL(?? `http://localhost:3000`)???�전 ?�록?�어 ?�어???�니??
+- SDK 로딩 ?�료 ??`window.kakao` 참조 ??`TypeError`가 발생?��? ?�도�?비동�??�전 검?��? ?�수?�으�?진행?�야 ?�니??
 
-⚠️ **유지 관리 시 주의사항 (Caveats & Constraints)**
-- 카카오 개발자 콘솔의 웹 플랫폼 도메인에 개발 및 배포 환경 URL(예: `http://localhost:3000`)이 사전 등록되어 있어야 합니다.
-- SDK 로딩 완료 전 `window.kakao` 참조 시 `TypeError`가 발생하지 않도록 비동기 안전 검사를 필수적으로 진행해야 합니다.

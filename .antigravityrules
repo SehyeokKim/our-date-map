@@ -9,6 +9,7 @@
 - **Transit API:** ODsay Public Transit Route API (`ODSAY_API_KEY`)
 - **PWA:** Standalone mode optimization, Service Worker, Web App Manifest
 - **Utility:** `browser-image-compression` for client-side image optimization, React Query (TanStack Query) for API caching
+- **Skills Guide:** Always read and reference [`skills.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/skills.md) for detailed technology stack rules, agent skills, and architecture guidelines.
 
 ---
 
@@ -41,11 +42,11 @@
 2. **`CHANGELOG.md` Language:** Always write the `CHANGELOG.md` in Korean.
 3. **`CHANGELOG.md` Updates:** Whenever a new feature, bug fix, or major change is completed, automatically update the `CHANGELOG.md` file under the `[Unreleased]` section (or the current version section).
 4. **Change Categories:** Group all updates into standard categories in Korean:
-   - `추가` (Added): 새 기능 추가.
-   - `변경` (Changed): 기존 기능 변경.
-   - `수정` (Fixed): 버그 수정.
-   - `삭제` (Removed): 기존 기능 삭제.
-   - `보안` (Security): 보안 및 키 관리 개선.
+   - `추�?` (Added): ??기능 추�?.
+   - `변�? (Changed): 기존 기능 변�?
+   - `?�정` (Fixed): 버그 ?�정.
+   - `??��` (Removed): 기존 기능 ??��.
+   - `보안` (Security): 보안 �???관�?개선.
 
 ---
 
@@ -56,7 +57,7 @@
 2. **Direct Main Strategy (With `!main`):**
    - ONLY when the user explicitly includes the `!main` flag in their prompt/command, skip branch creation and commit/push directly to `origin main`.
 3. **Explain-Only Mode (With `!explain`):**
-   - ONLY when the user prompt starts with or contains the `!explain` command (e.g. `!explain ...`), DO NOT make any code modifications. Act as if the user explicitly requested "코드를 변경하지말고 설명만 해줘", providing clear analysis and explanations only.
+   - ONLY when the user prompt starts with or contains the `!explain` command (e.g. `!explain ...`), DO NOT make any code modifications. Act as if the user explicitly requested "코드�?변경하지말고 ?�명�??�줘", providing clear analysis and explanations only.
 4. **Conventional Commits:** Write clear commit messages using standard types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
 5. **Verification before Push:** Ensure code compiles without TypeScript errors (`npx tsc --noEmit`), update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push.
 

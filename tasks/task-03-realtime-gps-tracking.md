@@ -1,22 +1,23 @@
 # task-03-realtime-gps-tracking
 
-🎯 **목표 (Goal)**
-- HTML5 Geolocation API를 통해 사용자의 현재 GPS 위치를 실시간 추적하고, 지도 위에 파동(ping) 애니메이션 커스텀 마커로 위치를 시각화합니다.
-- 언제든지 사용자 위치로 지도를 이동할 수 있는 우하단 GPS FAB(Floating Action Button)을 제공합니다.
+?�� **목표 (Goal)**
+- HTML5 Geolocation API�??�해 ?�용?�의 ?�재 GPS ?�치�??�시�?추적?�고, 지???�에 ?�동(ping) ?�니메이??커스?� 마커�??�치�??�각?�합?�다.
+- ?�제?��? ?�용???�치�?지?��? ?�동?????�는 ?�하??GPS FAB(Floating Action Button)???�공?�니??
 
-✅ **진행 상태 (Status)**
-- `Completed` (완료일: 2026-07-21 / 적용 버전: `v0.1.1`)
+??**진행 ?�태 (Status)**
+- `Completed` (?�료?? 2026-07-21 / ?�용 버전: `v0.1.1`)
 
-🛠️ **관련 코드 및 파일 경로 (Implemented Files)**
-- `src/app/page.tsx`: Geolocation API 조작 (`startTrackingLocation`, `locateUser`), `userOverlayRef` 마커 관리, GPS 버튼 UI
-- `src/app/globals.css`: `.custom-user-marker`, `.ping`, `.dot`, `.core` 펄싱 마커 스타일링
+?���?**관??코드 �??�일 경로 (Implemented Files)**
+- `src/app/page.tsx`: Geolocation API 조작 (`startTrackingLocation`, `locateUser`), `userOverlayRef` 마커 관�? GPS 버튼 UI
+- `src/app/globals.css`: `.custom-user-marker`, `.ping`, `.dot`, `.core` ?�싱 마커 ?��??�링
 
-📐 **구현 세부 스펙 (Specifications)**
-- **실시간 위치 추적:** `navigator.geolocation.watchPosition` (`enableHighAccuracy: true`, `timeout: 15000`, `maximumAge: 0`).
-- **커스텀 마커 오버레이:** Kakao Maps `CustomOverlay`를 활용하여 파동 애니메이션이 적용된 HTML 요소를 좌표와 실시간 동기화.
-- **최초 위치 자동 포커싱:** 위치 감지 성공 시 1회에 한해 사용자의 현재 좌표로 `mapInstance.panTo()` 실행.
-- **GPS 재포커싱 FAB:** 버튼 클릭 시 `locateUser()`를 호출하여 지도를 사용자 좌표 중심으로 이동.
+?�� **구현 ?��? ?�펙 (Specifications)**
+- **?�시�??�치 추적:** `navigator.geolocation.watchPosition` (`enableHighAccuracy: true`, `timeout: 15000`, `maximumAge: 0`).
+- **커스?� 마커 ?�버?�이:** Kakao Maps `CustomOverlay`�??�용?�여 ?�동 ?�니메이?�이 ?�용??HTML ?�소�?좌표?� ?�시�??�기??
+- **최초 ?�치 ?�동 ?�커??** ?�치 감�? ?�공 ??1?�에 ?�해 ?�용?�의 ?�재 좌표�?`mapInstance.panTo()` ?�행.
+- **GPS ?�포커싱 FAB:** 버튼 ?�릭 ??`locateUser()`�??�출?�여 지?��? ?�용??좌표 중심?�로 ?�동.
 
-⚠️ **유지 관리 시 주의사항 (Caveats & Constraints)**
-- Geolocation API는 브라우저 보안 정책상 HTTPS 또는 `localhost` 환경에서만 동작합니다.
-- 마커 파동 애니메이션 클래스는 Tailwind CSS 컴파일러에 의해 Purge되지 않도록 `globals.css` 파일에 직접 순수 CSS로 관리해야 합니다.
+?�️ **?��? 관�???주의?�항 (Caveats & Constraints)**
+- Geolocation API??브라?��? 보안 ?�책??HTTPS ?�는 `localhost` ?�경?�서�??�작?�니??
+- 마커 ?�동 ?�니메이???�래?�는 Tailwind CSS 컴파?�러???�해 Purge?��? ?�도�?`globals.css` ?�일??직접 ?�수 CSS�?관리해???�니??
+

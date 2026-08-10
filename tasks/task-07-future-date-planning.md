@@ -1,39 +1,40 @@
-# [Task 07] 미래 데이트 플래닝 & 카카오모빌리티 길찾기 코스 시각화
+# [Task 07] 미래 ?�이???�래??& 카카?�모빌리??길찾�?코스 ?�각??
 
-## 📌 작업 개요
+## ?�� ?�업 개요
 - **버전:** `v0.3.0`
-- **구현일:** 2026-07-23
-- **주요 목적:** 헤더 드롭다운 메뉴를 통해 "추억 데이트 지도" 모드와 "미래 데이트 플래닝" 모드를 자유롭게 전환하고, 앞으로 방문할 커플 데이트 장소를 순서대로 핀 찍어 Kakao Mobility API (`/api/directions`)를 통해 경로 코스(Polyline) 및 거리/시간 정보를 시각화합니다.
+- **구현??** 2026-07-23
+- **주요 목적:** ?�더 ?�롭?�운 메뉴�??�해 "추억 ?�이??지?? 모드?� "미래 ?�이???�래?? 모드�??�유�?�� ?�환?�고, ?�으�?방문??커플 ?�이???�소�??�서?��??� 찍어 Kakao Mobility API (`/api/directions`)�??�해 경로 코스(Polyline) �?거리/?�간 ?�보�??�각?�합?�다.
 
 ---
 
-## 🛠️ 세부 요구사항 & 구현 내역
+## ?���??��? ?�구?�항 & 구현 ?�역
 
-### 1. 헤더 UI 드롭다운 메뉴 확장 (`Header.tsx`)
-- 헤더 클릭 시 Glassmorphic 인터랙티브 드롭다운 메뉴 토글.
-- `추억 데이트 지도` (기존 저장 핀 모드) 및 `미래 데이트 플래닝` (코스 등록 & 길찾기 모드) 전환 지원.
-- 각 모드별 개수 뱃지(Memory Spots vs Planned Spots) 및 상태 라벨 표시.
+### 1. ?�더 UI ?�롭?�운 메뉴 ?�장 (`Header.tsx`)
+- ?�더 ?�릭 ??Glassmorphic ?�터?�티�??�롭?�운 메뉴 ?��?.
+- `추억 ?�이??지?? (기존 ?�???� 모드) �?`미래 ?�이???�래?? (코스 ?�록 & 길찾�?모드) ?�환 지??
+- �?모드�?개수 뱃�?(Memory Spots vs Planned Spots) �??�태 ?�벨 ?�시.
 
-### 2. 미래 데이트 플래닝 모드 (`useFuturePlanner.ts` & `FuturePlanSheet.tsx`)
-- 지도 클릭 시 해당 좌표의 역지오코딩 주소를 불러와 순서(1, 2, 3...)가 부여된 플랜 핀 생성 (`AddPlannedSpotModal.tsx`).
-- 하단 바텀 시트(`FuturePlanSheet.tsx`)를 통해 플랜 장소 순서 변경(위로 🔼 / 아래로 🔽), 핀 삭제(🗑️), 전체 초기화(🔄) 지원.
-- `localStorage` 자동 동기화를 통해 브라우저 새로고침 후에도 미래 데이트 플랜 보존.
+### 2. 미래 ?�이???�래??모드 (`useFuturePlanner.ts` & `FuturePlanSheet.tsx`)
+- 지???�릭 ???�당 좌표??????�코??주소�?불러?� ?�서(1, 2, 3...)가 부?�된 ?�랜 ?� ?�성 (`AddPlannedSpotModal.tsx`).
+- ?�단 바�? ?�트(`FuturePlanSheet.tsx`)�??�해 ?�랜 ?�소 ?�서 변�??�로 ?�� / ?�래�??��), ?� ??��(?���?, ?�체 초기???��) 지??
+- `localStorage` ?�동 ?�기?��? ?�해 브라?��? ?�로고침 ?�에??미래 ?�이???�랜 보존.
 
-### 3. Kakao Mobility API 연동 경로 시각화 (`route.ts` & `useDirections.ts`)
-- Next.js Route Handler (`src/app/api/directions/route.ts`)를 경유한 카카오모빌리티 다중 경유지 API (`POST /v1/waypoints/directions`) 연동.
-- 서버 사이드 `KAKAO_REST_API_KEY` 보안 래핑.
-- 2개 이상의 플랜 핀 등록 시 경로 vertexes 좌표 추출 ➔ Kakao Map 보라색 `Polyline` (`#8B5CF6`) 코스선 렌더링.
-- 총 이동 거리(km/m) 및 예상 소요 시간 시각화. API 실패 시 직선 연결 예외 처리 파이프라인 탑재.
+### 3. Kakao Mobility API ?�동 경로 ?�각??(`route.ts` & `useDirections.ts`)
+- Next.js Route Handler (`src/app/api/directions/route.ts`)�?경유??카카?�모빌리???�중 경유지 API (`POST /v1/waypoints/directions`) ?�동.
+- ?�버 ?�이??`KAKAO_REST_API_KEY` 보안 ?�핑.
+- 2�??�상???�랜 ?� ?�록 ??경로 vertexes 좌표 추출 ??Kakao Map 보라??`Polyline` (`#8B5CF6`) 코스???�더�?
+- �??�동 거리(km/m) �??�상 ?�요 ?�간 ?�각?? API ?�패 ??직선 ?�결 ?�외 처리 ?�이?�라???�재.
 
 ---
 
-## 📁 관련 핵심 코드 파일
-- `src/app/api/directions/route.ts`: Kakao Mobility REST API 호출 라우트 핸들러
-- `src/types/planner.ts`: 미래 플래닝 데이터 모델 및 타입 정의
-- `src/hooks/useFuturePlanner.ts`: 미래 플래닝 상태 관리 및 localStorage 연동 훅
-- `src/hooks/useDirections.ts`: 길찾기 API 연동 및 좌표 추출 훅
-- `src/hooks/useKakaoMap.ts`: 번호 핀 오버레이 및 Polyline 경로선 지도 렌더링 훅
-- `src/components/common/Header.tsx`: 모드 전환 인터랙티브 드롭다운 헤더
-- `src/components/modal/AddPlannedSpotModal.tsx`: 미래 데이트 장소 추가 모달
-- `src/components/modal/FuturePlanSheet.tsx`: 미래 데이트 코스 제어 바텀시트
-- `src/app/page.tsx`: 메인페이지 통합 컨트롤러
+## ?�� 관???�심 코드 ?�일
+- `src/app/api/directions/route.ts`: Kakao Mobility REST API ?�출 ?�우???�들??
+- `src/types/planner.ts`: 미래 ?�래???�이??모델 �??�???�의
+- `src/hooks/useFuturePlanner.ts`: 미래 ?�래???�태 관�?�?localStorage ?�동 ??
+- `src/hooks/useDirections.ts`: 길찾�?API ?�동 �?좌표 추출 ??
+- `src/hooks/useKakaoMap.ts`: 번호 ?� ?�버?�이 �?Polyline 경로??지???�더�???
+- `src/components/common/Header.tsx`: 모드 ?�환 ?�터?�티�??�롭?�운 ?�더
+- `src/components/modal/AddPlannedSpotModal.tsx`: 미래 ?�이???�소 추�? 모달
+- `src/components/modal/FuturePlanSheet.tsx`: 미래 ?�이??코스 ?�어 바�??�트
+- `src/app/page.tsx`: 메인?�이지 ?�합 컨트롤러
+

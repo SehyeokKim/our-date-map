@@ -1,209 +1,210 @@
-# 우리들의 데이트 지도 (Our Date Map) - 작업 구현 현황 (`TASKS.md`)
+# ?�리?�의 ?�이??지??(Our Date Map) - ?�업 구현 ?�황 (`TASKS.md`)
 
-이 문서는 **우리들의 데이트 지도** 프로젝트에서 구현 완료된 작업(Completed Tasks) 및 구현 예정 작업(Planned Tasks)의 전체 개요와 세부 명세 링크를 관리하는 프로젝트 루트 총괄 문서입니다.
-
----
-
-## 📌 전체 진행 상황 요약 (Overall Status)
-
-- **현재 버전:** `v0.9.2`
-- **구현 완료 (Completed):** Task 01 ~ Task 19 (PWA, Kakao Map SDK, 실시간 GPS, Supabase 연동, 사진 업로드, 미래 데이트 플래닝, Kakao OAuth, Web Push & Popcat, profiles 분리, 프로필 수정, 삭제 핀 휴지통, ODsay 대중교통 경로, 날짜 선택 기반 미래 데이트 플랜 DB 저장, 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인, 미래 데이트 코스 경로 영구 저장 및 재사용 파이프라인, 푸시 알림 메세지 이력 DB 저장 파이프라인, 데이트 코스 상세 드로어 UI 개선 및 경로 표시 제어 튜닝, 메모 들여쓰기 정렬 개선 & 미래 데이트 플래닝 핀/경로 은닉 제어)
-- **진행 예정 (Planned):** 추후 추가 예정 피처
+??문서??**?�리?�의 ?�이??지??* ?�로?�트?�서 구현 ?�료???�업(Completed Tasks) �?구현 ?�정 ?�업(Planned Tasks)???�체 개요?� ?��? 명세 링크�?관리하???�로?�트 루트 총괄 문서?�니??
 
 ---
 
-## 🛠️ 지금까지 구현된 작업 목록 (Implemented Tasks)
+## ?�� ?�체 진행 ?�황 ?�약 (Overall Status)
 
-### 1. [Task 01] PWA 단독 실행 최적화 & 모바일 레이아웃
-- **상태:** `Completed` (완료일: 2026-07-21 / 적용 버전: `v0.1.0`)
-- **개요:** 모바일 브라우저 및 iOS/Android PWA 단독(standalone) 실행 환경에 최적화된 풀스크린 레이아웃을 구축했습니다.
-- **주요 스펙:**
-  - `userScalable: false` 설정을 통한 모바일 핀치 줌 방지
-  - `public/manifest.json` 내 `display: standalone` 설정으로 모바일 앱과 동일한 UX 제공
-  - Tailwind CSS `backdrop-blur-md` 기반 Glassmorphic 헤더 바 구현
-- **상세 명세:** [`tasks/task-01-pwa-mobile-layout.md`](file:///c:/dev/our-date-map/tasks/task-01-pwa-mobile-layout.md)
-- **주요 파일:** [layout.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [manifest.json](file:///c:/dev/our-date-map/public/manifest.json), [globals.css](file:///c:/dev/our-date-map/src/app/globals.css)
+- **?�재 버전:** `v0.9.2`
+- **구현 ?�료 (Completed):** Task 01 ~ Task 19 (PWA, Kakao Map SDK, ?�시�?GPS, Supabase ?�동, ?�진 ?�로?? 미래 ?�이???�래?? Kakao OAuth, Web Push & Popcat, profiles 분리, ?�로???�정, ??�� ?� ?��??? ODsay ?�중교??경로, ?�짜 ?�택 기반 미래 ?�이???�랜 DB ?�?? ?�수 지??기본 ?�면 & 과거/미래 ?�이???�정 목록 ?�이?�라?? 미래 ?�이??코스 경로 ?�구 ?�??�??�사???�이?�라?? ?�시 ?�림 메세지 ?�력 DB ?�???�이?�라?? ?�이??코스 ?�세 ?�로??UI 개선 �?경로 ?�시 ?�어 ?�닝, 메모 ?�여?�기 ?�렬 개선 & 미래 ?�이???�래???�/경로 ?�???�어)
+- **진행 ?�정 (Planned):** 추후 추�? ?�정 ?�처
 
 ---
 
-### 2. [Task 02] Kakao Map SDK 비동기 연동 & 예외 처리
-- **상태:** `Completed` (완료일: 2026-07-21 / 적용 버전: `v0.1.1`)
-- **개요:** Kakao Maps JavaScript SDK를 Next.js App Router 환경에서 비동기로 안전하게 로드하고, API 키 문제나 미등록 도메인 접근 시 오류 안내 UI를 제공합니다.
-- **주요 스펙:**
-  - `next/script` (`strategy="afterInteractive"`) 및 `window.kakao.maps.load()` 안전 래핑
-  - 초기 지도 좌표를 남산서울타워(`37.551172, 126.988226`)로 설정
-  - API 로드 실패 시 카카오 개발자 콘솔 플랫폼 설정 안내를 담은 글래스모피즘 에러 카드 UI 반환
-- **상세 명세:** [`tasks/task-02-kakao-map-integration.md`](file:///c:/dev/our-date-map/tasks/task-02-kakao-map-integration.md)
-- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), `.env.local`
+## ?���?지금까지 구현???�업 목록 (Implemented Tasks)
+
+### 1. [Task 01] PWA ?�독 ?�행 최적??& 모바???�이?�웃
+- **?�태:** `Completed` (?�료?? 2026-07-21 / ?�용 버전: `v0.1.0`)
+- **개요:** 모바??브라?��? �?iOS/Android PWA ?�독(standalone) ?�행 ?�경??최적?�된 ?�?�크�??�이?�웃??구축?�습?�다.
+- **주요 ?�펙:**
+  - `userScalable: false` ?�정???�한 모바???��?�?방�?
+  - `public/manifest.json` ??`display: standalone` ?�정?�로 모바???�과 ?�일??UX ?�공
+  - Tailwind CSS `backdrop-blur-md` 기반 Glassmorphic ?�더 �?구현
+- **?�세 명세:** [`tasks/task-01-pwa-mobile-layout.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-01-pwa-mobile-layout.md)
+- **주요 ?�일:** [layout.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx), [manifest.json](file:///C:/Users/aica_/Desktop/projects/our-date-map/public/manifest.json), [globals.css](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/globals.css)
 
 ---
 
-### 3. [Task 03] 실시간 GPS 위치 추적 & Pulsing 마커
-- **상태:** `Completed` (완료일: 2026-07-21 / 적용 버전: `v0.1.1`)
-- **개요:** HTML5 Geolocation API를 사용하여 사용자의 실시간 GPS 위치를 추적하고, 지도 위에 파동(ping) 애니메이션 마커로 표시합니다.
-- **주요 스펙:**
-  - `navigator.geolocation.watchPosition` (`enableHighAccuracy: true`) 기반 실시간 추적
-  - Kakao Maps `CustomOverlay`를 활용한 펄싱(ping) 파동 커스텀 위치 마커 시각화
-  - 최초 1회 사용자 위치로 자동 포커싱 및 우하단 GPS FAB(Floating Action Button)을 통한 재포커싱 기능
-- **상세 명세:** [`tasks/task-03-realtime-gps-tracking.md`](file:///c:/dev/our-date-map/tasks/task-03-realtime-gps-tracking.md)
-- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [globals.css](file:///c:/dev/our-date-map/src/app/globals.css)
+### 2. [Task 02] Kakao Map SDK 비동�??�동 & ?�외 처리
+- **?�태:** `Completed` (?�료?? 2026-07-21 / ?�용 버전: `v0.1.1`)
+- **개요:** Kakao Maps JavaScript SDK�?Next.js App Router ?�경?�서 비동기로 ?�전?�게 로드?�고, API ??문제??미등�??�메???�근 ???�류 ?�내 UI�??�공?�니??
+- **주요 ?�펙:**
+  - `next/script` (`strategy="afterInteractive"`) �?`window.kakao.maps.load()` ?�전 ?�핑
+  - 초기 지??좌표�??�산?�울?�??`37.551172, 126.988226`)�??�정
+  - API 로드 ?�패 ??카카??개발??콘솔 ?�랫???�정 ?�내�??��? 글?�스모피�??�러 카드 UI 반환
+- **?�세 명세:** [`tasks/task-02-kakao-map-integration.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-02-kakao-map-integration.md)
+- **주요 ?�일:** [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx), `.env.local`
 
 ---
 
-### 4. [Task 04] Supabase DB & 스토리지 업로드 파이프라인
-- **상태:** `Completed` (완료일: 2026-07-21 / 적용 버전: `v0.1.0`)
-- **개요:** Supabase PostgreSQL 데이터베이스(`date_spots` 테이블)와 Storage 버킷(`date-photos`)을 연동하고, 클라이언트 사이드 이미지 압축 파이프라인을 구축했습니다.
-- **주요 스펙:**
-  - `date_spots` 테이블 schema DDL 및 RLS (Row Level Security) 정책 정의
-  - `browser-image-compression` 활용: 업로드 전 사진을 300KB 이하, 최대 해상도 1200px로 클라이언트 압축
-  - Supabase Storage `date-photos` 버킷 저장 및 퍼블릭 접근 URL (`getPublicUrl`) 반환
-- **상세 명세:** [`tasks/task-04-supabase-storage-pipeline.md`](file:///c:/dev/our-date-map/tasks/task-04-supabase-pipeline.md)
-- **주요 파일:** [supabase.ts](file:///c:/dev/our-date-map/src/lib/supabase.ts), [upload.ts](file:///c:/dev/our-date-map/src/lib/upload.ts), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql)
+### 3. [Task 03] ?�시�?GPS ?�치 추적 & Pulsing 마커
+- **?�태:** `Completed` (?�료?? 2026-07-21 / ?�용 버전: `v0.1.1`)
+- **개요:** HTML5 Geolocation API�??�용?�여 ?�용?�의 ?�시�?GPS ?�치�?추적?�고, 지???�에 ?�동(ping) ?�니메이??마커�??�시?�니??
+- **주요 ?�펙:**
+  - `navigator.geolocation.watchPosition` (`enableHighAccuracy: true`) 기반 ?�시�?추적
+  - Kakao Maps `CustomOverlay`�??�용???�싱(ping) ?�동 커스?� ?�치 마커 ?�각??
+  - 최초 1???�용???�치�??�동 ?�커??�??�하??GPS FAB(Floating Action Button)???�한 ?�포커싱 기능
+- **?�세 명세:** [`tasks/task-03-realtime-gps-tracking.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-03-realtime-gps-tracking.md)
+- **주요 ?�일:** [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx), [globals.css](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/globals.css)
 
 ---
 
-### 5. [Task 05] 데이트 장소 마커 표시 & 상세 보기 시트
-- **상태:** `Completed` (완료일: 2026-07-21 / 적용 버전: `v0.1.1`)
-- **개요:** Supabase DB에 저장된 데이트 장소 데이터를 패칭하여 지도 위에 분홍색 하트 커스텀 마커로 렌더링하고, 터치 시 상세 정보를 확인할 수 있는 바텀 시트를 노출합니다.
-- **주요 스펙:**
-  - Kakao Maps `CustomOverlay`를 활용한 분홍색 하트 마커 렌더링
-  - 마커 터치 시 지도 이동(`map.panTo`) 및 이벤트 버블링 차단 (`e.stopPropagation()`)
-  - 바텀 시트를 통한 추억 사진, 한국어 포맷 날짜, 장소명, 데이트 이야기 및 좌표 표시
-- **상세 명세:** [`tasks/task-05-spot-marker-detail-sheet.md`](file:///c:/dev/our-date-map/tasks/task-05-spot-marker-detail-sheet.md)
-- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql)
+### 4. [Task 04] Supabase DB & ?�토리�? ?�로???�이?�라??
+- **?�태:** `Completed` (?�료?? 2026-07-21 / ?�용 버전: `v0.1.0`)
+- **개요:** Supabase PostgreSQL ?�이?�베?�스(`date_spots` ?�이�??� Storage 버킷(`date-photos`)???�동?�고, ?�라?�언???�이???��?지 ?�축 ?�이?�라?�을 구축?�습?�다.
+- **주요 ?�펙:**
+  - `date_spots` ?�이�?schema DDL �?RLS (Row Level Security) ?�책 ?�의
+  - `browser-image-compression` ?�용: ?�로?????�진??300KB ?�하, 최�? ?�상??1200px�??�라?�언???�축
+  - Supabase Storage `date-photos` 버킷 ?�??�??�블�??�근 URL (`getPublicUrl`) 반환
+- **?�세 명세:** [`tasks/task-04-supabase-storage-pipeline.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-04-supabase-pipeline.md)
+- **주요 ?�일:** [supabase.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/lib/supabase.ts), [upload.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/lib/upload.ts), [schema.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/schema.sql)
 
 ---
 
-### 6. [Task 06] 다중 사진 업로드(최대 10장) & 2단계 요약/자세히보기 팝업 구축
-- **상태:** `Completed` (완료일: 2026-07-22 / 적용 버전: `v0.2.0`)
-- **개요:** 데이트 기록 시 사진 최대 10장 업로드 지원(`image_urls TEXT[]`), 1단계 요약 팝업(대표사진 1장, 1줄 메모, 제목링크) ➔ 2단계 전체 자세히보기 팝업(사진 10장 캐러셀 갤러리, 메모 전문, 🗑️ 핀 삭제 버튼) 재구축.
-- **주요 스펙:**
-  - 최대 10장 다중 사진 선택, 개별 압축 업로드 및 `image_urls TEXT[]` 스키마 마이그레이션 (`20260722022000_add_image_urls_array_to_date_spots.sql`)
-  - 1단계 요약 팝업([SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx)): 대표사진 1장, 1줄 메모, 제목 링크, 핀 삭제 버튼 제거
-  - 2단계 전체 자세히보기 팝업([SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)): 10장 갤러리 슬라이더 캐러셀, 메모 전문, 📍 위경도, 🗑️ 핀 삭제 버튼
-- **상세 명세:** [`tasks/task-06-map-click-marker-modal.md`](file:///c:/dev/our-date-map/tasks/task-06-map-click-marker-modal.md)
-- **주요 파일:** [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [AddSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddSpotModal.tsx), [SpotSummarySheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotSummarySheet.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+### 5. [Task 05] ?�이???�소 마커 ?�시 & ?�세 보기 ?�트
+- **?�태:** `Completed` (?�료?? 2026-07-21 / ?�용 버전: `v0.1.1`)
+- **개요:** Supabase DB???�?�된 ?�이???�소 ?�이?��? ?�칭?�여 지???�에 분홍???�트 커스?� 마커�??�더링하�? ?�치 ???�세 ?�보�??�인?????�는 바�? ?�트�??�출?�니??
+- **주요 ?�펙:**
+  - Kakao Maps `CustomOverlay`�??�용??분홍???�트 마커 ?�더�?
+  - 마커 ?�치 ??지???�동(`map.panTo`) �??�벤??버블�?차단 (`e.stopPropagation()`)
+  - 바�? ?�트�??�한 추억 ?�진, ?�국???�맷 ?�짜, ?�소�? ?�이???�야�?�?좌표 ?�시
+- **?�세 명세:** [`tasks/task-05-spot-marker-detail-sheet.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-05-spot-marker-detail-sheet.md)
+- **주요 ?�일:** [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx), [schema.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/schema.sql)
 
 ---
 
-### 7. [Task 07] 미래 데이트 플래닝 & Kakao Mobility API 코스 시각화
-- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.3.0`)
-- **개요:** 헤더 드롭다운 메뉴를 통해 '추억 데이트 지도'와 '미래 데이트 플래닝' 모드를 자유롭게 전환하고, 미래 방문할 데이트 장소를 순서대로 핀 찍어 Kakao Mobility API (`/api/directions`) 기반 경로 코스(Polyline) 및 거리/시간을 시각화하는 기능을 구현했습니다.
-- **주요 스펙:**
-  - Glassmorphic 인터랙티브 드롭다운 메뉴 헤더 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx))
-  - 미래 플래닝 코스 핀 추가 ([AddPlannedSpotModal.tsx](file:///c:/dev/our-date-map/src/components/modal/AddPlannedSpotModal.tsx)) 및 순서 변경/삭제/초기화 제어 바텀 시트 ([FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx))
-  - Kakao Mobility 다중 경유지 Route Handler (`/api/directions/route.ts`) 연동, `Polyline` 경로선 시각화 및 `localStorage` 자동 보존
-- **상세 명세:** [`tasks/task-07-future-date-planning.md`](file:///c:/dev/our-date-map/tasks/task-07-future-date-planning.md)
-- **주요 파일:** [route.ts](file:///c:/dev/our-date-map/src/app/api/directions/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [useDirections.ts](file:///c:/dev/our-date-map/src/hooks/useDirections.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx)
+### 6. [Task 06] ?�중 ?�진 ?�로??최�? 10?? & 2?�계 ?�약/?�세?�보�??�업 구축
+- **?�태:** `Completed` (?�료?? 2026-07-22 / ?�용 버전: `v0.2.0`)
+- **개요:** ?�이??기록 ???�진 최�? 10???�로??지??`image_urls TEXT[]`), 1?�계 ?�약 ?�업(?�?�사�?1?? 1�?메모, ?�목링크) ??2?�계 ?�체 ?�세?�보�??�업(?�진 10??캐러?� 갤러�? 메모 ?�문, ?���??� ??�� 버튼) ?�구�?
+- **주요 ?�펙:**
+  - 최�? 10???�중 ?�진 ?�택, 개별 ?�축 ?�로??�?`image_urls TEXT[]` ?�키�?마이그레?�션 (`20260722022000_add_image_urls_array_to_date_spots.sql`)
+  - 1?�계 ?�약 ?�업([SpotSummarySheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/SpotSummarySheet.tsx)): ?�?�사�?1?? 1�?메모, ?�목 링크, ?� ??�� 버튼 ?�거
+  - 2?�계 ?�체 ?�세?�보�??�업([SpotDetailSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/SpotDetailSheet.tsx)): 10??갤러�??�라?�더 캐러?�, 메모 ?�문, ?�� ?�경?? ?���??� ??�� 버튼
+- **?�세 명세:** [`tasks/task-06-map-click-marker-modal.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-06-map-click-marker-modal.md)
+- **주요 ?�일:** [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx), [AddSpotModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/AddSpotModal.tsx), [SpotSummarySheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/SpotSummarySheet.tsx), [SpotDetailSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/SpotDetailSheet.tsx)
 
 ---
 
-### 8. [Task 08] Kakao OAuth 인증 연동 & 데이트 장소 작성자 추적
-- **상태:** `Completed` (완료일: 2026-07-23 / 적용 버전: `v0.4.0`)
-- **개요:** Kakao OAuth 간편 로그인 연동(`@supabase/ssr`)을 구축하고, 데이트 핀 추가 시 작성자의 ID 및 닉네임/프로필 사진을 자동으로 저장하며 상세 보기에서 작성자 정보를 시각화합니다.
-- **주요 스펙:**
-  - DB 컬럼 마이그레이션 (`user_id`, `created_by`, `creator_nickname`, `creator_avatar_url`) 및 RLS 소유권 정책 적용 (`20260723103136_add_user_id_to_spots_and_records.sql`)
-  - Supabase Browser & Server Client (`src/lib/supabase/client.ts`, `server.ts`) 및 Auth Callback Route Handler (`/auth/callback/route.ts`) 구현
-  - 핀 기록 시 인증 세션의 `user_id` 자동 첨부 및 상세 시트 `(내 기록)` 작성자 배지 시각화
-  - Kakao OAuth `redirectTo` (`${origin}/auth/callback`) 동적 설정 및 KOE205 방지를 위한 `scopes` / `queryParams.scope` 명시적 재정의 (`profile_nickname profile_image`)
-  - Auth Callback Route Handler 세션 교환 추적 및 서버/클라이언트 예외 로깅 추가
-  - 헤더 드롭다운 내 카카오 간편 로그인 / 프로필 & 로그아웃 UI 통합 및 상세 시트 작성자 배지 노출
-- **상세 명세:** [`tasks/task-08-kakao-auth-creator-tracking.md`](file:///c:/dev/our-date-map/tasks/task-08-kakao-auth-creator-tracking.md)
-- **주요 파일:** [client.ts](file:///c:/dev/our-date-map/src/lib/supabase/client.ts), [server.ts](file:///c:/dev/our-date-map/src/lib/supabase/server.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+### 7. [Task 07] 미래 ?�이???�래??& Kakao Mobility API 코스 ?�각??
+- **?�태:** `Completed` (?�료?? 2026-07-23 / ?�용 버전: `v0.3.0`)
+- **개요:** ?�더 ?�롭?�운 메뉴�??�해 '추억 ?�이??지???� '미래 ?�이???�래?? 모드�??�유�?�� ?�환?�고, 미래 방문???�이???�소�??�서?��??� 찍어 Kakao Mobility API (`/api/directions`) 기반 경로 코스(Polyline) �?거리/?�간???�각?�하??기능??구현?�습?�다.
+- **주요 ?�펙:**
+  - Glassmorphic ?�터?�티�??�롭?�운 메뉴 ?�더 ([Header.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/common/Header.tsx))
+  - 미래 ?�래??코스 ?� 추�? ([AddPlannedSpotModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/AddPlannedSpotModal.tsx)) �??�서 변�???��/초기???�어 바�? ?�트 ([FuturePlanSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/FuturePlanSheet.tsx))
+  - Kakao Mobility ?�중 경유지 Route Handler (`/api/directions/route.ts`) ?�동, `Polyline` 경로???�각??�?`localStorage` ?�동 보존
+- **?�세 명세:** [`tasks/task-07-future-date-planning.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-07-future-date-planning.md)
+- **주요 ?�일:** [route.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/api/directions/route.ts), [Header.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/common/Header.tsx), [useFuturePlanner.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useFuturePlanner.ts), [useDirections.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useDirections.ts), [FuturePlanSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/FuturePlanSheet.tsx)
 
 ---
 
-### 9. [Task 09] Web Push 알림 토글 UI & 실시간 전송 파이프라인
-- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.5.0`)
-- **개요:** 헤더 프로필 카드 내 Popcat 이미지 버튼(`popcat_close.png` / `popcat_open.png`)을 통한 웹 푸시 알림 ON/OFF 토글, 1초 롱프레스 제스처 기반 커스텀 알림 문구 설정 모달([CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx)), 및 지도 우측 하단 Popcat 알림 전송 버튼(1초 오픈 애니메이션 & 쿨다운)을 구현하고, Web Push API 및 서비스 워커를 연동하여 실시간 알림을 발송합니다.
-- **주요 스펙:**
-  - 프로필 카드 하단 팝캣 위치 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx)): `[로그아웃]` 좌측 보더리스 transparent 버튼, Popcat 커스텀 이미지 (`popcat_close.png` / `popcat_open.png`), 1초 롱프레스 시 문구 설정 모달 오픈
-  - 커스텀 메시지 설정 모달 ([CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx)): Popcat 버튼 1초 롱프레스 시 햅틱 진동 피드백과 함께 오픈, 제목/본문 입력, 퀵 프리셋 칩("지금 뭐해? 🤔", "보고 싶어 💖" 등), `localStorage` (`our_date_map_custom_push_message`) 저장
-  - 지도 플로팅 팝캣 전송 위치 ([MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx)): 독립 수정 버튼 제거, 푸시 ON 시 우측 하단 노출, 숏 터치 시 사용자 커스텀 페이로드로 즉시 상대방 알림 전송 및 1초간 입 벌리는 애니메이션(`popcat_open.png`), 1초 롱프레스 시 문구 설정 모달 오픈
-  - Web Push 서비스 워커 ([sw.js](file:///c:/dev/our-date-map/public/sw.js)) 백그라운드 푸시 및 클릭 포커싱 처리
-  - `push_subscriptions` DB 마이그레이션 및 Next.js Route Handler (`/api/push/send/route.ts`)
-- **상세 명세:** [`tasks/task-09-web-push-popcat-profile.md`](file:///c:/dev/our-date-map/tasks/task-09-web-push-popcat-profile.md)
-- **주요 파일:** [sw.js](file:///c:/dev/our-date-map/public/sw.js), [useWebPush.ts](file:///c:/dev/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///c:/dev/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///c:/dev/our-date-map/src/components/map/MapContainer.tsx), [CustomPushMessageModal.tsx](file:///c:/dev/our-date-map/src/components/modal/CustomPushMessageModal.tsx)
+### 8. [Task 08] Kakao OAuth ?�증 ?�동 & ?�이???�소 ?�성??추적
+- **?�태:** `Completed` (?�료?? 2026-07-23 / ?�용 버전: `v0.4.0`)
+- **개요:** Kakao OAuth 간편 로그???�동(`@supabase/ssr`)??구축?�고, ?�이???� 추�? ???�성?�의 ID �??�네???�로???�진???�동?�로 ?�?�하�??�세 보기?�서 ?�성???�보�??�각?�합?�다.
+- **주요 ?�펙:**
+  - DB 컬럼 마이그레?�션 (`user_id`, `created_by`, `creator_nickname`, `creator_avatar_url`) �?RLS ?�유�??�책 ?�용 (`20260723103136_add_user_id_to_spots_and_records.sql`)
+  - Supabase Browser & Server Client (`src/lib/supabase/client.ts`, `server.ts`) �?Auth Callback Route Handler (`/auth/callback/route.ts`) 구현
+  - ?� 기록 ???�증 ?�션??`user_id` ?�동 첨�? �??�세 ?�트 `(??기록)` ?�성??배�? ?�각??
+  - Kakao OAuth `redirectTo` (`${origin}/auth/callback`) ?�적 ?�정 �?KOE205 방�?�??�한 `scopes` / `queryParams.scope` 명시???�정??(`profile_nickname profile_image`)
+  - Auth Callback Route Handler ?�션 교환 추적 �??�버/?�라?�언???�외 로깅 추�?
+  - ?�더 ?�롭?�운 ??카카??간편 로그??/ ?�로??& 로그?�웃 UI ?�합 �??�세 ?�트 ?�성??배�? ?�출
+- **?�세 명세:** [`tasks/task-08-kakao-auth-creator-tracking.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-08-kakao-auth-creator-tracking.md)
+- **주요 ?�일:** [client.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/lib/supabase/client.ts), [server.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/lib/supabase/server.ts), [useAuth.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useAuth.ts), [Header.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/common/Header.tsx), [SpotDetailSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/SpotDetailSheet.tsx)
 
 ---
 
-### 10. [Task 10] 작성자 메타데이터 profiles 테이블 분리 및 동적 관계형 조인
-- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
-- **개요:** `date_spots` 테이블 내 하드코딩된 작성자 메타데이터 컬럼들(`creator_nickname`, `creator_avatar_url`)을 전면 제거하고, `auth.users(id)`와 1:1 대응되는 `public.profiles` 테이블을 신설하여 `created_by` (UUID) 외래키(FK) 기반 dynamic relational JOIN 구문으로 리팩토링했습니다.
-- **주요 스펙:**
-  - `public.profiles` 테이블 신설 및 RLS 정책(전체 조회 허용, 자가 수정 제한) 적용 (`20260723233625_decouple_creator_data_to_profiles.sql`)
-  - 회원가입 시 프로필 자동 생성 DB 트리거 (`on_auth_user_created`) 및 기존 유저 백필 로직 구현
-  - `date_spots` 테이블에서 작성자 텍스트 컬럼 삭제 및 `created_by REFERENCES public.profiles(id)` FK 정의
-  - Supabase 조회 쿼리 동적 JOIN 연동 (`.select('*, profiles(id, nickname, profile_image_url)')`)
-  - UI 컴포넌트 동적 프로필 접근 연동 (`spot.profiles.nickname`, `spot.profiles.profile_image_url`)
-- **주요 파일:** [20260723233625_decouple_creator_data_to_profiles.sql](file:///c:/dev/our-date-map/supabase/migrations/20260723233625_decouple_creator_data_to_profiles.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [supabase.ts](file:///c:/dev/our-date-map/src/types/supabase.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+### 9. [Task 09] Web Push ?�림 ?��? UI & ?�시�??�송 ?�이?�라??
+- **?�태:** `Completed` (?�료?? 2026-07-24 / ?�용 버전: `v0.5.0`)
+- **개요:** ?�더 ?�로??카드 ??Popcat ?��?지 버튼(`popcat_close.png` / `popcat_open.png`)???�한 ???�시 ?�림 ON/OFF ?��?, 1�?롱프?�스 ?�스�?기반 커스?� ?�림 문구 ?�정 모달([CustomPushMessageModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/CustomPushMessageModal.tsx)), �?지???�측 ?�단 Popcat ?�림 ?�송 버튼(1�??�픈 ?�니메이??& 쿨다????구현?�고, Web Push API �??�비???�커�??�동?�여 ?�시�??�림??발송?�니??
+- **주요 ?�펙:**
+  - ?�로??카드 ?�단 ?�캣 ?�치 ([Header.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/common/Header.tsx)): `[로그?�웃]` 좌측 보더리스 transparent 버튼, Popcat 커스?� ?��?지 (`popcat_close.png` / `popcat_open.png`), 1�?롱프?�스 ??문구 ?�정 모달 ?�픈
+  - 커스?� 메시지 ?�정 모달 ([CustomPushMessageModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/CustomPushMessageModal.tsx)): Popcat 버튼 1�?롱프?�스 ???�틱 진동 ?�드백과 ?�께 ?�픈, ?�목/본문 ?�력, ???�리??�?"지�?뭐해? ?��", "보고 ?�어 ?��" ??, `localStorage` (`our_date_map_custom_push_message`) ?�??
+  - 지???�로???�캣 ?�송 ?�치 ([MapContainer.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/map/MapContainer.tsx)): ?�립 ?�정 버튼 ?�거, ?�시 ON ???�측 ?�단 ?�출, ???�치 ???�용??커스?� ?�이로드�?즉시 ?��?�??�림 ?�송 �?1초간 ??벌리???�니메이??`popcat_open.png`), 1�?롱프?�스 ??문구 ?�정 모달 ?�픈
+  - Web Push ?�비???�커 ([sw.js](file:///C:/Users/aica_/Desktop/projects/our-date-map/public/sw.js)) 백그?�운???�시 �??�릭 ?�커??처리
+  - `push_subscriptions` DB 마이그레?�션 �?Next.js Route Handler (`/api/push/send/route.ts`)
+- **?�세 명세:** [`tasks/task-09-web-push-popcat-profile.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-09-web-push-popcat-profile.md)
+- **주요 ?�일:** [sw.js](file:///C:/Users/aica_/Desktop/projects/our-date-map/public/sw.js), [useWebPush.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useWebPush.ts), [route.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/api/push/send/route.ts), [Header.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/common/Header.tsx), [MapContainer.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/map/MapContainer.tsx), [CustomPushMessageModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/CustomPushMessageModal.tsx)
 
 ---
 
-### 11. [Task 11] 프로필 수정 모달 UI 구축 & DB/스토리지 동기화
-- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
-- **개요:** 헤더 드롭다운의 사용자 카드를 클릭하여 닉네임과 프로필 사진을 직접 변경할 수 있는 프로필 수정 모달 UI([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))를 구현하고, Supabase Storage `avatars` 버킷 및 `public.profiles` DB 동기화 파이프라인을 구축했습니다.
-- **주요 스펙:**
-  - 헤더 드롭다운 하단 유저 프로필 카드 클릭 트리거 및 호버 인터랙션 ([Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx))
-  - `ProfileEditModal` UI: 프로필 사진 300KB 압축 및 실시간 미리보기, 닉네임 입력, `취소`/`저장` 버튼 ([ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx))
-  - Supabase Storage `avatars` 퍼블릭 버킷 마이그레이션 (`20260723235156_add_avatars_storage_bucket.sql`)
-  - `useAuth` 훅 강화: `profiles` 조회/upsert, Kakao OAuth 기본값 자동 폴백, 실시간 전역 프로필 동기화 ([useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts))
-- **주요 파일:** [ProfileEditModal.tsx](file:///c:/dev/our-date-map/src/components/modal/ProfileEditModal.tsx), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [upload.ts](file:///c:/dev/our-date-map/src/lib/upload.ts), [Header.tsx](file:///c:/dev/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql)
+### 10. [Task 10] ?�성??메�??�이??profiles ?�이�?분리 �??�적 관계형 조인
+- **?�태:** `Completed` (?�료?? 2026-07-24 / ?�용 버전: `v0.4.0`)
+- **개요:** `date_spots` ?�이�????�드코딩???�성??메�??�이??컬럼??`creator_nickname`, `creator_avatar_url`)???�면 ?�거?�고, `auth.users(id)`?� 1:1 ?�?�되??`public.profiles` ?�이블을 ?�설?�여 `created_by` (UUID) ?�래??FK) 기반 dynamic relational JOIN 구문?�로 리팩?�링?�습?�다.
+- **주요 ?�펙:**
+  - `public.profiles` ?�이�??�설 �?RLS ?�책(?�체 조회 ?�용, ?��? ?�정 ?�한) ?�용 (`20260723233625_decouple_creator_data_to_profiles.sql`)
+  - ?�원가?????�로???�동 ?�성 DB ?�리�?(`on_auth_user_created`) �?기존 ?��? 백필 로직 구현
+  - `date_spots` ?�이블에???�성???�스??컬럼 ??�� �?`created_by REFERENCES public.profiles(id)` FK ?�의
+  - Supabase 조회 쿼리 ?�적 JOIN ?�동 (`.select('*, profiles(id, nickname, profile_image_url)')`)
+  - UI 컴포?�트 ?�적 ?�로???�근 ?�동 (`spot.profiles.nickname`, `spot.profiles.profile_image_url`)
+- **주요 ?�일:** [20260723233625_decouple_creator_data_to_profiles.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/migrations/20260723233625_decouple_creator_data_to_profiles.sql), [schema.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/schema.sql), [supabase.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/types/supabase.ts), [spot.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/types/spot.ts), [useDateSpots.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useDateSpots.ts), [SpotDetailSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/SpotDetailSheet.tsx)
 
 ---
 
-### 12. [Task 12] 삭제된 데이트 핀 휴지통 테이블 (deleted_date_spots) & 소프트 삭제 메커니즘
-- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.4.0`)
-- **개요:** 핀 삭제 시 원본 데이터의 하드 삭제를 방지하고 휴지통에 보존 및 복원할 수 있도록 `deleted_date_spots` 전용 테이블 및 RLS 정책을 구축하고, 소프트 삭제 워크플로우를 완성했습니다.
-- **주요 스펙:**
-  - `deleted_date_spots` 휴지통 테이블 신설 마이그레이션 (`20260724000135_create_deleted_date_spots_table.sql`)
+### 11. [Task 11] ?�로???�정 모달 UI 구축 & DB/?�토리�? ?�기??
+- **?�태:** `Completed` (?�료?? 2026-07-24 / ?�용 버전: `v0.4.0`)
+- **개요:** ?�더 ?�롭?�운???�용??카드�??�릭?�여 ?�네?�과 ?�로???�진??직접 변경할 ???�는 ?�로???�정 모달 UI([ProfileEditModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/ProfileEditModal.tsx))�?구현?�고, Supabase Storage `avatars` 버킷 �?`public.profiles` DB ?�기???�이?�라?�을 구축?�습?�다.
+- **주요 ?�펙:**
+  - ?�더 ?�롭?�운 ?�단 ?��? ?�로??카드 ?�릭 ?�리�?�??�버 ?�터?�션 ([Header.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/common/Header.tsx))
+  - `ProfileEditModal` UI: ?�로???�진 300KB ?�축 �??�시�?미리보기, ?�네???�력, `취소`/`?�?? 버튼 ([ProfileEditModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/ProfileEditModal.tsx))
+  - Supabase Storage `avatars` ?�블�?버킷 마이그레?�션 (`20260723235156_add_avatars_storage_bucket.sql`)
+  - `useAuth` ??강화: `profiles` 조회/upsert, Kakao OAuth 기본�??�동 ?�백, ?�시�??�역 ?�로???�기??([useAuth.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useAuth.ts))
+- **주요 ?�일:** [ProfileEditModal.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/ProfileEditModal.tsx), [useAuth.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useAuth.ts), [upload.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/lib/upload.ts), [Header.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/common/Header.tsx), [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx), [schema.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/schema.sql)
+
+---
+
+### 12. [Task 12] ??��???�이???� ?��????�이�?(deleted_date_spots) & ?�프????�� 메커?�즘
+- **?�태:** `Completed` (?�료?? 2026-07-24 / ?�용 버전: `v0.4.0`)
+- **개요:** ?� ??�� ???�본 ?�이?�의 ?�드 ??���?방�??�고 ?��??�에 보존 �?복원?????�도�?`deleted_date_spots` ?�용 ?�이�?�?RLS ?�책??구축?�고, ?�프????�� ?�크?�로?��? ?�성?�습?�다.
+- **주요 ?�펙:**
+  - `deleted_date_spots` ?��????�이�??�설 마이그레?�션 (`20260724000135_create_deleted_date_spots_table.sql`)
   - 컬럼: `id`, `original_spot_id`, `spot_data` (JSONB), `deleted_by`, `deleted_at`, `reason`
-  - 핀 삭제 시 스팟 전체 데이터를 `deleted_date_spots`에 아카이빙하고 `date_spots` 내 `deleted_at = NOW()` 처리
-  - 소프트 삭제된 핀 복원 메서드 (`restoreDateSpot`) 및 휴지통 목록 패칭 (`fetchDeletedSpots`) 구현
-- **주요 파일:** [20260724000135_create_deleted_date_spots_table.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724000135_create_deleted_date_spots_table.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [useDateSpots.ts](file:///c:/dev/our-date-map/src/hooks/useDateSpots.ts), [spot.ts](file:///c:/dev/our-date-map/src/types/spot.ts), [SpotDetailSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/SpotDetailSheet.tsx)
+  - ?� ??�� ???�팟 ?�체 ?�이?��? `deleted_date_spots`???�카?�빙?�고 `date_spots` ??`deleted_at = NOW()` 처리
+  - ?�프????��???� 복원 메서??(`restoreDateSpot`) �??��???목록 ?�칭 (`fetchDeletedSpots`) 구현
+- **주요 ?�일:** [20260724000135_create_deleted_date_spots_table.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/migrations/20260724000135_create_deleted_date_spots_table.sql), [schema.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/schema.sql), [useDateSpots.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useDateSpots.ts), [spot.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/types/spot.ts), [SpotDetailSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/SpotDetailSheet.tsx)
 
 ---
 
-### 13. [Task 13] ODsay 대중교통 길찾기 API 연동 및 미래 데이트 플래너 경로 카드 연동
-- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.6.0`)
-- **개요:** ODsay 대중교통 길찾기 API(`searchPubTransPathT`) 프록시 API 핸들러를 구축하고, 미래 데이트 코스에 등록된 장소 간 이동 대중교통 경로(소요시간, 요금, 이동 수단 정보) 카드 UI 및 인메모리 캐싱을 구현했습니다.
-- **주요 스펙:**
-  - 서버 사이드 API Route Handler (`/api/transit/route.ts`) 구현: `ODSAY_API_KEY` 보안 래핑 및 `console.error('Transit API Error:', err)` 예외 로그/500 응답 명확화
-  - Kakao OAuth 프로필 이미지 Mixed Content 경고 해결: `http://` 카카오 CDN 프로필 주소를 `https://`로 안전하게 자동 전환 (`useAuth.ts`, `SpotDetailSheet.tsx`)
-  - 인메모리 Map 캐싱 기반 `useTransitRoute` 훅 작성: 동일 구간 중복 API 호출 방지 및 비상시 도보/직선 경로 클라이언트 안정적 폴백 처리
-  - 미래 데이트 플래너 UI 연동 (`FuturePlanSheet.tsx`): 핀과 핀 사이에 대중교통 이동 정보 카드(⏱️ 소요시간, 💳 요금, 🚉 지하철/버스 노선) 시각화 및 단거리 도보 예외 처리
-- **주요 파일:** [route.ts](file:///c:/dev/our-date-map/src/app/api/transit/route.ts), [useTransitRoute.ts](file:///c:/dev/our-date-map/src/hooks/useTransitRoute.ts), [transit.ts](file:///c:/dev/our-date-map/src/types/transit.ts), [useAuth.ts](file:///c:/dev/our-date-map/src/hooks/useAuth.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+### 13. [Task 13] ODsay ?�중교??길찾�?API ?�동 �?미래 ?�이???�래??경로 카드 ?�동
+- **?�태:** `Completed` (?�료?? 2026-07-24 / ?�용 버전: `v0.6.0`)
+- **개요:** ODsay ?�중교??길찾�?API(`searchPubTransPathT`) ?�록??API ?�들?��? 구축?�고, 미래 ?�이??코스???�록???�소 �??�동 ?�중교??경로(?�요?�간, ?�금, ?�동 ?�단 ?�보) 카드 UI �??�메모리 캐싱??구현?�습?�다.
+- **주요 ?�펙:**
+  - ?�버 ?�이??API Route Handler (`/api/transit/route.ts`) 구현: `ODSAY_API_KEY` 보안 ?�핑 �?`console.error('Transit API Error:', err)` ?�외 로그/500 ?�답 명확??
+  - Kakao OAuth ?�로???��?지 Mixed Content 경고 ?�결: `http://` 카카??CDN ?�로??주소�?`https://`�??�전?�게 ?�동 ?�환 (`useAuth.ts`, `SpotDetailSheet.tsx`)
+  - ?�메모리 Map 캐싱 기반 `useTransitRoute` ???�성: ?�일 구간 중복 API ?�출 방�? �?비상???�보/직선 경로 ?�라?�언???�정???�백 처리
+  - 미래 ?�이???�래??UI ?�동 (`FuturePlanSheet.tsx`): ?��??� ?�이???�중교???�동 ?�보 카드(?�️ ?�요?�간, ?�� ?�금, ?�� 지?�철/버스 ?�선) ?�각??�??�거�??�보 ?�외 처리
+- **주요 ?�일:** [route.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/api/transit/route.ts), [useTransitRoute.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useTransitRoute.ts), [transit.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/types/transit.ts), [useAuth.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useAuth.ts), [FuturePlanSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx)
 
 ---
 
-### 14. [Task 14] 날짜 선택 기반 미래 데이트 플랜 생성 및 Supabase DB 영구 저장 파이프라인 (!DB)
-- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.7.0`)
-- **개요:** 미래 데이트 플래닝 모드에서 날짜(`plan_date`)를 선택하여 코스를 구성하고, 작성된 플랜을 Supabase PostgreSQL `public.date_plans` 테이블에 영구 저장 및 언제든지 원터치 복원/삭제할 수 있는 파이프라인을 구사했습니다.
-- **주요 스펙:**
-  - `public.date_plans` DB 테이블 마이그레이션 (`20260724074000_create_date_plans_table.sql`) 및 RLS 정책 정의
-  - HTML5 날짜 선택 컨트롤 (`selectedDate`, 기본값: 오늘) 및 저장된 DB 플랜 복원 칩 목록 UI 구축 ([FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx))
-  - `useFuturePlanner` 훅 강화: Supabase `date_plans` DB CRUD sync (`savePlanToDb`, `fetchPlansForDate`, `loadPlanFromDb`, `deletePlanFromDb`)
-- **상세 명세:** [`tasks/task-14-date-plan-persistence.md`](file:///c:/dev/our-date-map/tasks/task-14-date-plan-persistence.md)
-- **주요 파일:** [20260724074000_create_date_plans_table.sql](file:///c:/dev/our-date-map/supabase/migrations/20260724074000_create_date_plans_table.sql), [schema.sql](file:///c:/dev/our-date-map/supabase/schema.sql), [supabase.ts](file:///c:/dev/our-date-map/src/types/supabase.ts), [planner.ts](file:///c:/dev/our-date-map/src/types/planner.ts), [useFuturePlanner.ts](file:///c:/dev/our-date-map/src/hooks/useFuturePlanner.ts), [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+### 14. [Task 14] ?�짜 ?�택 기반 미래 ?�이???�랜 ?�성 �?Supabase DB ?�구 ?�???�이?�라??(!DB)
+- **?�태:** `Completed` (?�료?? 2026-07-24 / ?�용 버전: `v0.7.0`)
+- **개요:** 미래 ?�이???�래??모드?�서 ?�짜(`plan_date`)�??�택?�여 코스�?구성?�고, ?�성???�랜??Supabase PostgreSQL `public.date_plans` ?�이블에 ?�구 ?�??�??�제?��? ?�터�?복원/??��?????�는 ?�이?�라?�을 구사?�습?�다.
+- **주요 ?�펙:**
+  - `public.date_plans` DB ?�이�?마이그레?�션 (`20260724074000_create_date_plans_table.sql`) �?RLS ?�책 ?�의
+  - HTML5 ?�짜 ?�택 컨트�?(`selectedDate`, 기본�? ?�늘) �??�?�된 DB ?�랜 복원 �?목록 UI 구축 ([FuturePlanSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/FuturePlanSheet.tsx))
+  - `useFuturePlanner` ??강화: Supabase `date_plans` DB CRUD sync (`savePlanToDb`, `fetchPlansForDate`, `loadPlanFromDb`, `deletePlanFromDb`)
+- **?�세 명세:** [`tasks/task-14-date-plan-persistence.md`](file:///C:/Users/aica_/Desktop/projects/our-date-map/tasks/task-14-date-plan-persistence.md)
+- **주요 ?�일:** [20260724074000_create_date_plans_table.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/migrations/20260724074000_create_date_plans_table.sql), [schema.sql](file:///C:/Users/aica_/Desktop/projects/our-date-map/supabase/schema.sql), [supabase.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/types/supabase.ts), [planner.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/types/planner.ts), [useFuturePlanner.ts](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/hooks/useFuturePlanner.ts), [FuturePlanSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx)
 
 ---
 
-### 15. [Task 15] 순수 지도 기본 화면 & 과거/미래 데이트 일정 목록 파이프라인 (!DB)
-- **상태:** `Completed` (완료일: 2026-07-24 / 적용 버전: `v0.8.0`)
-- **개요:** 앱 진입 시 순수 지도 화면을 기본으로 노출하고, 기간 설정(`start_date` ~ `end_date`) 데이트 추가 모달과 과거/미래 전체 데이트 일정 목록 모달(`DateItineraryModal`)을 구현했습니다.
-- **주요 스펙:**
-  - `public.date_plans` 테이블에 `start_date` 및 `end_date` 컬럼 추가 마이그레이션 (`20260724074500_add_date_range_to_date_plans.sql`)
-  - 기본 진입 시 하단 드로어를 접힌 상태(`isExpanded = false`)로 유지하여 순수 풀스크린 지도 뷰 보장
-  - 과거 데이트(`end_date < today`) 및 미래 데이트(`start_date >= today`) 탭 분리 일정 목록 모달 (`DateItineraryModal.tsx`)
-  - 당일치기/1박2일/2박3일 퀵 칩 지원 기간 선택 데이트 생성 모달 (`CreateDatePlanModal.tsx`)
-### 19. [Task 19] 메모 들여쓰기 정렬 개선 & 미래 데이트 플래닝 핀/경로 은닉 제어
-- **상태:** `Completed` (완료일: 2026-07-27 / 적용 버전: `v0.9.2`)
-- **개요:** 메모 개행 시 들여쓰기 정렬 스타일 이슈 및 미래 데이트 플래닝 진입 시 핀 은닉 요청을 반영했습니다.
-- **주요 스펙:**
-  - 코스 장소 카드 내 메모(`memo`)의 말풍선 아이콘(💬)과 본문 텍스트 영역을 Flex 레이아웃으로 완벽 분리하여, 2줄 이상 줄바꿈 출력 시에도 둘째 줄 이하 텍스트가 첫째 줄 텍스트 시작점에 맞춰 정렬되도록 개선
-  - 상단 메뉴의 '미래 데이트 플래닝' 모드로 진입 시 경로선뿐만 아니라 지도 위 핀(`plannedSpotMarkers`)도 함께 은닉 처리 적용
-  - '일정 목록' 모달 내의 **'지도에서 코스 보기'** 버튼을 터치했을 때만 해당 코스의 장소 핀과 최적 경로(Polyline)가 지도에 함께 렌더링되도록 튜닝
-- **주요 파일:** [FuturePlanSheet.tsx](file:///c:/dev/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///c:/dev/our-date-map/src/app/page.tsx)
+### 15. [Task 15] ?�수 지??기본 ?�면 & 과거/미래 ?�이???�정 목록 ?�이?�라??(!DB)
+- **?�태:** `Completed` (?�료?? 2026-07-24 / ?�용 버전: `v0.8.0`)
+- **개요:** ??진입 ???�수 지???�면??기본?�로 ?�출?�고, 기간 ?�정(`start_date` ~ `end_date`) ?�이??추�? 모달�?과거/미래 ?�체 ?�이???�정 목록 모달(`DateItineraryModal`)??구현?�습?�다.
+- **주요 ?�펙:**
+  - `public.date_plans` ?�이블에 `start_date` �?`end_date` 컬럼 추�? 마이그레?�션 (`20260724074500_add_date_range_to_date_plans.sql`)
+  - 기본 진입 ???�단 ?�로?��? ?�힌 ?�태(`isExpanded = false`)�??��??�여 ?�수 ?�?�크�?지??�?보장
+  - 과거 ?�이??`end_date < today`) �?미래 ?�이??`start_date >= today`) ??분리 ?�정 목록 모달 (`DateItineraryModal.tsx`)
+  - ?�일치기/1�???2�?????�?지??기간 ?�택 ?�이???�성 모달 (`CreateDatePlanModal.tsx`)
+### 19. [Task 19] 메모 ?�여?�기 ?�렬 개선 & 미래 ?�이???�래???�/경로 ?�???�어
+- **?�태:** `Completed` (?�료?? 2026-07-27 / ?�용 버전: `v0.9.2`)
+- **개요:** 메모 개행 ???�여?�기 ?�렬 ?��????�슈 �?미래 ?�이???�래??진입 ???� ?�???�청??반영?�습?�다.
+- **주요 ?�펙:**
+  - 코스 ?�소 카드 ??메모(`memo`)??말풍???�이�??��)�?본문 ?�스???�역??Flex ?�이?�웃?�로 ?�벽 분리?�여, 2�??�상 줄바�?출력 ?�에???�째 �??�하 ?�스?��? 첫째 �??�스???�작?�에 맞춰 ?�렬?�도�?개선
+  - ?�단 메뉴??'미래 ?�이???�래?? 모드�?진입 ??경로?�뿐�??�니??지?????�(`plannedSpotMarkers`)???�께 ?�??처리 ?�용
+  - '?�정 목록' 모달 ?�의 **'지?�에??코스 보기'** 버튼???�치?�을 ?�만 ?�당 코스???�소 ?��?최적 경로(Polyline)가 지?�에 ?�께 ?�더링되?�록 ?�닝
+- **주요 ?�일:** [FuturePlanSheet.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/components/modal/FuturePlanSheet.tsx), [page.tsx](file:///C:/Users/aica_/Desktop/projects/our-date-map/src/app/page.tsx)
+
 
 
 
