@@ -110,6 +110,7 @@ Closes #<이슈번호>
 ```
 
 - **Merge 방식**: 기능 브랜치 병합 시 **`Squash and Merge`**를 권장한다. (커밋 히스토리를 단일 커밋으로 요약)
+- **머지 후 브랜치 정리**: `main`에 머지된 브랜치는 즉시 로컬(`git branch -d`)과 원격(`git push origin --delete`)에서 모두 삭제한다. 머지된 브랜치를 남겨두지 않는다.
 - **AI 서명 금지**: 커밋 메시지·PR 제목·PR 본문 어디에도 `Co-Authored-By: Claude ...`, `🤖 Generated with Claude Code` 등 AI 서명을 넣지 않는다. GitHub contributor 목록에 Claude가 표시되지 않아야 한다.
 
 ---

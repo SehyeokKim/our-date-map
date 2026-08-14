@@ -54,6 +54,7 @@
 4. **Commit Convention:** Write clear commit messages following `docs/conventions.md` (Conventional Commits + Gitmoji), using standard types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
 5. **Verification before Push:** Ensure code compiles without TypeScript errors (`npx tsc --noEmit`), update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push.
 6. **No AI Attribution (Strict):** Claude must NEVER appear as a GitHub contributor. Do not add `Co-Authored-By: Claude ...` trailers, "🤖 Generated with Claude Code" lines, or any other AI signature to commit messages, PR titles, or PR descriptions.
+7. **Post-Merge Branch Cleanup (Auto):** Immediately after a feature branch is merged into `main` (by any means — local merge or GitHub PR), delete the merged branch both locally (`git branch -d <branch>`) and remotely (`git push origin --delete <branch>`, skip if already gone). Also run `git fetch --prune` when noticing stale remote-tracking refs. Never leave merged branches behind.
 
 ## 7. API Key & Security Management (Strict)
 1. **Client Keys (`NEXT_PUBLIC_`):** Only keys intended for browser-side SDK rendering (e.g., `NEXT_PUBLIC_KAKAO_MAP_KEY`) may use the `NEXT_PUBLIC_` prefix in `.env.local`.
