@@ -161,7 +161,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
       {/* Map Floating Control Area (Bottom Right) */}
       {!loading && (
-        <div className="absolute bottom-6 right-6 z-10 flex flex-col items-center gap-3">
+        <div className="absolute bottom-10 right-6 z-10 flex flex-col items-center gap-3">
           {/* Floating Push Send Button (Popcat Animation & Double Click to Open Settings) */}
           {pushEnabled && (
             <button
