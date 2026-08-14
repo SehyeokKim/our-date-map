@@ -1,15 +1,13 @@
 import React, { useState } from "react";
-import { PlannedSpot, DatePlan } from "@/types/planner";
+import { PlannedSpot } from "@/types/planner";
 import { TransitRouteResult } from "@/types/transit";
 import {
   Calendar,
   ChevronUp,
   ChevronDown,
   Trash2,
-  Navigation,
   Sparkles,
   MapPin,
-  RefreshCw,
   Clock,
   Route,
   Bus,
@@ -20,25 +18,11 @@ interface FuturePlanSheetProps {
   onRemoveSpot: (id: string) => void;
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
-  onClearAll: () => void;
   routeDistance?: number;
   routeDuration?: number;
   loadingRoute?: boolean;
   transitRoutes?: Record<string, TransitRouteResult>;
   loadingTransit?: boolean;
-
-  // Date selection & DB persistence props
-  selectedDate?: string;
-  onSelectDate?: (date: string) => void;
-  savedPlans?: DatePlan[];
-  isSavingDb?: boolean;
-  isLoadingDb?: boolean;
-  onSavePlanToDb?: () => void;
-  onLoadPlanFromDb?: (plan: DatePlan) => void;
-  onDeletePlanFromDb?: (planId: string) => void;
-  onOpenScheduleModal?: () => void;
-  onOpenCreateModal?: () => void;
-  onClose?: () => void;
   onPanToSpot?: (lat: number, lng: number) => void;
 }
 
@@ -47,23 +31,11 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   onRemoveSpot,
   onMoveUp,
   onMoveDown,
-  onClearAll,
   routeDistance,
   routeDuration,
   loadingRoute,
   transitRoutes,
   loadingTransit,
-  selectedDate = new Date().toISOString().split("T")[0],
-  onSelectDate,
-  savedPlans = [],
-  isSavingDb = false,
-  isLoadingDb = false,
-  onSavePlanToDb,
-  onLoadPlanFromDb,
-  onDeletePlanFromDb,
-  onOpenScheduleModal,
-  onOpenCreateModal,
-  onClose,
   onPanToSpot,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);

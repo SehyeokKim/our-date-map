@@ -1,1 +1,0 @@
-export { supabase, createClient, signInWithKakao, signOut } from './supabase/client';

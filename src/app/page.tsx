@@ -93,27 +93,19 @@ export default function Home() {
     plannedSpots,
     currentRouteSummary,
     updateRouteSummary,
-    selectedDate,
-    setSelectedDate,
     allDatePlans,
-    savedPlans,
-    isSavingDb,
-    isLoadingDb,
     isScheduleModalOpen,
     setIsScheduleModalOpen,
     isCreateModalOpen,
     setIsCreateModalOpen,
     isPlanSheetOpen,
-    setIsPlanSheetOpen,
     startNewDatePlan,
-    savePlanToDb,
     loadPlanFromDb,
     deletePlanFromDb,
     addSpot,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
-    clearAllPlans,
   } = useFuturePlanner(showToast, user?.id);
 
   const [showRouteOnMap, setShowRouteOnMap] = useState<boolean>(false);
@@ -153,7 +145,6 @@ export default function Home() {
     isAddModalOpen,
     newSpotLatLng,
     currentAddress,
-    handleStartAddSpot,
     closeAddModal,
   } = useKakaoMap(showToast);
 
@@ -275,7 +266,6 @@ export default function Home() {
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
         onOpenScheduleModal={() => setIsScheduleModalOpen(true)}
-        onOpenCreateModal={() => setIsCreateModalOpen(true)}
       />
 
       <Toast toast={toast} />
@@ -286,7 +276,6 @@ export default function Home() {
         loading={loadingMap}
         mapError={mapError}
         locateUser={locateUser}
-        handleFabClick={handleStartAddSpot}
         pushEnabled={pushEnabled}
         onSendInstantPush={() => {
           const finalTitle = customPushMessage.title || "DateMap😘";
@@ -387,30 +376,11 @@ export default function Home() {
           onRemoveSpot={removeSpot}
           onMoveUp={moveSpotUp}
           onMoveDown={moveSpotDown}
-          onClearAll={clearAllPlans}
           routeDistance={routeStats.distance}
           routeDuration={routeStats.duration}
           loadingRoute={loadingRoute}
           transitRoutes={transitRoutes}
           loadingTransit={loadingTransit}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          savedPlans={savedPlans}
-          isSavingDb={isSavingDb}
-          isLoadingDb={isLoadingDb}
-          onSavePlanToDb={() =>
-            savePlanToDb(undefined, {
-              distance: routeStats.distance,
-              duration: routeStats.duration,
-              path: currentRouteSummary?.path,
-              transitRoutes,
-            })
-          }
-          onLoadPlanFromDb={loadPlanFromDb}
-          onDeletePlanFromDb={deletePlanFromDb}
-          onOpenScheduleModal={() => setIsScheduleModalOpen(true)}
-          onOpenCreateModal={() => setIsCreateModalOpen(true)}
-          onClose={() => setIsPlanSheetOpen(false)}
           onPanToSpot={(lat, lng) => panToSpot(lat, lng)}
         />
       )}

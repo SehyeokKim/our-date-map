@@ -84,7 +84,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Select the best/recommended path (first path)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bestPath = paths[0];
     const info = bestPath.info;
 

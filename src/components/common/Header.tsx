@@ -21,7 +21,6 @@ interface HeaderProps {
   pushLoading?: boolean;
   onOpenCustomPushModal?: () => void;
   onOpenScheduleModal?: () => void;
-  onOpenCreateModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -40,7 +39,6 @@ export const Header: React.FC<HeaderProps> = ({
   pushLoading = false,
   onOpenCustomPushModal,
   onOpenScheduleModal,
-  onOpenCreateModal,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const headerRef = useRef<HTMLDivElement>(null);

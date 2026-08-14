@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Calendar, MapPin, Sparkles, Check } from "lucide-react";
+import { X, Calendar, Check } from "lucide-react";
 
 interface CreateDatePlanModalProps {
   isOpen: boolean;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 import { uploadCompressedPhotos } from "@/lib/upload";
 import { DateSpot, LatLng, DeletedDateSpot } from "@/types/spot";
 import { Json } from "@/types/supabase";

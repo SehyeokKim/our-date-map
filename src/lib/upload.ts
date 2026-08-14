@@ -1,5 +1,5 @@
 import imageCompression from "browser-image-compression";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 
 /**
  * Compress a single photo file before uploading

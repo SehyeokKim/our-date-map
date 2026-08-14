@@ -8,7 +8,6 @@ interface MapContainerProps {
   loading: boolean;
   mapError: string | null;
   locateUser: () => void;
-  handleFabClick: () => void;
   pushEnabled?: boolean;
   onSendInstantPush?: () => void;
   pushLoading?: boolean;
@@ -20,7 +19,6 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   loading,
   mapError,
   locateUser,
-  handleFabClick,
   pushEnabled = false,
   onSendInstantPush,
   pushLoading = false,
