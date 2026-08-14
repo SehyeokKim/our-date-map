@@ -92,7 +92,7 @@
 
 ## 10. Supabase CLI & Database Protection Rules (Strict)
 1. **Data Protection & No Arbitrary Deletion:** The AI agent must NEVER delete, truncate, reset, or modify existing database rows, records, or stored data values on its own discretion.
-2. **Strict Schema Modification Scope:** When an explicit instruction to modify data/database is given (`!DB`), the AI agent is ONLY allowed to alter database schemas, column names, attribute properties, or data structures (e.g., via migrations). It must NEVER alter or delete actual row data unless specifically requested.
+2. **`!DB` Flag Gate (Strict):** Unless the user's prompt explicitly includes the `!DB` flag, the AI agent must NOT touch the database at all — no migrations, no `supabase db push`, no schema/bucket/RLS changes, and no data changes. Even WITH `!DB`, the agent is ONLY allowed to alter database schemas, column names, attribute properties, or data structures (e.g., via migrations). It must NEVER alter or delete actual row data unless specifically requested.
 3. **CLI Automation Workflows:** Use Supabase CLI commands (`supabase migration`, `supabase db push`) as the primary mechanism for database schema changes.
 4. **Migration Generation:** Whenever a feature requires DB structural changes (tables, columns, RLS policies, storage buckets), automatically generate a new migration file inside `supabase/migrations/` using `npx supabase migration new <migration_name>`.
 5. **Schema Consolidation:** Keep `supabase/schema.sql` updated as a reference consolidated schema file.
