@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { uploadCompressedPhotos } from "@/lib/upload";
+import { uploadCompressedPhotos, uploadVideos } from "@/lib/upload";
 import { DateSpot, LatLng, DeletedDateSpot } from "@/types/spot";
 import { Json } from "@/types/supabase";
 
@@ -29,7 +29,7 @@ function extractStoragePath(imageUrl: string | null): string | null {
   }
 }
 
-// Helper to extract all storage file paths from a spot (checking both image_urls array & image_url string)
+// Helper to extract all storage file paths from a spot (image_urls array, image_url string & video_urls array)
 function extractAllStoragePaths(spot: DateSpot): string[] {
   const pathsSet = new Set<string>();
 
@@ -43,6 +43,13 @@ function extractAllStoragePaths(spot: DateSpot): string[] {
   if (spot.image_url) {
     const path = extractStoragePath(spot.image_url);
     if (path) pathsSet.add(path);
+  }
+
+  if (spot.video_urls && Array.isArray(spot.video_urls)) {
+    spot.video_urls.forEach((url) => {
+      const path = extractStoragePath(url);
+      if (path) pathsSet.add(path);
+    });
   }
 
   return Array.from(pathsSet);
@@ -209,6 +216,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             longitude: backup.longitude,
             image_url: backup.image_url ?? "",
             image_urls: backup.image_urls ?? [],
+            video_urls: backup.video_urls ?? [],
             address: backup.address ?? "",
             visited_at: backup.visited_at,
             created_at: backup.created_at,
@@ -322,6 +330,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
       latLng: LatLng;
       imageFiles?: File[];
       imageFile?: File | null;
+      videoFiles?: File[];
       visitedAt: string;
       address?: string;
       userId?: string | null;
@@ -333,6 +342,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         latLng,
         imageFiles,
         imageFile,
+        videoFiles,
         visitedAt,
         address,
         userId,
@@ -365,6 +375,12 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
           uploadedUrls = await uploadCompressedPhotos(filesToUpload);
         }
 
+        // Upload videos as-is (no compression) — sequential to avoid mobile memory spikes
+        let uploadedVideoUrls: string[] = [];
+        if (videoFiles && videoFiles.length > 0) {
+          uploadedVideoUrls = await uploadVideos(videoFiles);
+        }
+
         const primaryUrl = uploadedUrls.length > 0 ? uploadedUrls[0] : "";
 
         // Determine authenticated user_id from parameters or active Supabase session
@@ -387,6 +403,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             longitude: latLng.lng,
             image_url: primaryUrl,
             image_urls: uploadedUrls,
+            video_urls: uploadedVideoUrls,
             address: address ? address.trim() : "",
             visited_at: new Date(visitedAt).toISOString(),
             user_id: activeUserId,
@@ -438,6 +455,8 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         visitedAt: string;
         keptImageUrls: string[];
         newImageFiles: File[];
+        keptVideoUrls?: string[];
+        newVideoFiles?: File[];
       }
     ): Promise<DateSpot | null> => {
       if (!updates.title.trim()) {
@@ -461,6 +480,17 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         }
         const finalUrls = [...updates.keptImageUrls, ...newUrls].slice(0, 10);
 
+        // Videos: keep the selected existing ones and upload new files as-is
+        const keptVideoUrls =
+          updates.keptVideoUrls ??
+          (spot.video_urls && Array.isArray(spot.video_urls) ? spot.video_urls : []);
+        let newVideoUrls: string[] = [];
+        if (updates.newVideoFiles && updates.newVideoFiles.length > 0) {
+          showToast("동영상을 업로드하는 중...", "info");
+          newVideoUrls = await uploadVideos(updates.newVideoFiles);
+        }
+        const finalVideoUrls = [...keptVideoUrls, ...newVideoUrls];
+
         const { data, error } = await supabase
           .from("date_spots")
           .update({
@@ -469,6 +499,7 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
             visited_at: new Date(updates.visitedAt).toISOString(),
             image_url: finalUrls[0] || "",
             image_urls: finalUrls,
+            video_urls: finalVideoUrls,
           })
           .eq("id", spot.id)
           .select("*, profiles(id, nickname, profile_image_url)")
@@ -477,15 +508,19 @@ export function useDateSpots(showToast: (message: string, type?: "success" | "er
         if (error) throw error;
         const updated = data as DateSpot;
 
-        // Best-effort cleanup: remove storage files for photos the user detached
+        // Best-effort cleanup: remove storage files for photos/videos the user detached
         const previousUrls =
           spot.image_urls && spot.image_urls.length > 0
             ? spot.image_urls
             : spot.image_url
             ? [spot.image_url]
             : [];
-        const removedPaths = previousUrls
-          .filter((url) => !finalUrls.includes(url))
+        const previousVideoUrls =
+          spot.video_urls && Array.isArray(spot.video_urls) ? spot.video_urls : [];
+        const removedPaths = [
+          ...previousUrls.filter((url) => !finalUrls.includes(url)),
+          ...previousVideoUrls.filter((url) => !finalVideoUrls.includes(url)),
+        ]
           .map((url) => extractStoragePath(url))
           .filter((path): path is string => Boolean(path));
         if (removedPaths.length > 0) {

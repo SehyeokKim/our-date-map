@@ -2,7 +2,7 @@
 
 import React from "react";
 import { DateSpot } from "@/types/spot";
-import { X, Heart, MapPin, Camera } from "lucide-react";
+import { X, Heart, MapPin, Camera, Film } from "lucide-react";
 
 interface SpotListModalProps {
   isOpen: boolean;
@@ -88,6 +88,8 @@ export const SpotListModal: React.FC<SpotListModalProps> = ({
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
+                    ) : spot.video_urls && spot.video_urls.length > 0 ? (
+                      <Film className="w-5 h-5 text-rose-300" />
                     ) : (
                       <Camera className="w-5 h-5 text-rose-300" />
                     )}

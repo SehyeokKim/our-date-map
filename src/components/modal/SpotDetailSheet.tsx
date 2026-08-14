@@ -10,6 +10,8 @@ import {
   ChevronRight,
   Pencil,
   ImagePlus,
+  Film,
+  Play,
 } from "lucide-react";
 import { DateSpot } from "@/types/spot";
 
@@ -19,7 +21,11 @@ export interface SpotUpdates {
   visitedAt: string;
   keptImageUrls: string[];
   newImageFiles: File[];
+  keptVideoUrls?: string[];
+  newVideoFiles?: File[];
 }
+
+type MediaItem = { type: "image" | "video"; url: string };
 
 interface SpotDetailSheetProps {
   spot: DateSpot | null;
@@ -47,6 +53,8 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
   const [keptPhotos, setKeptPhotos] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  const [keptVideos, setKeptVideos] = useState<string[]>([]);
+  const [newVideoFiles, setNewVideoFiles] = useState<File[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -55,6 +63,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
     setIsEditing(false);
     setIsSaving(false);
     setNewFiles([]);
+    setNewVideoFiles([]);
     setNewPreviews((prev) => {
       prev.forEach((url) => URL.revokeObjectURL(url));
       return [];
@@ -81,6 +90,15 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
       ? [spot.image_url]
       : [];
 
+  const videos: string[] =
+    spot.video_urls && spot.video_urls.length > 0 ? spot.video_urls : [];
+
+  // Unified media carousel: photos first, then videos
+  const media: MediaItem[] = [
+    ...photos.map((url): MediaItem => ({ type: "image", url })),
+    ...videos.map((url): MediaItem => ({ type: "video", url })),
+  ];
+
   const formattedDate = new Date(spot.visited_at)
     .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
     .replace(/\. /g, ".")
@@ -90,15 +108,15 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
 
   const handleNextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (photos.length > 0) {
-      setCurrentImageIndex((prev) => (prev + 1) % photos.length);
+    if (media.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % media.length);
     }
   };
 
   const handlePrevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (photos.length > 0) {
-      setCurrentImageIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    if (media.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + media.length) % media.length);
     }
   };
 
@@ -107,7 +125,9 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
     setEditDate(new Date(spot.visited_at).toISOString().split("T")[0]);
     setEditDescription(spot.description || "");
     setKeptPhotos(photos);
+    setKeptVideos(videos);
     setNewFiles([]);
+    setNewVideoFiles([]);
     setNewPreviews([]);
     setIsEditing(true);
   };
@@ -115,9 +135,27 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
   const cancelEditing = () => {
     newPreviews.forEach((url) => URL.revokeObjectURL(url));
     setNewFiles([]);
+    setNewVideoFiles([]);
     setNewPreviews([]);
     setIsEditing(false);
   };
+
+  const handleAddVideos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const selected = Array.from(e.target.files);
+    setNewVideoFiles((prev) => [...prev, ...selected]);
+    e.target.value = "";
+  };
+
+  const removeKeptVideo = (index: number) => {
+    setKeptVideos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewVideo = (index: number) => {
+    setNewVideoFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSizeMB = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 
   const handleAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -140,6 +178,18 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
 
   const handleSaveEdit = async () => {
     if (!onUpdate || isSaving) return;
+
+    // Soft cap: warn (but do not block) when the new upload exceeds 30MB per pin
+    const estimatedBytes =
+      newVideoFiles.reduce((sum, f) => sum + f.size, 0) + newFiles.length * 300 * 1024;
+    const estimatedMB = estimatedBytes / (1024 * 1024);
+    if (estimatedMB > 30) {
+      const proceed = window.confirm(
+        `핀당 권장 용량은 30MB입니다.\n지금 약 ${estimatedMB.toFixed(1)}MB를 새로 업로드하려고 합니다. 정말 올릴까요?\n\n(무료 저장 공간(1GB)이 빠르게 소진될 수 있어요)`
+      );
+      if (!proceed) return;
+    }
+
     setIsSaving(true);
     const updated = await onUpdate(spot, {
       title: editTitle,
@@ -147,11 +197,14 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
       visitedAt: editDate,
       keptImageUrls: keptPhotos,
       newImageFiles: newFiles,
+      keptVideoUrls: keptVideos,
+      newVideoFiles,
     });
     setIsSaving(false);
     if (updated) {
       newPreviews.forEach((url) => URL.revokeObjectURL(url));
       setNewFiles([]);
+      setNewVideoFiles([]);
       setNewPreviews([]);
       setCurrentImageIndex(0);
       setIsEditing(false);
@@ -298,6 +351,75 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                 </div>
               </div>
 
+              {/* Edit: Videos */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700">동영상</label>
+                  {newVideoFiles.length > 0 && (
+                    <span className="text-[11px] font-bold text-rose-500">
+                      새 파일 {formatFileSizeMB(newVideoFiles.reduce((s, f) => s + f.size, 0))}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  {keptVideos.map((url, index) => (
+                    <div
+                      key={url}
+                      className="flex items-center gap-2.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl"
+                    >
+                      <Film className="w-4 h-4 text-rose-400 shrink-0" />
+                      <span className="flex-1 min-w-0 text-xs font-medium text-gray-700 truncate">
+                        {url.split("/").pop()?.split("?")[0] || `동영상 ${index + 1}`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeKeptVideo(index)}
+                        disabled={isSaving}
+                        className="w-5 h-5 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                        aria-label="동영상 삭제"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {newVideoFiles.map((file, index) => (
+                    <div
+                      key={`${file.name}_${index}`}
+                      className="flex items-center gap-2.5 px-3 py-2 bg-rose-50/60 border border-rose-200 rounded-xl"
+                    >
+                      <Film className="w-4 h-4 text-rose-500 shrink-0" />
+                      <span className="flex-1 min-w-0 text-xs font-medium text-gray-700 truncate">
+                        {file.name}
+                      </span>
+                      <span className="text-[10px] font-bold text-gray-400 shrink-0">
+                        {formatFileSizeMB(file.size)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeNewVideo(index)}
+                        disabled={isSaving}
+                        className="w-5 h-5 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                        aria-label="새 동영상 제거"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="flex items-center justify-center gap-1.5 w-full py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 hover:border-rose-300 hover:text-rose-400 cursor-pointer transition-colors">
+                    <Film className="w-4 h-4" />
+                    <span className="text-xs font-semibold">동영상 추가</span>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      multiple
+                      onChange={handleAddVideos}
+                      disabled={isSaving}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
               {/* Edit: Story */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">우리의 이야기</label>
@@ -370,17 +492,28 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                 )}
               </div>
 
-              {/* Full Gallery Photo Carousel (Up to 10 photos) */}
-              {photos.length > 0 && (
+              {/* Full Gallery Media Carousel (photos + videos) */}
+              {media.length > 0 && (
                 <div className="relative w-full aspect-4/3 rounded-2xl overflow-hidden border border-gray-100 bg-gray-900 group shadow-sm">
-                  <img
-                    src={photos[currentImageIndex]}
-                    alt={`${spot.title} 사진 ${currentImageIndex + 1}`}
-                    className="w-full h-full object-contain bg-black/90 transition-all duration-300"
-                  />
+                  {media[currentImageIndex].type === "video" ? (
+                    <video
+                      key={media[currentImageIndex].url}
+                      src={media[currentImageIndex].url}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="w-full h-full object-contain bg-black/90"
+                    />
+                  ) : (
+                    <img
+                      src={media[currentImageIndex].url}
+                      alt={`${spot.title} 사진 ${currentImageIndex + 1}`}
+                      className="w-full h-full object-contain bg-black/90 transition-all duration-300"
+                    />
+                  )}
 
-                  {/* Navigation Controls if multiple photos */}
-                  {photos.length > 1 && (
+                  {/* Navigation Controls if multiple media items */}
+                  {media.length > 1 && (
                     <>
                       <button
                         type="button"
@@ -398,9 +531,10 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                         <ChevronRight className="w-5 h-5" />
                       </button>
 
-                      {/* Photo Index Counter */}
-                      <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
-                        {currentImageIndex + 1} / {photos.length}
+                      {/* Media Index Counter */}
+                      <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                        {media[currentImageIndex].type === "video" && <Play className="w-3 h-3 fill-current" />}
+                        {currentImageIndex + 1} / {media.length}
                       </span>
                     </>
                   )}

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Heart, X, ExternalLink, MapPin, Image as ImageIcon } from "lucide-react";
+import { Heart, X, ExternalLink, MapPin, Image as ImageIcon, Film } from "lucide-react";
 import { DateSpot } from "@/types/spot";
 
 interface SpotSummarySheetProps {
@@ -101,6 +101,12 @@ export const SpotSummarySheet: React.FC<SpotSummarySheetProps> = ({
               <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                 <ImageIcon className="w-3 h-3" />
                 +{photoCount - 1}장 더보기
+              </span>
+            )}
+            {spot.video_urls && spot.video_urls.length > 0 && (
+              <span className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Film className="w-3 h-3" />
+                동영상 {spot.video_urls.length}
               </span>
             )}
           </div>

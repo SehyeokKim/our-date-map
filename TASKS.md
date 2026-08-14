@@ -37,5 +37,6 @@ _현재 없음._
 | 18 | 데이트 코스 상세 드로어 UI 개선 & 경로 표시 제어 튜닝 | 07-27 | - | `src/components/modal/FuturePlanSheet.tsx`, `src/components/common/Header.tsx` |
 | 19 | 메모 들여쓰기 정렬 & 플래닝 진입 시 핀/경로 은닉 제어 | 07-27 | v0.9.2 | `src/components/modal/FuturePlanSheet.tsx`, `src/app/page.tsx` |
 | 20 | 지도 햄버거 메뉴 (추억 모아보기·주소로 추가·휴지통·현재 위치로) & 기록 수정 & 핀 복원 | 08-14 | - | `src/components/map/MapContainer.tsx`, `src/components/modal/SpotListModal.tsx`, `AddressSearchModal.tsx`, `TrashModal.tsx`, `src/hooks/useAddressSearch.ts`, `useDateSpots.ts` |
+| 21 | 데이트 기록 동영상 업로드·재생 (원본 업로드, 핀당 30MB 초과 경고, `video_urls` 컬럼) | 08-14 | - | `supabase/migrations/20260814073021_*.sql`, `src/lib/upload.ts`, `src/hooks/useDateSpots.ts`, `src/components/modal/AddSpotModal.tsx`, `SpotDetailSheet.tsx` |
 
 > 완료일은 2026년 기준. 버전 `-`는 릴리스 태그 미지정 작업(상세는 `CHANGELOG.md` [Unreleased] 참조).

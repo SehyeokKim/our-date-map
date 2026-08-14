@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -103,6 +103,7 @@ export type Database = {
           longitude: number
           title: string
           user_id: string | null
+          video_urls: string[] | null
           visited_at: string
         }
         Insert: {
@@ -118,6 +119,7 @@ export type Database = {
           longitude: number
           title: string
           user_id?: string | null
+          video_urls?: string[] | null
           visited_at?: string
         }
         Update: {
@@ -133,6 +135,7 @@ export type Database = {
           longitude?: number
           title?: string
           user_id?: string | null
+          video_urls?: string[] | null
           visited_at?: string
         }
         Relationships: [

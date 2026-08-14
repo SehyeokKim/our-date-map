@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Upload, Calendar, Heart, MapPin, Loader2 } from "lucide-react";
+import { X, Upload, Calendar, Heart, MapPin, Loader2, Film } from "lucide-react";
 import { LatLng } from "@/types/spot";
 
 interface AddSpotModalProps {
@@ -14,6 +14,7 @@ interface AddSpotModalProps {
     description: string;
     latLng: LatLng;
     imageFiles?: File[];
+    videoFiles?: File[];
     visitedAt: string;
     address?: string;
     userId?: string | null;
@@ -42,6 +43,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
   const [visitedAt, setVisitedAt] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,6 +53,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
       setVisitedAt(today);
       setImageFiles([]);
       setPreviewUrls([]);
+      setVideoFiles([]);
     }
   }, [isOpen]);
 
@@ -83,9 +86,34 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
     setPreviewUrls(updatedUrls);
   };
 
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selected = Array.from(e.target.files);
+      setVideoFiles((prev) => [...prev, ...selected]);
+      e.target.value = "";
+    }
+  };
+
+  const removeVideo = (indexToRemove: number) => {
+    setVideoFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const formatFileSizeMB = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!latLng) return;
+
+    // Soft cap: warn (but do not block) when the estimated upload exceeds 30MB per pin
+    const estimatedBytes =
+      videoFiles.reduce((sum, f) => sum + f.size, 0) + imageFiles.length * 300 * 1024;
+    const estimatedMB = estimatedBytes / (1024 * 1024);
+    if (estimatedMB > 30) {
+      const proceed = window.confirm(
+        `핀당 권장 용량은 30MB입니다.\n지금 약 ${estimatedMB.toFixed(1)}MB를 업로드하려고 합니다. 정말 올릴까요?\n\n(무료 저장 공간(1GB)이 빠르게 소진될 수 있어요)`
+      );
+      if (!proceed) return;
+    }
 
     // Fallback: If title is left empty, use the extracted road address as default title
     const finalTitle = title.trim() || initialAddress.trim() || "소중한 데이트 장소";
@@ -95,6 +123,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
       description,
       latLng,
       imageFiles,
+      videoFiles,
       visitedAt,
       address: initialAddress,
       userId: currentUserId || null,
@@ -233,6 +262,61 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
                 />
               </label>
             )}
+          </div>
+
+          {/* Video Upload (uploaded as-is, no compression) */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-gray-700">추억 동영상</label>
+              {videoFiles.length > 0 && (
+                <span className="text-[11px] font-bold text-rose-500">
+                  총 {formatFileSizeMB(videoFiles.reduce((s, f) => s + f.size, 0))}
+                </span>
+              )}
+            </div>
+
+            {videoFiles.length > 0 && (
+              <div className="space-y-1.5 mb-2">
+                {videoFiles.map((file, idx) => (
+                  <div
+                    key={`${file.name}_${idx}`}
+                    className="flex items-center gap-2.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl"
+                  >
+                    <Film className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span className="flex-1 min-w-0 text-xs font-medium text-gray-700 truncate">
+                      {file.name}
+                    </span>
+                    <span className="text-[10px] font-bold text-gray-400 shrink-0">
+                      {formatFileSizeMB(file.size)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeVideo(idx)}
+                      disabled={isUploading}
+                      className="w-5 h-5 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <label className="flex items-center justify-center gap-1.5 w-full py-2.5 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 hover:bg-gray-100/80 cursor-pointer transition-all">
+              <Film className="w-4 h-4 text-gray-400" />
+              <span className="text-xs text-gray-500 font-semibold">동영상 추가하기</span>
+              <input
+                type="file"
+                accept="video/*"
+                multiple
+                onChange={handleVideoChange}
+                className="hidden"
+                disabled={isUploading}
+              />
+            </label>
+            <p className="mt-1 text-[10px] text-gray-400 leading-tight">
+              원본 그대로 업로드됩니다. 핀당 권장 용량은 30MB입니다 (초과 시 확인 후 업로드).
+            </p>
           </div>
 
           {/* Description */}

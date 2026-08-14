@@ -16,6 +16,7 @@ export interface DateSpot {
   longitude: number;
   image_url?: string | null;
   image_urls?: string[] | null;
+  video_urls?: string[] | null;
   address?: string | null;
   visited_at: string;
   created_at: string;
