@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Script from "next/script";
-import { ToastState } from "@/types/spot";
+import { ToastState, DeletedDateSpot } from "@/types/spot";
 import { useKakaoMap } from "@/hooks/useKakaoMap";
 import { useDateSpots } from "@/hooks/useDateSpots";
 import { useFuturePlanner } from "@/hooks/useFuturePlanner";
@@ -16,6 +16,8 @@ import { MapContainer } from "@/components/map/MapContainer";
 import { AddSpotModal } from "@/components/modal/AddSpotModal";
 import { SpotSummarySheet } from "@/components/modal/SpotSummarySheet";
 import { SpotDetailSheet } from "@/components/modal/SpotDetailSheet";
+import { SpotListModal } from "@/components/modal/SpotListModal";
+import { TrashModal } from "@/components/modal/TrashModal";
 import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
 import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
@@ -28,17 +30,24 @@ export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [routeStats, setRouteStats] = useState<{ distance?: number; duration?: number }>({});
   const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
+  const [isSpotListOpen, setIsSpotListOpen] = useState<boolean>(false);
+  const [isTrashOpen, setIsTrashOpen] = useState<boolean>(false);
+  const [deletedSpots, setDeletedSpots] = useState<DeletedDateSpot[]>([]);
+  const [loadingTrash, setLoadingTrash] = useState<boolean>(false);
   const [isCustomPushModalOpen, setIsCustomPushModalOpen] = useState<boolean>(false);
   const [customPushMessage, setCustomPushMessage] = useState<{ title: string; body: string }>({
     title: "DateMap😘",
     body: "뽁!",
   });
 
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setToast({ message, type });
-    setTimeout(() => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
       setToast(null);
-    }, 3000);
+    }, 2000);
   }, []);
 
   // Supabase Auth (Kakao OAuth & Profile Management)
@@ -84,7 +93,16 @@ export default function Home() {
   } = useWebPush(showToast, user?.id);
 
   // Supabase Memory Date Spots
-  const { spots, isUploading, loadDateSpots, createDateSpot, deleteDateSpot } = useDateSpots(showToast);
+  const {
+    spots,
+    isUploading,
+    loadDateSpots,
+    createDateSpot,
+    deleteDateSpot,
+    updateDateSpot,
+    restoreDateSpot,
+    fetchDeletedSpots,
+  } = useDateSpots(showToast);
 
   // Future Date Spot Planner
   const {
@@ -276,6 +294,13 @@ export default function Home() {
         loading={loadingMap}
         mapError={mapError}
         locateUser={locateUser}
+        onOpenSpotList={() => setIsSpotListOpen(true)}
+        onOpenTrash={async () => {
+          setIsTrashOpen(true);
+          setLoadingTrash(true);
+          setDeletedSpots(await fetchDeletedSpots());
+          setLoadingTrash(false);
+        }}
         pushEnabled={pushEnabled}
         onSendInstantPush={() => {
           const finalTitle = customPushMessage.title || "DateMap😘";
@@ -365,9 +390,45 @@ export default function Home() {
           spot={selectedSpot}
           onClose={() => setSelectedSpot(null)}
           onDelete={deleteDateSpot}
+          onUpdate={async (spot, updates) => {
+            const updated = await updateDateSpot(spot, updates);
+            if (updated) setSelectedSpot(updated);
+            return updated;
+          }}
           currentUserId={user?.id}
         />
       )}
+
+      {/* Trash Modal (휴지통 — 삭제된 핀 복구) */}
+      <TrashModal
+        isOpen={isTrashOpen}
+        onClose={() => setIsTrashOpen(false)}
+        deletedSpots={deletedSpots}
+        isLoading={loadingTrash}
+        onRestore={async (originalSpotId) => {
+          const success = await restoreDateSpot(originalSpotId);
+          if (success) {
+            setDeletedSpots((prev) =>
+              prev.filter((d) => d.original_spot_id !== originalSpotId)
+            );
+            await loadDateSpots();
+          }
+          return success;
+        }}
+      />
+
+      {/* Memory Spot List Modal (추억 모아보기) */}
+      <SpotListModal
+        isOpen={isSpotListOpen}
+        onClose={() => setIsSpotListOpen(false)}
+        spots={spots}
+        onSelectSpot={(spot) => {
+          setIsSpotListOpen(false);
+          if (appMode !== "memory") setAppMode("memory");
+          panToSpot(spot.latitude, spot.longitude);
+          setSelectedSpot(spot);
+        }}
+      />
 
       {/* Future Planning Control Sheet (Only shown when user loads or creates a course) */}
       {appMode === "planning" && isPlanSheetOpen && (

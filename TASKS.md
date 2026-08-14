@@ -9,7 +9,9 @@
 
 ## 🚧 진행 중 / 예정 (In Progress / Planned)
 
-_현재 없음._
+| # | 작업 | 상태 | 브랜치 | 명세 |
+| --- | --- | --- | --- | --- |
+| 20 | 핀 목록 조회 버튼 & 주소 검색 핀 등록 | `In Progress` | `feat/pin-list-address-search` | [task-20](tasks/task-20-pin-list-address-search.md) |
 
 ---
 

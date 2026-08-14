@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navigation, AlertCircle, Loader2 } from "lucide-react";
+import { Navigation, AlertCircle, Loader2, Menu, X, Heart, Trash2 } from "lucide-react";
 
 interface MapContainerProps {
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
   loading: boolean;
   mapError: string | null;
   locateUser: () => void;
+  onOpenSpotList?: () => void;
+  onOpenTrash?: () => void;
   pushEnabled?: boolean;
   onSendInstantPush?: () => void;
   pushLoading?: boolean;
@@ -19,6 +21,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   loading,
   mapError,
   locateUser,
+  onOpenSpotList,
+  onOpenTrash,
   pushEnabled = false,
   onSendInstantPush,
   pushLoading = false,
@@ -26,9 +30,11 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 }) => {
   const [isPopcatOpen, setIsPopcatOpen] = useState<boolean>(false);
   const [isCooldown, setIsCooldown] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return () => {
@@ -36,6 +42,22 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     };
   }, []);
+
+  // Close map menu when touching/clicking outside
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleOutside = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
+  }, [isMenuOpen]);
 
   const handleSendPush = async () => {
     if (isCooldown || pushLoading) return;
@@ -152,14 +174,54 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             </button>
           )}
 
-          {/* GPS Locate Button */}
-          <button
-            onClick={locateUser}
-            className="w-12 h-12 rounded-full bg-white/95 border border-gray-100/50 text-gray-700 flex items-center justify-center shadow-lg shadow-black/5 hover:text-rose-500 hover:border-rose-100 hover:bg-white active:scale-95 transition-all duration-200 cursor-pointer"
-            aria-label="현재 위치 찾기"
-          >
-            <Navigation className="w-5 h-5 fill-current" />
-          </button>
+          {/* Map Menu Button & Popover */}
+          <div ref={menuRef} className="relative">
+            {/* Menu Popover */}
+            {isMenuOpen && (
+              <div className="absolute bottom-14 right-0 w-max bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl shadow-black/10 overflow-hidden py-1.5">
+                <button
+                  onClick={() => {
+                    onOpenSpotList?.();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  <Heart className="w-4 h-4 fill-current" />
+                  추억 모아보기
+                </button>
+                <button
+                  onClick={() => {
+                    onOpenTrash?.();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  휴지통
+                </button>
+                <button
+                  onClick={() => {
+                    locateUser();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  <Navigation className="w-4 h-4 fill-current" />
+                  현재 위치로
+                </button>
+              </div>
+            )}
+
+            {/* Menu Toggle Button */}
+            <button
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              className="w-12 h-12 rounded-full bg-white/95 border border-gray-100/50 text-gray-700 flex items-center justify-center shadow-lg shadow-black/5 hover:text-rose-500 hover:border-rose-100 hover:bg-white active:scale-95 transition-all duration-200 cursor-pointer"
+              aria-label="지도 메뉴"
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       )}
     </>
