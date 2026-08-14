@@ -1,114 +1,120 @@
-# 🛠️ Git 커밋 및 브랜치 컨벤션 가이드 (Git & Gitmoji Conventions)
+# Git & Gitmoji 컨벤션 (our-date-map)
 
-본 문서는 프로젝트의 코드 이력 관리와 원활한 협업을 위한 **업계 표준 Git 커밋 및 브랜치 전략 컨벤션**을 정의합니다.
+본 문서는 이 프로젝트의 커밋·브랜치·PR 작성 규칙을 정의합니다. (Vigilantis 팀 컨벤션을 `our-date-map` 단일 Next.js 앱 구조에 맞게 조정한 버전입니다.)
 
 ---
 
-## 1. 📝 커밋 메시지 구조 (Commit Message Structure)
+## 공통 규격: TYPE (변경 성격)
 
-기본적인 커밋 메시지 구조는 **Conventional Commits**와 **Gitmoji** 표준을 조합하여 사용합니다.
+| TYPE | 용도 |
+| --- | --- |
+| `FEAT` | 새로운 기능 추가 |
+| `FIX` | 버그 수정 |
+| `REFACTOR` | 동작 변경 없는 코드 개선 |
+| `CHORE` | 빌드·패키지·CI/CD·설정 등 부수 작업 |
+| `DOCS` | 문서 수정(README, TASKS, CHANGELOG 등) |
 
-```text
-<emoji> <type>(<scope>): <subject>
+- 브랜치명에서는 **소문자**(`feat`, `fix`, `refactor`, `chore`, `docs`)로 쓴다.
+- 커밋·PR 제목에서는 **대문자 대괄호**(`[FEAT]` 등)로 쓴다.
 
-[optional body]
+---
 
-[optional footer(s)]
+## 브랜치명 규칙
+
+- 형식: `<type>/<이슈번호>-<english-kebab-summary>`
+  - `type`: TYPE 소문자. (`feature/`는 `feat/`와 동일하게 취급하며 `feat/`를 권장)
+  - `이슈번호`: GitHub 이슈 번호(숫자만, `#` 제외). 연결된 이슈가 없으면 번호를 임의로 만들지 않고 생략한다: `<type>/<english-kebab-summary>`.
+  - `english-kebab-summary`: 작업을 요약하는 **영문 소문자 kebab-case**. 2~5단어 권장, 축약보다 의미 명확성 우선.
+- **브랜치명에는 이모지를 넣지 않는다**(ASCII만).
+- 하나의 브랜치는 하나의 이슈/작업 단위에 대응시킨다.
+
+### 예시
+
+| 작업 | 브랜치명 |
+| --- | --- |
+| 데이트 코스 공유 기능 (#21) | `feat/21-date-course-share` |
+| 지도 핀 클릭 시 모달 미표시 수정 | `fix/map-pin-modal-not-opening` |
+| 경로 캐싱 로직 모듈 분리 | `refactor/route-cache-module` |
+| Supabase 타입 재생성 스크립트 | `chore/supabase-typegen-script` |
+
+---
+
+## Gitmoji (커밋·PR 제목 접두)
+
+- 커밋과 PR **제목 맨 앞**에 변경 성격을 나타내는 gitmoji **이모지 1개**를 붙인다. (전체 목록: https://gitmoji.dev)
+- **이모지 문자**(예: ✨)를 그대로 사용한다. `:sparkles:` 형태의 단축 코드는 `git log`에서 렌더링되지 않으므로 지양한다.
+- TYPE을 먼저 정하고, 그 TYPE 안에서 가장 구체적으로 들어맞는 gitmoji를 고른다. 애매하면 해당 TYPE의 "대표" 이모지를 쓴다.
+
+### TYPE별 gitmoji 매핑
+
+| TYPE | 대표 | 세부 상황별 |
+| --- | --- | --- |
+| `FEAT` | ✨ | 🎉 프로젝트/모듈 시작 · 🏗️ 아키텍처 변경 · 🗃️ DB 스키마/마이그레이션(Supabase) · 🛂 인증·권한(Kakao OAuth·RLS) · 🦺 검증 로직 · 🔊 로그 추가 · 💄 UI/스타일 · 📱 반응형·PWA · 🚩 feature flag · 🏷️ 타입 정의 |
+| `FIX` | 🐛 | 🚑️ 치명적 핫픽스 · 🩹 사소한 수정 · 🔒️ 보안 취약점(키 노출·스코프) · 🥅 예외/에러 처리(외부 API 폴백) · 🚨 린터 경고 · 💚 CI 빌드 수정 |
+| `REFACTOR` | ♻️ | 🎨 구조/포맷 정리 · ⚡️ 성능 개선(캐싱·이미지 최적화) · 🔥 코드/파일 제거 · ⚰️ 데드코드 제거 · 🚚 이동·이름 변경 |
+| `CHORE` | 🔧 | 👷 CI 빌드 시스템(`.github`) · ⬆️/⬇️ 의존성 업/다운그레이드 · ➕/➖ 의존성 추가/제거 · 📌 의존성 버전 고정 · 🔨 개발 스크립트 · 🙈 `.gitignore` · 🚀 배포(Vercel) · 🔖 릴리스 태그 |
+| `DOCS` | 📝 | 💡 소스 주석 · 📄 라이선스 |
+
+> 표에 없는 상황은 https://gitmoji.dev 에서 가장 가까운 이모지를 선택한다. TYPE(대문자 대괄호)은 gitmoji와 별개로 **항상 유지**한다.
+
+---
+
+## 커밋 메시지 규칙
+
+- **제목**: `<gitmoji> [TYPE] #이슈번호 - 한 줄 설명`
+  - 한 줄 설명은 한국어, 명령형/요약형으로 50자 내외. 코드 식별자·파일명은 원문 유지.
+  - 연결된 이슈가 없으면 `<gitmoji> [TYPE] 한 줄 설명` 형식을 쓴다.
+  - 제목 끝에 마침표(`.`)를 붙이지 않는다.
+- **본문(선택, 권장)**: 제목과 한 줄 띄우고 작성. "무엇을·왜"를 불릿으로 정리한다. 어떻게(구현 상세)는 필요한 경우에만.
+- **푸터(선택)**: 이슈 연결은 `Refs #이슈번호`(관련) 또는 `Closes #이슈번호`(해결)로 명시한다.
+- **AI(Claude) 작성 커밋**: `Co-Authored-By` 등 AI 서명 트레일러를 **붙이지 않는다**.
+
+### 예시
+
+```
+✨ [FEAT] #21 - 데이트 코스 공유 링크 생성 기능 구현
+
+- GET /api/share/[id] Route Handler 추가
+- date_plans의 route_summary를 공유 페이지에서 복원 렌더링
+- 만료 시각(expires_at) 필드 포함
+
+Refs #21
 ```
 
-### 예시 (Examples)
-* `✨ feat(auth): 소셜 로그인(Google) 기능 구현`
-* `🐛 fix(map): 지도 핀 클릭 시 모달 안 뜨는 현상 수정`
-* `♻️ refactor(ui): Button 공통 컴포넌트 구조 개선`
-* `📝 docs: git 커밋 컨벤션 문서(conventions.md) 작성`
-* `🔧 chore: TailwindCSS 및 PostCSS 관련 패키지 업데이트`
+> 예: 지도 핀 모달 예외 처리 → `🥅 [FIX] 지도 핀 클릭 시 모달 미표시 예외 처리`, Supabase 마이그레이션 → `🗃️ [FEAT] date_plans 테이블 start_date/end_date 컬럼 추가`.
 
 ---
 
-## 2. 🏷️ 커밋 타입 (Commit Types)
+## Pull Request(PR) 규칙
 
-| 커밋 타입 | 설명 |
-| :--- | :--- |
-| **`feat`** | 새로운 기능 추가 |
-| **`fix`** | 버그 수정 |
-| **`docs`** | 문서 작성 및 수정 (`README.md`, 주석 등) |
-| **`style`** | 코드 의미에 영향을 주지 않는 변경 (포맷팅, 세미콜론 누락 등) |
-| **`refactor`** | 리팩토링 (기능 변경 없이 코드 구조 개선) |
-| **`perf`** | 성능 향상 (Performance improvement) |
-| **`test`** | 테스트 코드 추가, 수정, 리팩토링 |
-| **`build`** | 빌드 시스템 또는 외부 의존성 관련 변경 (`npm`, `webpack` 등) |
-| **`ci`** | CI/CD 설정 파일 및 스크립트 수정 (`GitHub Actions` 등) |
-| **`chore`** | 패키지 매니저 설정, 기타 자잘한 작업 (소스 코드 수정 없음) |
-| **`revert`** | 이전 커밋 되돌리기 |
+- **대상 브랜치**: `main`. 기능 브랜치를 `origin`에 푸시한 뒤 PR을 생성한다. (`!main` 플래그가 명시된 경우에만 `main` 직접 커밋 허용 — `CLAUDE.md` 6조 참조)
+- **제목**: 커밋과 동일한 `<gitmoji> [TYPE] #이슈번호 - 한 줄 설명` 형식.
+- **본문**: 아래 템플릿을 채운다.
 
----
+```markdown
+## 개요
+<이 PR이 무엇을, 왜 바꾸는지 2~3줄>
 
-## 3. 🎨 Gitmoji 체크리스트 (Gitmoji Cheatsheet)
+## 변경 사항
+- <핵심 변경 1>
+- <핵심 변경 2>
 
-현업에서 가장 자주 사용되는 주요 이모지 모음입니다.
+## 테스트
+- [ ] `npx tsc --noEmit` 통과
+- [ ] `npm run build` 로컬 빌드 확인
+- [ ] `CHANGELOG.md` / `TASKS.md` 갱신
+- [ ] (DB 변경 시) `supabase/migrations/` 마이그레이션 및 `types/supabase.ts` 재생성
 
-| 이모지 | 태그 코드 | 주요 용도 | 예시 |
-| :---: | :--- | :--- | :--- |
-| ✨ | `:sparkles:` | 새로운 기능 구현 | `✨ feat: 회원가입 기능 개발` |
-| 🐛 | `:bug:` | 버그 수정 | `🐛 fix: 결제 에러 수정` |
-| 🚑️ | `:ambulance:` | 치명적인 긴급 버그 수정 (Hotfix) | `🚑️ hotfix: 서버 다운 원인 패치` |
-| 💄 | `:lipstick:` | UI/UX 스타일링 작업 | `💄 style: 메인 헤더 디자인 개편` |
-| ♻️ | `:recycle:` | 코드 리팩토링 | `♻️ refactor: API 요청 로직 모듈화` |
-| ⚡️ | `:zap:` | 성능 개선 | `⚡️ perf: 이미지 로딩 속도 최적화` |
-| 📝 | `:memo:` | 문서 추가/수정 | `📝 docs: API 명세서 업데이트` |
-| 🔒️ | `:lock:` | 보안 관련 이슈 해결 | `🔒️ fix: 토큰 검증 로직 강화` |
-| 🚀 | `:rocket:` | 배포 관련 작업 | `🚀 chore: v1.0.0 프로덕션 배포` |
-| 🧪 | `:test_tube:` | 실패하는 테스트 작성 또는 실험성 코드 | `🧪 test: 단위 테스트 추가` |
-| ✅ | `:white_check_mark:` | 테스트 성공 및 통과 | `✅ test: 회원가입 테스트 통과` |
-| 📦️ | `:package:` | 패키지/의존성 추가 및 업데이트 | `📦️ chore: axios 패키지 추가` |
-| 🚚 | `:truck:` | 파일 이동 또는 이름 변경 | `🚚 refactor: utils 폴더 위치 이동` |
-| 🔥 | `:fire:` | 불필요한 코드나 파일 삭제 | `🔥 chore: 사용하지 않는 디렉토리 제거` |
-| 🔧 | `:wrench:` | 개발 설정 파일 작성/수정 | `🔧 chore: tsconfig.json 설정 변경` |
-| 🚧 | `:construction:` | 진행 중인 작업 (Work In Progress) | `🚧 feat: 장바구니 기능 작업 중` |
+## 관련 이슈
+Closes #<이슈번호>
+```
+
+- **Merge 방식**: 기능 브랜치 병합 시 **`Squash and Merge`**를 권장한다. (커밋 히스토리를 단일 커밋으로 요약)
+- **AI 서명 금지**: 커밋 메시지·PR 제목·PR 본문 어디에도 `Co-Authored-By: Claude ...`, `🤖 Generated with Claude Code` 등 AI 서명을 넣지 않는다. GitHub contributor 목록에 Claude가 표시되지 않아야 한다.
 
 ---
 
-## 4. ✍️ 커밋 작성 세부 규칙 (Commit Rules)
+## (선택) GitHub 이슈 제목 규칙
 
-1. **제목(Subject)은 50자 이내**로 명확하고 간결하게 작성합니다.
-2. **제목 끝에 마침표(`.`)를 붙이지 않습니다.**
-3. **명령조 또는 명사형 통일**:
-   - 좋은 예: `✨ feat: 로그인 기능 추가` 또는 `✨ feat: Add login feature`
-   - 나쁜 예: `✨ feat: 로그인 기능을 추가했습니다.`
-4. **본문(Body)** 이 필요한 경우, 제목과 본문 사이에 **빈 줄**을 하나 둡니다. (무엇을, 왜 변경했는지 서술)
-5. **이슈 번호 참조(Footer)**: 커밋이 특정 이슈와 관련이 있는 경우 하단에 언급합니다.
-   - 예: `Fixes: #12` 또는 `Closes: #45`
-
----
-
-## 5. 🌿 브랜치 전략 (Git Branching Strategy)
-
-업계에서 가장 널리 쓰이는 **GitHub Flow / Simplified Git Flow** 표준을 채택합니다.
-
-### 메인 브랜치
-* **`main` (또는 `master`)**: 프로덕션에 배포 가능한 상태의 최신 코드 브랜치.
-* **`develop`** (선택 사항): 기능들이 모여 다음 배포를 준비하는 개발 브랜치.
-
-### 보조 브랜치 (Feature / Issue Branches)
-브랜치 이름은 `<type>/<issue-number>-<short-description>` 형식으로 작성합니다.
-
-| 브랜치 접두사 | 설명 | 예시 |
-| :--- | :--- | :--- |
-| **`feature/`** 또는 **`feat/`** | 새로운 기능 개발 | `feature/#12-google-login` |
-| **`fix/`** 또는 **`bugfix/`** | 일반 버그 수정 | `fix/#34-map-render-error` |
-| **`hotfix/`** | 운영 환경 긴급 버그 수정 | `hotfix/#99-auth-token-leak` |
-| **`refactor/`** | 리팩토링 전용 작업 | `refactor/#45-state-management` |
-| **`docs/`** | 문서화 전용 작업 | `docs/#2-update-readme` |
-
----
-
-## 6. 🔀 Pull Request (PR) & Code Review
-
-1. **PR 제목 양식**:
-   - `[FE] ✨ feat(#12): 소셜 로그인 기능 구현`
-2. **PR 본문 포함 내용**:
-   - **작업 개요 (Summary)**: 무엇을 변경했는지 요약
-   - **관련 이슈 (Related Issues)**: `Closes #12`
-   - **체크리스트**: 테스트 통과 여부, 셀프 리뷰 진행 여부
-3. **Merge 방식**:
-   - 일반적인 기능 개발 브랜치 합병 시 **`Squash and Merge`**를 권장합니다. (커밋 히스토리를 깔끔하게 단일 커밋으로 요약)
+- 형식: `[TYPE] 한글 설명` (예: `[FEAT] 데이트 코스 공유 링크 생성`).
+- 이슈의 `TYPE`이 그대로 브랜치명과 커밋·PR 제목으로 이어진다.

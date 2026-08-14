@@ -1,42 +1,45 @@
 # Project Skills & Capabilities Guide (`our-date-map`)
 
-??문서??**`our-date-map`** ?�로?�트??기술 ?�택, ?�이?�트 �?개발???�킬 목록, 주요 ?�구 �?개발 가?�드?�인???�리??가?�드?�니??
+이 문서는 **`our-date-map`** 프로젝트의 기술 스택, 에이전트 및 개발자 스킬 목록, 주요 도구 및 개발 가이드라인을 정리한 가이드입니다.
 
 ---
 
-## ?���?Key Technology Stack & Competencies
+## 🛠️ Key Technology Stack & Competencies
 
 ### 1. Frontend Framework & UI
 - **Next.js 16 (App Router)**: Server Components, Server Actions, API Routes (`src/app/api/`)
-- **React 19**: 최신 Hook ?�턴 �?Concurrent Features
-- **TypeScript**: ?�격???�???�의 (`src/types/`)
-- **Tailwind CSS v4 & Lucide React**: 반응??UI �?모던 ?�자???�스??구축
-- **Kakao Maps API & Public Transit API**: ?�소 ?�시, ?�중교??경로 검??�?지???�동
+- **React 19**: 최신 Hook 패턴 및 Concurrent Features
+- **TypeScript**: 엄격한 타입 정의 (`src/types/`)
+- **Tailwind CSS v4 & Lucide React**: 반응형 UI 및 모던 디자인 시스템 구축
+- **Kakao Maps API & Public Transit API**: 장소 표시, 대중교통 경로 검색 및 지도 연동
 
 ### 2. Backend & Data Management
 - **Supabase**: 
-  - PostgreSQL ?�이?�베?�스, 마이그레?�션 (`supabase/migrations/`)
+  - PostgreSQL 데이터베이스, 마이그레이션 (`supabase/migrations/`)
   - Authenticated Client (`@supabase/ssr`, `@supabase/supabase-js`)
-  - Row Level Security (RLS) �?Realtime Data 처리
+  - Row Level Security (RLS) 및 Realtime Data 처리
 - **Web Push API**: PWA notification (`web-push`)
-- **Image Compression**: ?�라?�언??�??��?지 ?�축 (`browser-image-compression`)
+- **Image Compression**: 클라이언트 측 이미지 압축 (`browser-image-compression`)
 
 ---
 
-## ?�� Agent & Workflow Skills
+## 🤖 Agent & Workflow Skills
 
-?�이?�트 ?�업 ?�행 ???�용 가?�한 ?�심 ?�킬??
+에이전트 작업 수행 시 사용 가능한 핵심 스킬들:
 
 ### 1. Next.js 16 & React 19 Architecture
-- Next.js App Router API 규칙 �?비동�??�버 컴포?�트 ?�턴 준??- Client / Server Component 분리 �?State 최적??- Custom Hooks �?Reusable Modal/UI 컴포?�트 개발 (`src/components/`)
+- Next.js App Router API 규칙 및 비동기 서버 컴포넌트 패턴 준수
+- Client / Server Component 분리 및 State 최적화
+- Custom Hooks 및 Reusable Modal/UI 컴포넌트 개발 (`src/components/`)
 
 ### 2. Supabase Integration & Database Migration
-- Supabase SQL 마이그레?�션 ?�성 �??�키�?변�?관�?(`supabase/migrations/`)
-- Client/Server ?�경??맞춘 Supabase SSR ?�라?�언???�용
+- Supabase SQL 마이그레이션 작성 및 스키마 변경 관리 (`supabase/migrations/`)
+- Client/Server 환경에 맞춘 Supabase SSR 클라이언트 사용
 
 ### 3. API & External Service Integration
-- Kakao Map SDK & Transit API ?�동 (`src/app/api/transit/`)
-- Web Push ?�림 발송 �?구독 관�?
+- Kakao Map SDK & Transit API 연동 (`src/app/api/transit/`)
+- Web Push 알림 발송 및 구독 관리
+
 ---
 name: nextjs-app-router-patterns
 description: "Comprehensive patterns for Next.js 14+ App Router architecture, Server Components, and modern full-stack React development."
@@ -81,12 +84,11 @@ Comprehensive patterns for Next.js 14+ App Router architecture, Server Component
 
 ---
 
-## ?�� General Guidelines & Commands
+## 📋 General Guidelines & Commands
 
-- **개발 ?�버 ?�행**: `npm run dev`
-- **?�로?�트 빌드**: `npm run build`
+- **개발 서버 실행**: `npm run dev`
+- **프로젝트 빌드**: `npm run build`
 - **코드 린트**: `npm run lint`
 
 ---
 *Last Updated: 2026-08-05*
-
