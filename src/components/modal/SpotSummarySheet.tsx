@@ -90,12 +90,12 @@ export const SpotSummarySheet: React.FC<SpotSummarySheetProps> = ({
           <div
             onClick={handleTitleClick}
             onTouchEnd={handleTitleClick}
-            className="relative w-full h-32 rounded-2xl overflow-hidden border border-gray-100 group cursor-pointer touch-manipulation"
+            className="relative w-full h-48 rounded-2xl overflow-hidden border border-gray-100 group cursor-pointer touch-manipulation"
           >
             <img
               src={representativePhoto}
               alt={spot.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
             />
             {photoCount > 1 && (
               <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">

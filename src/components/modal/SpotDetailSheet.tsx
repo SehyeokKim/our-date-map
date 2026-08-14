@@ -170,6 +170,12 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
     setKeptPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Promote a kept photo to the representative thumbnail (first position = image_urls[0])
+  const makeKeptThumbnail = (index: number) => {
+    if (index === 0) return;
+    setKeptPhotos((prev) => [prev[index], ...prev.filter((_, i) => i !== index)]);
+  };
+
   const removeNewPhoto = (index: number) => {
     URL.revokeObjectURL(newPreviews[index]);
     setNewFiles((prev) => prev.filter((_, i) => i !== index));
@@ -299,22 +305,40 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   사진 ({totalPhotoCount}/10)
                 </label>
+                {keptPhotos.length > 1 && (
+                  <p className="text-[10px] text-gray-400 mb-1.5 leading-tight">
+                    사진을 누르면 대표 사진(썸네일)으로 지정됩니다.
+                  </p>
+                )}
                 <div className="grid grid-cols-4 gap-2">
                   {keptPhotos.map((url, index) => (
                     <div
                       key={url}
-                      className="relative aspect-square rounded-xl overflow-hidden border border-gray-200"
+                      onClick={() => !isSaving && makeKeptThumbnail(index)}
+                      className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all ${
+                        index === 0
+                          ? "border-2 border-rose-400 ring-1 ring-rose-200"
+                          : "border border-gray-200 hover:border-rose-300"
+                      }`}
                     >
                       <img src={url} alt={`사진 ${index + 1}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
-                        onClick={() => removeKeptPhoto(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeKeptPhoto(index);
+                        }}
                         disabled={isSaving}
                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-500 transition-colors cursor-pointer"
                         aria-label="사진 삭제"
                       >
                         <X className="w-3 h-3" />
                       </button>
+                      {index === 0 && (
+                        <span className="absolute bottom-1 left-1 bg-rose-500 text-white text-[8px] font-bold px-1 py-0.5 rounded">
+                          대표
+                        </span>
+                      )}
                     </div>
                   ))}
                   {newPreviews.map((url, index) => (

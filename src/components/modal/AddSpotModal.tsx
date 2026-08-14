@@ -86,6 +86,13 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
     setPreviewUrls(updatedUrls);
   };
 
+  // Promote a selected photo to the representative thumbnail (first position = image_urls[0])
+  const makeThumbnail = (indexToPromote: number) => {
+    if (indexToPromote === 0) return;
+    setImageFiles((prev) => [prev[indexToPromote], ...prev.filter((_, idx) => idx !== indexToPromote)]);
+    setPreviewUrls((prev) => [prev[indexToPromote], ...prev.filter((_, idx) => idx !== indexToPromote)]);
+  };
+
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const selected = Array.from(e.target.files);
@@ -221,29 +228,48 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
               <span className="text-[11px] font-bold text-rose-500">{imageFiles.length} / 10</span>
             </div>
 
-            {/* Photo Previews Slider */}
+            {/* Photo Previews Slider (tap a photo to set it as the representative thumbnail) */}
             {previewUrls.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none">
-                {previewUrls.map((url, idx) => (
-                  <div
-                    key={idx}
-                    className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0 group"
-                  >
-                    <img src={url} alt={`미리보기 ${idx + 1}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      disabled={isUploading}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-rose-600 transition-colors"
+              <>
+                <p className="text-[10px] text-gray-400 mb-1.5 leading-tight">
+                  사진을 누르면 대표 사진(썸네일)으로 지정됩니다.
+                </p>
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none">
+                  {previewUrls.map((url, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => !isUploading && makeThumbnail(idx)}
+                      className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 group cursor-pointer transition-all ${
+                        idx === 0
+                          ? "border-2 border-rose-400 ring-2 ring-rose-200"
+                          : "border border-gray-200 hover:border-rose-300"
+                      }`}
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                    <span className="absolute bottom-1 left-1 bg-black/50 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                      {idx + 1}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                      <img src={url} alt={`미리보기 ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeImage(idx);
+                        }}
+                        disabled={isUploading}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-rose-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      {idx === 0 ? (
+                        <span className="absolute bottom-1 left-1 bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          ⭐ 대표
+                        </span>
+                      ) : (
+                        <span className="absolute bottom-1 left-1 bg-black/50 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          {idx + 1}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
 
             {imageFiles.length < 10 && (
