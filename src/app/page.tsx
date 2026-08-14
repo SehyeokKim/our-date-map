@@ -18,6 +18,7 @@ import { SpotSummarySheet } from "@/components/modal/SpotSummarySheet";
 import { SpotDetailSheet } from "@/components/modal/SpotDetailSheet";
 import { SpotListModal } from "@/components/modal/SpotListModal";
 import { TrashModal } from "@/components/modal/TrashModal";
+import { AddressSearchModal } from "@/components/modal/AddressSearchModal";
 import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
 import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
@@ -32,6 +33,7 @@ export default function Home() {
   const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
   const [isSpotListOpen, setIsSpotListOpen] = useState<boolean>(false);
   const [isTrashOpen, setIsTrashOpen] = useState<boolean>(false);
+  const [isAddressSearchOpen, setIsAddressSearchOpen] = useState<boolean>(false);
   const [deletedSpots, setDeletedSpots] = useState<DeletedDateSpot[]>([]);
   const [loadingTrash, setLoadingTrash] = useState<boolean>(false);
   const [isCustomPushModalOpen, setIsCustomPushModalOpen] = useState<boolean>(false);
@@ -163,6 +165,7 @@ export default function Home() {
     isAddModalOpen,
     newSpotLatLng,
     currentAddress,
+    openAddSpotAt,
     closeAddModal,
   } = useKakaoMap(showToast);
 
@@ -295,6 +298,7 @@ export default function Home() {
         mapError={mapError}
         locateUser={locateUser}
         onOpenSpotList={() => setIsSpotListOpen(true)}
+        onOpenAddressSearch={() => setIsAddressSearchOpen(true)}
         onOpenTrash={async () => {
           setIsTrashOpen(true);
           setLoadingTrash(true);
@@ -398,6 +402,17 @@ export default function Home() {
           currentUserId={user?.id}
         />
       )}
+
+      {/* Address Search Modal (주소로 추가 — 검색 후 핀 등록) */}
+      <AddressSearchModal
+        isOpen={isAddressSearchOpen}
+        onClose={() => setIsAddressSearchOpen(false)}
+        onSelectLocation={(result) => {
+          setIsAddressSearchOpen(false);
+          if (appMode !== "memory") setAppMode("memory");
+          openAddSpotAt(result.lat, result.lng, result.address || result.name);
+        }}
+      />
 
       {/* Trash Modal (휴지통 — 삭제된 핀 복구) */}
       <TrashModal

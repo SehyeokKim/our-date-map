@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### 추가
+- **주소·장소명 검색으로 핀 등록 ("주소로 추가"):** 햄버거 메뉴의 "주소로 추가"에서 도로명·지번 주소(Geocoder)와 장소 이름(Places)을 병렬 검색(300ms 디바운스)해 결과를 병합 표시하고, 선택 시 지도를 해당 좌표로 이동한 뒤 주소가 자동 채워진 핀 등록 모달을 엽니다. 이미 로드된 Kakao SDK `services` 라이브러리만 사용해 별도 API 키·쿼터 소모가 없습니다. ([useAddressSearch.ts](src/hooks/useAddressSearch.ts), [AddressSearchModal.tsx](src/components/modal/AddressSearchModal.tsx), [useKakaoMap.ts](src/hooks/useKakaoMap.ts), [MapContainer.tsx](src/components/map/MapContainer.tsx), [page.tsx](src/app/page.tsx))
 - **지도 햄버거 메뉴 & 추억 모아보기:** 우하단 GPS 버튼을 햄버거 메뉴 FAB으로 교체하고(팝오버에 "현재 위치로" 포함), 등록된 데이트 핀 전체를 최신순 리스트(썸네일·제목·날짜·메모 1줄)로 보는 **"추억 모아보기"** 모달을 추가했습니다. 항목 터치 시 해당 핀 좌표로 지도 이동 후 상세 시트가 열립니다. ([MapContainer.tsx](src/components/map/MapContainer.tsx), [SpotListModal.tsx](src/components/modal/SpotListModal.tsx), [page.tsx](src/app/page.tsx))
 - **데이트 기록 수정 기능:** 핀 상세 시트의 연필 버튼으로 제목·데이트 날짜·사진(개별 삭제/추가, 최대 10장, 300KB 압축 업로드)·이야기를 수정하는 편집 모드를 추가했습니다. 편집에서 제거한 사진은 스토리지에서도 함께 정리됩니다. ([SpotDetailSheet.tsx](src/components/modal/SpotDetailSheet.tsx), [useDateSpots.ts](src/hooks/useDateSpots.ts), [page.tsx](src/app/page.tsx))
 - **휴지통 & 핀 복원:** 햄버거 메뉴에 **휴지통**을 추가해 삭제된 핀(`deleted_date_spots`) 목록을 조회하고 원터치로 복원할 수 있습니다. ([TrashModal.tsx](src/components/modal/TrashModal.tsx), [useDateSpots.ts](src/hooks/useDateSpots.ts), [page.tsx](src/app/page.tsx))

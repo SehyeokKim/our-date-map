@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navigation, AlertCircle, Loader2, Menu, X, Heart, Trash2 } from "lucide-react";
+import { Navigation, AlertCircle, Loader2, Menu, X, Heart, Trash2, MapPinPlus } from "lucide-react";
 
 interface MapContainerProps {
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -9,6 +9,7 @@ interface MapContainerProps {
   mapError: string | null;
   locateUser: () => void;
   onOpenSpotList?: () => void;
+  onOpenAddressSearch?: () => void;
   onOpenTrash?: () => void;
   pushEnabled?: boolean;
   onSendInstantPush?: () => void;
@@ -22,6 +23,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   mapError,
   locateUser,
   onOpenSpotList,
+  onOpenAddressSearch,
   onOpenTrash,
   pushEnabled = false,
   onSendInstantPush,
@@ -188,6 +190,16 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                 >
                   <Heart className="w-4 h-4 fill-current" />
                   추억 모아보기
+                </button>
+                <button
+                  onClick={() => {
+                    onOpenAddressSearch?.();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  <MapPinPlus className="w-4 h-4" />
+                  주소로 추가
                 </button>
                 <button
                   onClick={() => {

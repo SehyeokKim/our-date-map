@@ -9,9 +9,7 @@
 
 ## 🚧 진행 중 / 예정 (In Progress / Planned)
 
-| # | 작업 | 상태 | 브랜치 | 명세 |
-| --- | --- | --- | --- | --- |
-| 20 | 핀 목록 조회 버튼 & 주소 검색 핀 등록 | `In Progress` | `feat/pin-list-address-search` | [task-20](tasks/task-20-pin-list-address-search.md) |
+_현재 없음._
 
 ---
 
@@ -38,5 +36,6 @@
 | 17 | 푸시 알림 전송 이력 `push_messages` DB 기록 | 07-27 | - | `src/app/api/push/send/route.ts`, `supabase/schema.sql` |
 | 18 | 데이트 코스 상세 드로어 UI 개선 & 경로 표시 제어 튜닝 | 07-27 | - | `src/components/modal/FuturePlanSheet.tsx`, `src/components/common/Header.tsx` |
 | 19 | 메모 들여쓰기 정렬 & 플래닝 진입 시 핀/경로 은닉 제어 | 07-27 | v0.9.2 | `src/components/modal/FuturePlanSheet.tsx`, `src/app/page.tsx` |
+| 20 | 지도 햄버거 메뉴 (추억 모아보기·주소로 추가·휴지통·현재 위치로) & 기록 수정 & 핀 복원 | 08-14 | - | `src/components/map/MapContainer.tsx`, `src/components/modal/SpotListModal.tsx`, `AddressSearchModal.tsx`, `TrashModal.tsx`, `src/hooks/useAddressSearch.ts`, `useDateSpots.ts` |
 
 > 완료일은 2026년 기준. 버전 `-`는 릴리스 태그 미지정 작업(상세는 `CHANGELOG.md` [Unreleased] 참조).

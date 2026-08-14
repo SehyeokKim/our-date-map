@@ -400,6 +400,27 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     setIsAddModalOpen(true);
   }, [map, fetchAddress]);
 
+  // Open "Add Spot" modal at a searched location (address search flow)
+  const openAddSpotAt = useCallback(
+    (lat: number, lng: number, address?: string) => {
+      const coords = { lat, lng };
+      setNewSpotLatLng(coords);
+      if (address) {
+        setCurrentAddress(address);
+      } else {
+        fetchAddress(lat, lng);
+      }
+
+      const kakao = window.kakao;
+      if (map && kakao?.maps) {
+        map.setLevel(3);
+        map.panTo(new kakao.maps.LatLng(lat, lng));
+      }
+      setIsAddModalOpen(true);
+    },
+    [map, fetchAddress]
+  );
+
   // Handle map click to place temporary pin & fetch reverse geocoding address
   useEffect(() => {
     if (!map) return;
@@ -578,6 +599,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
     currentAddress,
     setCurrentAddress,
     handleStartAddSpot,
+    openAddSpotAt,
     closeAddModal,
   };
 }
