@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Camera, Loader2, User as UserIcon, Heart } from "lucide-react";
+import { X, Camera, Loader2, User as UserIcon, Heart, LogOut } from "lucide-react";
 import { Profile } from "@/types/spot";
 
 interface ProfileEditModalProps {
@@ -10,6 +10,7 @@ interface ProfileEditModalProps {
   currentPartnerId?: string | null;
   fetchAvailablePartners?: () => Promise<Profile[]>;
   onSave: (newNickname: string, imageFile?: File | null, partnerId?: string | null) => Promise<boolean>;
+  onLogout?: () => void;
 }
 
 export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
@@ -20,6 +21,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   currentPartnerId = null,
   fetchAvailablePartners,
   onSave,
+  onLogout,
 }) => {
   const [nickname, setNickname] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -201,6 +203,22 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               )}
             </button>
           </div>
+
+          {/* Logout Button */}
+          {onLogout && (
+            <button
+              type="button"
+              onClick={() => {
+                onLogout();
+                onClose();
+              }}
+              disabled={isSaving}
+              className="w-full mt-1 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-100 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>로그아웃</span>
+            </button>
+          )}
         </form>
       </div>
     </div>

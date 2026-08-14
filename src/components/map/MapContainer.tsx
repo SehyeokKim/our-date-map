@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navigation, AlertCircle, Loader2, Menu, X, Heart, Trash2, MapPinPlus } from "lucide-react";
+import { Navigation, AlertCircle, Loader2, Menu, X, Heart, Trash2, MapPinPlus, User as UserIcon } from "lucide-react";
 
 interface MapContainerProps {
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -11,6 +11,8 @@ interface MapContainerProps {
   onOpenSpotList?: () => void;
   onOpenAddressSearch?: () => void;
   onOpenTrash?: () => void;
+  onOpenProfileEdit?: () => void;
+  profileAvatarUrl?: string | null;
   pushEnabled?: boolean;
   onSendInstantPush?: () => void;
   pushLoading?: boolean;
@@ -25,6 +27,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   onOpenSpotList,
   onOpenAddressSearch,
   onOpenTrash,
+  onOpenProfileEdit,
+  profileAvatarUrl = null,
   pushEnabled = false,
   onSendInstantPush,
   pushLoading = false,
@@ -181,6 +185,26 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             {/* Menu Popover */}
             {isMenuOpen && (
               <div className="absolute bottom-14 right-0 w-max bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl shadow-black/10 overflow-hidden py-1.5">
+                {onOpenProfileEdit && (
+                  <button
+                    onClick={() => {
+                      onOpenProfileEdit();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                  >
+                    {profileAvatarUrl ? (
+                      <img
+                        src={profileAvatarUrl}
+                        alt="내 프로필"
+                        className="w-5 h-5 -mx-0.5 rounded-full object-cover border border-gray-200 select-none pointer-events-none"
+                      />
+                    ) : (
+                      <UserIcon className="w-4 h-4" />
+                    )}
+                    프로필 수정
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     onOpenSpotList?.();

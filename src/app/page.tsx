@@ -277,11 +277,7 @@ export default function Home() {
         memoryCount={spots ? spots.length : 0}
         planningCount={allDatePlans ? allDatePlans.length : 0}
         user={user}
-        nickname={nickname}
-        avatarUrl={avatarUrl}
         onLoginWithKakao={loginWithKakao}
-        onLogout={logout}
-        onOpenProfileEdit={() => setIsProfileEditOpen(true)}
         pushEnabled={pushEnabled}
         onTogglePush={togglePushNotification}
         pushLoading={pushLoading}
@@ -299,6 +295,8 @@ export default function Home() {
         locateUser={locateUser}
         onOpenSpotList={() => setIsSpotListOpen(true)}
         onOpenAddressSearch={() => setIsAddressSearchOpen(true)}
+        onOpenProfileEdit={user ? () => setIsProfileEditOpen(true) : undefined}
+        profileAvatarUrl={avatarUrl}
         onOpenTrash={async () => {
           setIsTrashOpen(true);
           setLoadingTrash(true);
@@ -328,6 +326,7 @@ export default function Home() {
         currentAvatarUrl={avatarUrl}
         currentPartnerId={profile?.partner_id}
         fetchAvailablePartners={fetchAvailablePartners}
+        onLogout={logout}
         onSave={async (newNickname, imageFile, partnerId) => {
           const success = await updateProfile(newNickname, imageFile, partnerId);
           if (success) {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Heart, Calendar, ChevronDown, MapPin, Sparkles, LogOut, User as UserIcon, MessageSquare } from "lucide-react";
+import { Heart, Calendar, ChevronDown, MapPin, Sparkles, MessageSquare } from "lucide-react";
 import { AppMode } from "@/types/planner";
 import { User } from "@supabase/supabase-js";
 
@@ -11,11 +11,7 @@ interface HeaderProps {
   memoryCount?: number;
   planningCount?: number;
   user?: User | null;
-  nickname?: string | null;
-  avatarUrl?: string | null;
   onLoginWithKakao?: () => void;
-  onLogout?: () => void;
-  onOpenProfileEdit?: () => void;
   pushEnabled?: boolean;
   onTogglePush?: () => void;
   pushLoading?: boolean;
@@ -29,11 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   memoryCount = 0,
   planningCount = 0,
   user,
-  nickname,
-  avatarUrl,
   onLoginWithKakao,
-  onLogout,
-  onOpenProfileEdit,
   pushEnabled = false,
   onTogglePush,
   pushLoading = false,
@@ -82,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <div ref={headerRef} className="absolute top-4 left-4 right-4 z-30 mx-auto max-w-md">
+    <div ref={headerRef} className="absolute top-4 left-6 right-6 z-30 mx-auto max-w-md">
       {/* Main Header Bar */}
       <header
         onClick={() => setIsOpen(!isOpen)}
@@ -126,13 +118,29 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Active User Avatar Preview */}
-          {user && avatarUrl && (
-            <img
-              src={avatarUrl}
-              alt={nickname || "사용자 프로필"}
-              className="w-7 h-7 rounded-full border border-gray-200 object-cover shadow-sm"
-            />
+          {/* Web Push Notification Popcat Toggle (Double Click to Open Settings) */}
+          {user && (
+            <button
+              type="button"
+              onClick={handlePopcatClick}
+              disabled={pushLoading}
+              title={
+                pushEnabled
+                  ? "웹 푸시 알림 켜짐 (더블클릭 하면 설정창 열림)"
+                  : "웹 푸시 알림 꺼짐 (더블클릭 하면 설정창 열림)"
+              }
+              aria-label={pushEnabled ? "웹 푸시 알림 끄기" : "웹 푸시 알림 켜기"}
+              className="border-none bg-transparent outline-none p-0 cursor-pointer transition-transform flex items-center justify-center relative active:scale-95"
+            >
+              <img
+                src={pushEnabled ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
+                alt={pushEnabled ? "Push ON" : "Push OFF"}
+                className="w-7 h-7 object-contain select-none pointer-events-none"
+              />
+              {pushEnabled && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border border-white" />
+              )}
+            </button>
           )}
 
           <ChevronDown
@@ -196,109 +204,43 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* Quick Schedule List Button */}
-          <div className="pt-1">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onOpenScheduleModal?.();
-              }}
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold rounded-xl border border-violet-100 transition-all active:scale-95 cursor-pointer"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>일정 목록</span>
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-gray-100 my-1" />
-
-          {/* Auth Section: Kakao Login / Profile & Logout */}
-          <div className="pt-0.5 px-1">
-            {user ? (
-              <div
-                onClick={() => {
-                  onOpenProfileEdit?.();
-                  setIsOpen(false);
-                }}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 transition-all cursor-pointer group active:scale-[0.98]"
-                title="클릭하여 프로필 수정하기"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={nickname || "프로필 이미지"}
-                      className="w-8 h-8 rounded-full border border-amber-300 object-cover flex-shrink-0 group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-amber-200/80 flex items-center justify-center text-amber-800 font-bold text-xs">
-                      <UserIcon className="w-4 h-4" />
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-gray-800 truncate flex items-center gap-1">
-                      <span>{nickname || "카카오 사용자"}님</span>
-                      <span className="text-[10px] text-amber-600 font-normal">✏️</span>
-                    </div>
-                    <div className="text-[10px] text-amber-700 font-medium">
-                      프로필 수정하기
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Web Push Notification Popcat Toggle Button (Double Click to Open Settings) */}
-                  <button
-                    type="button"
-                    onClick={handlePopcatClick}
-                    disabled={pushLoading}
-                    title={
-                      pushEnabled
-                        ? "웹 푸시 알림 켜짐 (더블클릭 하면 설정창 열림)"
-                        : "웹 푸시 알림 꺼짐 (더블클릭 하면 설정창 열림)"
-                    }
-                    aria-label={pushEnabled ? "웹 푸시 알림 끄기" : "웹 푸시 알림 켜기"}
-                    className="border-none bg-transparent outline-none p-0 cursor-pointer transition-transform flex items-center justify-center relative active:scale-95"
-                  >
-                    <img
-                      src={pushEnabled ? "/icons/popcat_open.png" : "/icons/popcat_close.png"}
-                      alt={pushEnabled ? "Push ON" : "Push OFF"}
-                      className="w-7 h-7 object-contain select-none pointer-events-none"
-                    />
-                    {pushEnabled && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border border-white" />
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onLogout?.();
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-100 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>로그아웃</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
+          {/* Quick Schedule List Button (planning mode only) */}
+          {appMode === "planning" && (
+            <div className="pt-1">
               <button
-                type="button"
                 onClick={() => {
-                  onLoginWithKakao?.();
                   setIsOpen(false);
+                  onOpenScheduleModal?.();
                 }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#FEE500] hover:bg-[#FDD800] text-[#191919] font-semibold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold rounded-xl border border-violet-100 transition-all active:scale-95 cursor-pointer"
               >
-                <MessageSquare className="w-4 h-4 fill-[#191919]" />
-                <span>카카오로 3초 로그인 (작성자 기록)</span>
+                <Calendar className="w-3.5 h-3.5" />
+                <span>일정 목록</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Auth Section: Kakao Login (only when logged out) */}
+          {!user && (
+            <>
+              {/* Divider */}
+              <div className="border-t border-gray-100 my-1" />
+
+              <div className="pt-0.5 px-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onLoginWithKakao?.();
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#FEE500] hover:bg-[#FDD800] text-[#191919] font-semibold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
+                >
+                  <MessageSquare className="w-4 h-4 fill-[#191919]" />
+                  <span>카카오로 3초 로그인 (작성자 기록)</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
