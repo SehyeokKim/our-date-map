@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 
 interface FuturePlanSheetProps {
+  /** 불러온(또는 새로 만든) 일정의 제목. 없으면 기본 문구를 쓴다 */
+  planTitle?: string;
   plannedSpots: PlannedSpot[];
   onRemoveSpot: (id: string) => void;
   onMoveUp: (index: number) => void;
@@ -31,6 +33,7 @@ interface FuturePlanSheetProps {
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
+  planTitle,
   plannedSpots,
   onRemoveSpot,
   onMoveUp,
@@ -75,18 +78,21 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
           onClick={() => setIsExpanded(!isExpanded)}
           className="p-3.5 flex items-center justify-between cursor-pointer border-b border-line bg-plan-tint"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-plan text-on-accent flex items-center justify-center shadow-sm">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-plan text-on-accent flex items-center justify-center shadow-sm shrink-0">
               <Calendar className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-display text-ink text-sm">데이트 코스 상세</h2>
-                <span className="bg-surface text-plan-strong font-bold text-[11px] px-2 py-0.5 rounded-full">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                {/* 일정을 불러왔다면 그 제목을, 아니면 기본 문구를 보여준다 */}
+                <h2 className="font-display text-ink text-sm truncate">
+                  {planTitle?.trim() || "데이트 코스 상세"}
+                </h2>
+                <span className="bg-surface text-plan-strong font-bold text-[11px] px-2 py-0.5 rounded-full shrink-0">
                   총 {plannedSpots.length}곳
                 </span>
               </div>
-              <p className="text-[10px] text-ink-muted">
+              <p className="text-[10px] text-ink-muted truncate">
                 {isEditing
                   ? "순서 조정 · 삭제 · 경유지 추가를 할 수 있어요"
                   : plannedSpots.length === 0

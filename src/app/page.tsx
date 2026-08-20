@@ -117,6 +117,7 @@ export default function Home() {
     plannedSpots,
     currentRouteSummary,
     updateRouteSummary,
+    currentTitle,
     allDatePlans,
     isScheduleModalOpen,
     setIsScheduleModalOpen,
@@ -461,6 +462,7 @@ export default function Home() {
       {/* Future Planning Control Sheet (Only shown when user loads or creates a course) */}
       {appMode === "planning" && isPlanSheetOpen && (
         <FuturePlanSheet
+          planTitle={currentTitle}
           plannedSpots={plannedSpots}
           onRemoveSpot={removeSpot}
           onMoveUp={moveSpotUp}

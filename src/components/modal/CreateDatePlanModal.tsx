@@ -34,13 +34,6 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
     onStartPlan(finalStart, finalEnd, finalTitle);
   };
 
-  const handleQuickPreset = (days: number) => {
-    const s = new Date();
-    const e = new Date(Date.now() + days * 86400000);
-    setStartDate(s.toISOString().split("T")[0]);
-    setEndDate(e.toISOString().split("T")[0]);
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all duration-300 pointer-events-auto">
       <div className="relative w-full max-w-sm bg-surface rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col border border-line">
@@ -65,36 +58,6 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
 
         {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {/* Quick Presets */}
-          <div>
-            <label className="block text-[11px] font-semibold text-ink-muted mb-1.5 uppercase tracking-wider">
-              빠른 기간 선택
-            </label>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleQuickPreset(0)}
-                className="flex-1 py-1.5 bg-plan-tint hover:bg-plan-line text-plan-strong font-bold text-xs rounded-xl border border-plan-line transition-all active:scale-95 cursor-pointer"
-              >
-                당일치기
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickPreset(1)}
-                className="flex-1 py-1.5 bg-plan-tint hover:bg-plan-line text-plan-strong font-bold text-xs rounded-xl border border-plan-line transition-all active:scale-95 cursor-pointer"
-              >
-                1박 2일
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickPreset(2)}
-                className="flex-1 py-1.5 bg-plan-tint hover:bg-plan-line text-plan-strong font-bold text-xs rounded-xl border border-plan-line transition-all active:scale-95 cursor-pointer"
-              >
-                2박 3일
-              </button>
-            </div>
-          </div>
-
           {/* Date Range Selection Inputs */}
           <div className="grid grid-cols-2 gap-2.5">
             <div>
