@@ -118,6 +118,7 @@ export default function Home() {
     currentRouteSummary,
     updateRouteSummary,
     currentTitle,
+    setCurrentTitle,
     allDatePlans,
     isScheduleModalOpen,
     setIsScheduleModalOpen,
@@ -130,6 +131,7 @@ export default function Home() {
     savePlanToDb,
     isSavingDb,
     addSpot,
+    updateSpot,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
@@ -522,6 +524,8 @@ export default function Home() {
           isEditing={isEditingPlan}
           onToggleEdit={handleTogglePlanEdit}
           isSaving={isSavingDb}
+          onRenamePlan={setCurrentTitle}
+          onUpdateSpot={updateSpot}
         />
       )}
 

@@ -377,6 +377,22 @@ export function useFuturePlanner(
     [plannedSpots, saveSpots, showToast]
   );
 
+  // Update a spot's title/memo (편집 모드에서 경유지 내용 수정)
+  const updateSpot = useCallback(
+    (id: string, updates: { title: string; memo?: string }) => {
+      const nextTitle = updates.title.trim();
+      const nextMemo = updates.memo?.trim();
+
+      const updated = plannedSpots.map((s) =>
+        s.id === id
+          ? { ...s, title: nextTitle || s.title, memo: nextMemo || undefined }
+          : s
+      );
+      saveSpots(updated);
+    },
+    [plannedSpots, saveSpots]
+  );
+
   // Remove spot
   const removeSpot = useCallback(
     (id: string) => {
@@ -473,6 +489,7 @@ export function useFuturePlanner(
     fetchAllDatePlans,
     fetchPlansForDate,
     addSpot,
+    updateSpot,
     removeSpot,
     moveSpotUp,
     moveSpotDown,

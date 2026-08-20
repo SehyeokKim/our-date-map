@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PlannedSpot } from "@/types/planner";
 import { TransitRouteResult } from "@/types/transit";
 import {
@@ -36,6 +36,10 @@ interface FuturePlanSheetProps {
   /** 편집 진입(수정) 또는 저장 후 종료(완료) */
   onToggleEdit?: () => void;
   isSaving?: boolean;
+  /** 편집 모드에서 플랜 제목을 바꾼다 (DB 반영은 완료 시) */
+  onRenamePlan?: (title: string) => void;
+  /** 편집 모드에서 경유지 제목·메모를 바꾼다 (DB 반영은 완료 시) */
+  onUpdateSpot?: (id: string, updates: { title: string; memo?: string }) => void;
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
@@ -54,8 +58,39 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   isEditing = false,
   onToggleEdit,
   isSaving = false,
+  onRenamePlan,
+  onUpdateSpot,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+  // 인라인 편집 상태 — 플랜 제목과 경유지(제목·메모)
+  const [titleDraft, setTitleDraft] = useState<string | null>(null);
+  const [spotDraft, setSpotDraft] = useState<{ id: string; title: string; memo: string } | null>(
+    null
+  );
+
+  const displayTitle = planTitle?.trim() || "데이트 코스 상세";
+
+  const commitTitle = () => {
+    if (titleDraft === null) return;
+    const next = titleDraft.trim();
+    if (next && next !== displayTitle) onRenamePlan?.(next);
+    setTitleDraft(null);
+  };
+
+  const commitSpot = () => {
+    if (!spotDraft) return;
+    onUpdateSpot?.(spotDraft.id, { title: spotDraft.title, memo: spotDraft.memo });
+    setSpotDraft(null);
+  };
+
+  // 편집을 끝내면(완료) 열려 있던 인라인 입력도 함께 정리한다
+  useEffect(() => {
+    if (!isEditing) {
+      setTitleDraft(null);
+      setSpotDraft(null);
+    }
+  }, [isEditing]);
 
   // Helper for formatting distance (meters to km)
   const formatDistance = (meters?: number) => {
@@ -88,10 +123,40 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 min-w-0">
-                {/* 일정을 불러왔다면 그 제목을, 아니면 기본 문구를 보여준다 */}
-                <h2 className="font-display text-ink text-sm truncate">
-                  {planTitle?.trim() || "데이트 코스 상세"}
-                </h2>
+                {/* 편집 모드에서는 제목을 눌러 바로 고칠 수 있다 */}
+                {titleDraft !== null ? (
+                  <input
+                    value={titleDraft}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => setTitleDraft(e.target.value)}
+                    onBlur={commitTitle}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        commitTitle();
+                      }
+                      if (e.key === "Escape") setTitleDraft(null);
+                    }}
+                    maxLength={40}
+                    className="min-w-0 flex-1 font-display text-ink text-sm bg-surface border border-plan rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-plan"
+                  />
+                ) : isEditing && onRenamePlan ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTitleDraft(displayTitle);
+                    }}
+                    title="플랜 제목 수정"
+                    className="min-w-0 flex items-center gap-1 font-display text-ink text-sm truncate hover:text-plan-strong transition-colors cursor-pointer"
+                  >
+                    <span className="truncate">{displayTitle}</span>
+                    <Pencil className="w-3 h-3 shrink-0 text-plan" />
+                  </button>
+                ) : (
+                  <h2 className="font-display text-ink text-sm truncate">{displayTitle}</h2>
+                )}
                 <span className="bg-surface text-plan-strong font-bold text-[11px] px-2 py-0.5 rounded-full shrink-0">
                   총 {plannedSpots.length}곳
                 </span>
@@ -198,12 +263,70 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
 
                   return (
                     <React.Fragment key={spot.id}>
+                      {spotDraft && spotDraft.id === spot.id ? (
+                      /* 경유지 인라인 편집 — 제목과 계획 메모 */
+                      <div className="p-3 rounded-2xl bg-surface border-2 border-plan shadow-xs space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-plan text-on-accent font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                            {spot.order}
+                          </div>
+                          <input
+                            value={spotDraft.title}
+                            autoFocus
+                            onChange={(e) => setSpotDraft({ ...spotDraft, title: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                commitSpot();
+                              }
+                              if (e.key === "Escape") setSpotDraft(null);
+                            }}
+                            placeholder="경유지 이름"
+                            maxLength={40}
+                            className="flex-1 min-w-0 bg-surface-2 border border-line rounded-lg px-2.5 py-1.5 text-xs font-bold text-ink focus:outline-none focus:ring-2 focus:ring-plan"
+                          />
+                        </div>
+                        <textarea
+                          value={spotDraft.memo}
+                          onChange={(e) => setSpotDraft({ ...spotDraft, memo: e.target.value })}
+                          placeholder="계획 메모 (예: 오후 2시 예약완료)"
+                          rows={2}
+                          className="w-full bg-surface-2 border border-line rounded-lg px-2.5 py-1.5 text-[11px] text-ink focus:outline-none focus:ring-2 focus:ring-plan resize-none"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSpotDraft(null)}
+                            className="flex-1 py-1.5 rounded-lg bg-surface-2 text-ink-muted text-[11px] font-bold hover:bg-line transition-colors cursor-pointer"
+                          >
+                            취소
+                          </button>
+                          <button
+                            type="button"
+                            onClick={commitSpot}
+                            className="flex-1 py-1.5 rounded-lg bg-plan text-on-accent text-[11px] font-bold hover:bg-plan-strong transition-colors cursor-pointer"
+                          >
+                            확인
+                          </button>
+                        </div>
+                      </div>
+                      ) : (
                       <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-2 border border-line hover:border-plan-line hover:bg-plan-tint transition-all shadow-2xs group">
-                        {/* Clickable spot info area -> pans map to spot */}
+                        {/* 편집 모드에선 제목을 눌러 경유지 내용을 고치고, 아니면 지도 위치로 이동 */}
                         <div
-                          onClick={() => onPanToSpot?.(spot.latitude, spot.longitude)}
+                          onClick={() => {
+                            if (isEditing && onUpdateSpot) {
+                              setSpotDraft({
+                                id: spot.id,
+                                title: spot.title,
+                                memo: spot.memo || "",
+                              });
+                            } else {
+                              onPanToSpot?.(spot.latitude, spot.longitude);
+                            }
+                          }}
                           className="flex items-center gap-3 min-w-0 cursor-pointer flex-1"
-                          title="클릭 시 지도 위치로 이동"
+                          title={isEditing ? "클릭 시 제목·메모 수정" : "클릭 시 지도 위치로 이동"}
                         >
                           {/* Order Badge */}
                           <div className="w-7 h-7 rounded-full bg-plan text-on-accent font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
@@ -211,8 +334,11 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <div className="font-bold text-xs text-ink group-hover:text-plan-strong transition-colors truncate">
-                              {spot.title}
+                            <div className="font-bold text-xs text-ink group-hover:text-plan-strong transition-colors truncate flex items-center gap-1">
+                              <span className="truncate">{spot.title}</span>
+                              {isEditing && onUpdateSpot && (
+                                <Pencil className="w-2.5 h-2.5 shrink-0 text-plan" />
+                              )}
                             </div>
                             {spot.address && (
                               <div className="text-[10px] text-ink-subtle flex items-center gap-1 mt-0.5">
@@ -260,6 +386,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                         </div>
                         )}
                       </div>
+                      )}
 
                       {/* Public Transit Route Card between Spot A and Spot B */}
                       {nextSpot && (
