@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { TransitRouteInfo, TransitSubPath } from "@/types/transit";
 import { ODSAY_PATH_TYPE, isTransitMode } from "@/lib/transit";
 
+/**
+ * 성공한 조회 결과만 1시간 보관한다.
+ *
+ * 이전에는 fetch에 `next: { revalidate: 3600 }`을 걸었는데, ODsay는 실패해도 HTTP 200에
+ * 에러 본문을 담아 주기 때문에 **실패 응답까지 한 시간 동안 캐시**됐다. 그래서 키 인증 오류나
+ * 일시적 장애가 한 번 나면 해당 구간이 한 시간 내내 "경로 없음"으로 굳어버렸다.
+ * 이제 응답 본문을 확인한 뒤 성공한 것만 직접 캐시한다. (§9 쿼터 보호 요건은 그대로 충족)
+ */
+const CACHE_TTL_MS = 60 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 500;
+const successCache = new Map<string, { info: TransitRouteInfo; expiresAt: number }>();
+
+const readCache = (key: string): TransitRouteInfo | null => {
+  const hit = successCache.get(key);
+  if (!hit) return null;
+  if (hit.expiresAt <= Date.now()) {
+    successCache.delete(key);
+    return null;
+  }
+  return hit.info;
+};
+
+const writeCache = (key: string, info: TransitRouteInfo) => {
+  if (successCache.size >= MAX_CACHE_ENTRIES) {
+    const oldest = successCache.keys().next().value;
+    if (oldest) successCache.delete(oldest);
+  }
+  successCache.set(key, { info, expiresAt: Date.now() + CACHE_TTL_MS });
+};
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const SX = searchParams.get("SX");
@@ -28,6 +58,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // 네트워크로 나가기 전에 캐시부터 확인한다 (좌표 + 이동수단 조합이 키)
+  const cacheKey = `${SX},${SY}->${EX},${EY}@${requestedPathType}`;
+  const cached = readCache(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached);
+  }
+
   try {
     const origin = request.nextUrl.origin || "http://localhost:3000";
     const refererHeader = request.headers.get("referer") || origin;
@@ -42,7 +79,8 @@ export async function GET(request: NextRequest) {
           Accept: "application/json",
           Referer: refererHeader,
         },
-        next: { revalidate: 3600 }, // Cache on Next.js server side for 1 hour
+        // 에러 본문까지 캐시되지 않도록 프레임워크 캐시는 끄고 위 successCache로 직접 관리한다
+        cache: "no-store",
       });
 
       if (!res.ok) {
@@ -79,8 +117,9 @@ export async function GET(request: NextRequest) {
       const errMsg = data.error[0]?.message || data.error?.message || "경로를 찾을 수 없습니다.";
 
       // Handle short distance / walk only error (-98 or similar)
+      // 이건 "가까워서 걸어가면 된다"는 정상 결과이므로 캐시해도 된다.
       if (errCode === "-98" || errCode === -98) {
-        return NextResponse.json({
+        const walkOnlyInfo: TransitRouteInfo = {
           totalTime: 10,
           payment: 0,
           busTransitCount: 0,
@@ -96,7 +135,9 @@ export async function GET(request: NextRequest) {
             },
           ],
           isWalkOnly: true,
-        } as TransitRouteInfo);
+        };
+        writeCache(cacheKey, walkOnlyInfo);
+        return NextResponse.json(walkOnlyInfo);
       }
 
       return NextResponse.json({ error: errMsg }, { status: 400 });
@@ -165,6 +206,9 @@ export async function GET(request: NextRequest) {
       isWalkOnly: info.busTransitCount === 0 && info.subwayTransitCount === 0,
       fallbackApplied,
     };
+
+    // 성공한 결과만 보관한다 (에러는 캐시하지 않아 다음 요청에서 즉시 다시 시도된다)
+    writeCache(cacheKey, routeInfo);
 
     return NextResponse.json(routeInfo);
   } catch (err: any) {
