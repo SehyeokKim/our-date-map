@@ -77,7 +77,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              🔮 데이트 계획 ({futurePlans.length})
+              데이트 계획 ({futurePlans.length})
             </button>
             <button
               onClick={() => setActiveTab("past")}
@@ -87,7 +87,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              ⏳ 데이트 기록 ({pastPlans.length})
+              데이트 기록 ({pastPlans.length})
             </button>
           </div>
 
