@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -39,6 +39,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      couples: {
+        Row: {
+          created_at: string
+          font: string
+          id: string
+          theme: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          font?: string
+          id?: string
+          theme?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          font?: string
+          id?: string
+          theme?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couples_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       date_plans: {
         Row: {
           created_at: string
@@ -206,6 +241,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          couple_id: string | null
           created_at: string
           id: string
           nickname: string | null
@@ -214,6 +250,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          couple_id?: string | null
           created_at?: string
           id: string
           nickname?: string | null
@@ -222,6 +259,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          couple_id?: string | null
           created_at?: string
           id?: string
           nickname?: string | null
@@ -230,6 +268,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_partner_id_fkey"
             columns: ["partner_id"]

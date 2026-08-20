@@ -1,13 +1,38 @@
 -- 우리들의 데이트 지도 (Our Date Map) - Supabase Database & Storage Schema
 
+-- 0-a. 커플 테이블 (couples) — 두 사람이 함께 쓰는 공용 정보를 커플 단위로 모아 둔다
+CREATE TABLE IF NOT EXISTS public.couples (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    theme TEXT NOT NULL DEFAULT 'sage',
+    font TEXT NOT NULL DEFAULT 'gowun-noto',
+    updated_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+ALTER TABLE public.couples ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to couples" ON public.couples FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated insert to couples" ON public.couples FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow couple members to update couples" ON public.couples FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM public.profiles p WHERE p.couple_id = couples.id AND p.id = auth.uid())
+    OR NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.couple_id = couples.id)
+);
+
+GRANT ALL ON public.couples TO anon, authenticated, service_role;
+
 -- 0. 프로필 테이블 (profiles) 생성 및 트리거 설정
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nickname TEXT,
     profile_image_url TEXT,
+    partner_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    couple_id UUID REFERENCES public.couples(id) ON DELETE SET NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_profiles_couple_id ON public.profiles(couple_id);
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 

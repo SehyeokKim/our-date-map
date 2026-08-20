@@ -3,6 +3,8 @@ export interface Profile {
   nickname?: string | null;
   profile_image_url?: string | null;
   partner_id?: string | null;
+  /** 공용 설정(테마·폰트 등)을 함께 쓰는 커플 그룹 */
+  couple_id?: string | null;
   updated_at?: string;
   created_at?: string;
 }

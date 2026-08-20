@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase, signInWithKakao, signOut as supabaseSignOut } from "@/lib/supabase/client";
 import { uploadCompressedAvatar } from "@/lib/upload";
+import { ensureCouple } from "@/lib/couple";
 import { Profile } from "@/types/spot";
 
 export function useAuth() {
@@ -144,6 +145,8 @@ export function useAuth() {
           setProfile(data as Profile);
           if (finalPartnerId) {
             localStorage.setItem("our_date_map_target_partner_id", finalPartnerId);
+            // 파트너를 지정하면 공용 설정을 담을 커플로 묶는다 (실패해도 프로필 저장은 유지)
+            await ensureCouple(user.id, finalPartnerId);
           } else {
             localStorage.removeItem("our_date_map_target_partner_id");
           }

@@ -360,7 +360,11 @@ export default function Home() {
       />
 
       {/* App Settings Modal (테마 설정 등) */}
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        userId={user?.id}
+      />
 
       {/* User Profile Edit Modal */}
       <ProfileEditModal

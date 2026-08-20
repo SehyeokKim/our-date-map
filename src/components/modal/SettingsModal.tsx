@@ -15,13 +15,15 @@ import {
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 로그인 사용자 — 커플로 묶여 있으면 테마가 상대방과 공유된다 */
+  userId?: string | null;
 }
 
 type SettingsView = "list" | "theme";
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, userId }) => {
   const [view, setView] = useState<SettingsView>("list");
-  const { theme, font, applyTheme } = useTheme();
+  const { theme, font, applyTheme, isShared } = useTheme(userId);
 
   // 아직 적용하지 않은 선택값 — 미리보기 카드에만 반영된다
   const [pendingTheme, setPendingTheme] = useState<ColorTheme>(theme);
@@ -71,7 +73,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 {view === "theme" ? "테마 설정" : "설정"}
               </h2>
               <p className="text-[10px] text-ink-muted">
-                {view === "theme" ? "색상과 폰트를 골라 나만의 지도 만들기" : "앱 환경 설정"}
+                {view === "theme"
+                  ? isShared
+                    ? "색상과 폰트는 상대방과 함께 적용돼요"
+                    : "색상과 폰트를 골라 나만의 지도 만들기"
+                  : "앱 환경 설정"}
               </p>
             </div>
           </div>
@@ -204,7 +210,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <section>
               <div className="flex items-baseline justify-between mb-2">
                 <div className="text-xs font-bold text-ink">적용 예시</div>
-                <div className="text-[10px] text-ink-subtle">적용하기를 눌러야 실제로 바뀌어요</div>
+                <div className="text-[10px] text-ink-subtle">
+                  {isShared ? "적용하면 상대방에게도 반영돼요" : "적용하기를 눌러야 실제로 바뀌어요"}
+                </div>
               </div>
               <div
                 data-theme={pendingTheme}
