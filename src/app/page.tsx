@@ -130,8 +130,6 @@ export default function Home() {
     moveSpotDown,
   } = useFuturePlanner(showToast, user?.id);
 
-  const [showRouteOnMap, setShowRouteOnMap] = useState<boolean>(false);
-
   // Kakao Mobility Directions API
   const { fetchRoute, loadingRoute } = useDirections();
 
@@ -175,7 +173,6 @@ export default function Home() {
   const handleLoadPlanWithFit = useCallback(
     (plan: DatePlan) => {
       loadPlanFromDb(plan);
-      setShowRouteOnMap(true);
       if (plan.spots && plan.spots.length > 0) {
         fitBounds(plan.spots.map((s: PlannedSpot) => ({ lat: s.latitude, lng: s.longitude })));
       }
@@ -197,8 +194,9 @@ export default function Home() {
     if (appMode === "planning") {
       clearMemorySpotMarkers();
 
-      // Only render planned spot markers & route polyline on map if explicit course display is requested ('지도에서 코스 보기')
-      if (showRouteOnMap) {
+      // 코스 핀·경로선은 하단 시트와 같은 조건으로 표시한다 (플랜을 불러왔거나 새로 시작했을 때).
+      // 둘을 별도 상태로 두면 모드를 오갈 때 시트만 남고 경로가 사라지는 불일치가 생긴다.
+      if (isPlanSheetOpen) {
         renderPlannedSpotMarkers(plannedSpots);
 
         if (plannedSpots.length >= 2) {
@@ -245,7 +243,7 @@ export default function Home() {
     map,
     spots,
     plannedSpots,
-    showRouteOnMap,
+    isPlanSheetOpen,
     currentRouteSummary,
     fetchRoute,
     updateRouteSummary,
@@ -270,12 +268,7 @@ export default function Home() {
       {/* Header with Mode Selection Dropdown, Kakao Auth & Profile Edit */}
       <Header
         appMode={appMode}
-        onSelectMode={(mode) => {
-          setAppMode(mode);
-          if (mode === "planning") {
-            setShowRouteOnMap(false);
-          }
-        }}
+        onSelectMode={setAppMode}
         memoryCount={spots ? spots.length : 0}
         planningCount={allDatePlans ? allDatePlans.length : 0}
         user={user}
