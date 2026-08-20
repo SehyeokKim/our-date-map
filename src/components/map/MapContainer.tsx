@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navigation, AlertCircle, Loader2, Menu, X, Heart, Trash2, MapPinPlus, User as UserIcon } from "lucide-react";
+import { Navigation, AlertCircle, Loader2, Menu, X, Heart, Trash2, MapPinPlus, User as UserIcon, Settings } from "lucide-react";
 
 interface MapContainerProps {
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -12,6 +12,7 @@ interface MapContainerProps {
   onOpenAddressSearch?: () => void;
   onOpenTrash?: () => void;
   onOpenProfileEdit?: () => void;
+  onOpenSettings?: () => void;
   profileAvatarUrl?: string | null;
   pushEnabled?: boolean;
   onSendInstantPush?: () => void;
@@ -28,6 +29,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   onOpenAddressSearch,
   onOpenTrash,
   onOpenProfileEdit,
+  onOpenSettings,
   profileAvatarUrl = null,
   pushEnabled = false,
   onSendInstantPush,
@@ -244,6 +246,16 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                 >
                   <Navigation className="w-4 h-4 fill-current" />
                   현재 위치로
+                </button>
+                <button
+                  onClick={() => {
+                    onOpenSettings?.();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  <Settings className="w-4 h-4" />
+                  설정
                 </button>
               </div>
             )}

@@ -9,7 +9,8 @@
 
 ## 🚧 진행 중 / 예정 (In Progress / Planned)
 
-_현재 없음._
+- **사용자 테마 커스터마이징 (색상·폰트 등)** — 명세: [tasks/task-22-theme-customization.md](tasks/task-22-theme-customization.md)
+  - 1단계(설정 진입점: 햄버거 메뉴 "설정" + 테마 설정 placeholder) 완료. 상세 기능은 사용자 설명 대기 중.
 
 ---
 

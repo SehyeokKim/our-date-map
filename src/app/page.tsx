@@ -22,6 +22,7 @@ import { AddressSearchModal } from "@/components/modal/AddressSearchModal";
 import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
 import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
+import { SettingsModal } from "@/components/modal/SettingsModal";
 import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModal";
 import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
@@ -31,6 +32,7 @@ export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [routeStats, setRouteStats] = useState<{ distance?: number; duration?: number }>({});
   const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isSpotListOpen, setIsSpotListOpen] = useState<boolean>(false);
   const [isTrashOpen, setIsTrashOpen] = useState<boolean>(false);
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState<boolean>(false);
@@ -296,6 +298,7 @@ export default function Home() {
         onOpenSpotList={() => setIsSpotListOpen(true)}
         onOpenAddressSearch={() => setIsAddressSearchOpen(true)}
         onOpenProfileEdit={user ? () => setIsProfileEditOpen(true) : undefined}
+        onOpenSettings={() => setIsSettingsOpen(true)}
         profileAvatarUrl={avatarUrl}
         onOpenTrash={async () => {
           setIsTrashOpen(true);
@@ -317,6 +320,9 @@ export default function Home() {
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
       />
+
+      {/* App Settings Modal (테마 설정 등) */}
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       {/* User Profile Edit Modal */}
       <ProfileEditModal
