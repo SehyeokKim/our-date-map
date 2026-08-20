@@ -112,8 +112,8 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
               </div>
               <p className="text-xs font-bold text-ink">
                 {activeTab === "future"
-                  ? "등록된 미래 데이트 일정이 없습니다"
-                  : "저장된 과거 데이트 일정이 없습니다"}
+                  ? "등록된 데이트 계획이 없습니다"
+                  : "저장된 데이트 기록이 없습니다"}
               </p>
               <p className="text-[11px] text-ink-muted max-w-xs mx-auto">
                 우측 상단 + 버튼을 눌러 데이트 기간을 설정하고 지도에 코스를 작성해 보세요!
