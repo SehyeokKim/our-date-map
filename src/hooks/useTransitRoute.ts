@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PlannedSpot } from "@/types/planner";
-import { TransitMode, TransitRouteInfo, TransitRouteResult } from "@/types/transit";
+import { TransitMode, TransitRouteResponse, TransitRouteResult } from "@/types/transit";
 import { getDefaultTransitMode } from "@/lib/transit";
 
 /**
@@ -19,14 +19,14 @@ export function useTransitRoute(
 ) {
   const [transitRoutes, setTransitRoutes] = useState<Record<string, TransitRouteResult>>({});
   const [loadingTransit, setLoadingTransit] = useState<boolean>(false);
-  const cacheRef = useRef<Map<string, TransitRouteInfo>>(new Map());
+  const cacheRef = useRef<Map<string, TransitRouteResponse>>(new Map());
 
   const fetchPairTransitRoute = useCallback(
     async (
       fromSpot: PlannedSpot,
       toSpot: PlannedSpot,
       mode: TransitMode
-    ): Promise<TransitRouteInfo | null> => {
+    ): Promise<TransitRouteResponse | null> => {
       // 같은 좌표라도 이동수단이 다르면 다른 경로이므로 캐시 키에 수단을 포함한다
       const key = `${fromSpot.longitude.toFixed(5)},${fromSpot.latitude.toFixed(
         5
@@ -46,7 +46,8 @@ export function useTransitRoute(
           return null;
         }
 
-        const data: TransitRouteInfo = await res.json();
+        const data: TransitRouteResponse = await res.json();
+        if (!data?.candidates?.length) return null;
         cacheRef.current.set(key, data);
         return data;
       } catch (err) {
@@ -72,7 +73,11 @@ export function useTransitRoute(
         const from = plannedSpots[i];
         const to = plannedSpots[i + 1];
         const saved = savedTransitRoutes[`${from.id}->${to.id}`];
-        if (!saved || saved.mode !== resolveTransitMode(from, to)) {
+        if (
+          !saved ||
+          saved.mode !== resolveTransitMode(from, to) ||
+          (saved.selectedIndex ?? 0) !== (to.transitRouteIndex ?? 0)
+        ) {
           hasAllSaved = false;
           break;
         }
@@ -97,15 +102,24 @@ export function useTransitRoute(
         const pairKey = `${fromSpot.id}->${toSpot.id}`;
         const mode = resolveTransitMode(fromSpot, toSpot);
 
-        const routeInfo = await fetchPairTransitRoute(fromSpot, toSpot, mode);
+        const data = await fetchPairTransitRoute(fromSpot, toSpot, mode);
         if (isMounted) {
+          const candidates = data?.candidates ?? [];
+          // 저장된 선택이 후보 범위를 벗어나면 가장 빠른 경로로 되돌린다
+          const selectedIndex =
+            candidates.length > 0
+              ? Math.min(Math.max(toSpot.transitRouteIndex ?? 0, 0), candidates.length - 1)
+              : 0;
+
           newRoutes[pairKey] = {
             fromSpotId: fromSpot.id,
             toSpotId: toSpot.id,
-            routeInfo,
+            routeInfo: candidates[selectedIndex] ?? null,
+            candidates,
+            selectedIndex,
             mode,
-            fallbackApplied: routeInfo?.fallbackApplied,
-            error: routeInfo ? null : "경로 탐색 불가 (도보 권장)",
+            fallbackApplied: data?.fallbackApplied,
+            error: candidates.length > 0 ? null : "경로 탐색 불가 (도보 권장)",
           };
         }
       }

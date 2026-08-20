@@ -402,10 +402,24 @@ export function useFuturePlanner(
     [plannedSpots, saveSpots]
   );
 
-  // 구간 이동수단 지정 — 도착 경유지에 저장하며, 한 번 고르면 다시 바꾸기 전까지 유지된다
+  // 구간 이동수단 지정 — 도착 경유지에 저장하며, 한 번 고르면 다시 바꾸기 전까지 유지된다.
+  // 수단이 바뀌면 후보 경로 목록 자체가 달라지므로 선택해 둔 경로 번호는 초기화한다.
   const setSpotTransitMode = useCallback(
     (id: string, mode: TransitMode) => {
-      const updated = plannedSpots.map((s) => (s.id === id ? { ...s, transitMode: mode } : s));
+      const updated = plannedSpots.map((s) =>
+        s.id === id ? { ...s, transitMode: mode, transitRouteIndex: undefined } : s
+      );
+      saveSpots(updated);
+    },
+    [plannedSpots, saveSpots]
+  );
+
+  // 같은 수단의 후보 경로 중 몇 번째를 쓸지 지정
+  const setSpotTransitRouteIndex = useCallback(
+    (id: string, index: number) => {
+      const updated = plannedSpots.map((s) =>
+        s.id === id ? { ...s, transitRouteIndex: index } : s
+      );
       saveSpots(updated);
     },
     [plannedSpots, saveSpots]
@@ -509,6 +523,7 @@ export function useFuturePlanner(
     addSpot,
     updateSpot,
     setSpotTransitMode,
+    setSpotTransitRouteIndex,
     removeSpot,
     moveSpotUp,
     moveSpotDown,

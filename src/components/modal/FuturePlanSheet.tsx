@@ -44,6 +44,8 @@ interface FuturePlanSheetProps {
   onUpdateSpot?: (id: string, updates: { title: string; memo?: string }) => void;
   /** 구간 이동수단 지정 — 도착 경유지 id에 저장한다 */
   onSelectTransitMode?: (spotId: string, mode: TransitMode) => void;
+  /** 같은 수단의 후보 경로 중 하나를 고른다 */
+  onSelectTransitRoute?: (spotId: string, index: number) => void;
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
@@ -65,6 +67,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   onRenamePlan,
   onUpdateSpot,
   onSelectTransitMode,
+  onSelectTransitRoute,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
@@ -404,10 +407,9 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                               </div>
                               <div className="min-w-0">
                                 <div className="font-bold flex items-center gap-2 text-ink text-[11px]">
-                                  <span>⏱️ 약 {transit.routeInfo.totalTime}분 소요</span>
+                                  <span>약 {transit.routeInfo.totalTime}분 소요</span>
                                 </div>
-                                <div className="text-[10px] text-plan-strong font-medium truncate mt-0.5 flex items-center gap-1">
-                                  <span>🚉</span>
+                                <div className="text-[10px] text-plan-strong font-medium truncate mt-0.5">
                                   <span className="truncate">
                                     {transit.routeInfo.subpaths
                                       .map((sp) => sp.transportName)
@@ -429,9 +431,9 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                           )}
                         </div>
 
-                        {/* 구간 이동수단 — 수정 모드에서 직접 고른다 (선택값은 바꾸기 전까지 유지) */}
-                        {isEditing && onSelectTransitMode ? (
-                          <div className="px-2.5 pb-2.5 space-y-1">
+                        {/* 구간 이동수단 + 후보 경로 — 수정 모드에서만 고른다 */}
+                        {isEditing && onSelectTransitMode && (
+                          <div className="px-2.5 pb-2.5 space-y-1.5">
                             <div className="flex items-center gap-1">
                               {TRANSIT_MODES.map((mode) => {
                                 const isSelected = resolveTransitMode(spot, nextSpot) === mode;
@@ -452,22 +454,50 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                                 );
                               })}
                             </div>
+
+                            {/* 고른 수단으로 찾은 후보 경로 (최대 3개) */}
+                            {transit?.candidates && transit.candidates.length > 0 && (
+                              <div className="space-y-1">
+                                {transit.candidates.map((cand, ci) => {
+                                  const isPicked = (transit.selectedIndex ?? 0) === ci;
+                                  const line =
+                                    cand.subpaths
+                                      .filter((sp) => sp.trafficType !== 3)
+                                      .map((sp) => sp.transportName)
+                                      .filter(Boolean)
+                                      .join(" ➔ ") || "도보 이동";
+                                  return (
+                                    <button
+                                      key={ci}
+                                      type="button"
+                                      onClick={() => onSelectTransitRoute?.(nextSpot.id, ci)}
+                                      aria-pressed={isPicked}
+                                      className={`w-full text-left px-2 py-1.5 rounded-lg border transition-all active:scale-[0.99] cursor-pointer ${
+                                        isPicked
+                                          ? "bg-surface border-plan ring-1 ring-plan"
+                                          : "bg-surface/60 border-line hover:bg-surface"
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span className="text-[10px] font-bold text-ink shrink-0">
+                                          약 {cand.totalTime}분
+                                        </span>
+                                        <span className="text-[10px] text-ink-muted truncate">
+                                          {line}
+                                        </span>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+
                             {transit?.fallbackApplied && (
                               <p className="text-[10px] text-warn leading-tight">
                                 고른 수단으로는 경로가 없어 지하철+버스로 안내하고 있어요.
                               </p>
                             )}
                           </div>
-                        ) : (
-                          transit?.mode && (
-                            <div className="px-2.5 pb-2 -mt-1">
-                              <span className="text-[10px] text-ink-subtle">
-                                {TRANSIT_MODE_META[transit.mode].short}
-                                {transit.fallbackApplied ? " (대체 경로)" : ""}
-                                {nextSpot.transitMode ? "" : " · 자동"}
-                              </span>
-                            </div>
-                          )
                         )}
                         </div>
                       )}

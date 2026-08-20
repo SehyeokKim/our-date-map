@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TransitRouteInfo, TransitSubPath } from "@/types/transit";
+import { TransitRouteInfo, TransitRouteResponse, TransitSubPath } from "@/types/transit";
 import { ODSAY_PATH_TYPE, isTransitMode } from "@/lib/transit";
 
 /**
@@ -12,25 +12,78 @@ import { ODSAY_PATH_TYPE, isTransitMode } from "@/lib/transit";
  */
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 500;
-const successCache = new Map<string, { info: TransitRouteInfo; expiresAt: number }>();
+const successCache = new Map<string, { body: TransitRouteResponse; expiresAt: number }>();
 
-const readCache = (key: string): TransitRouteInfo | null => {
+const readCache = (key: string): TransitRouteResponse | null => {
   const hit = successCache.get(key);
   if (!hit) return null;
   if (hit.expiresAt <= Date.now()) {
     successCache.delete(key);
     return null;
   }
-  return hit.info;
+  return hit.body;
 };
 
-const writeCache = (key: string, info: TransitRouteInfo) => {
+const writeCache = (key: string, body: TransitRouteResponse) => {
   if (successCache.size >= MAX_CACHE_ENTRIES) {
     const oldest = successCache.keys().next().value;
     if (oldest) successCache.delete(oldest);
   }
-  successCache.set(key, { info, expiresAt: Date.now() + CACHE_TTL_MS });
+  successCache.set(key, { body, expiresAt: Date.now() + CACHE_TTL_MS });
 };
+
+/** ODsay path 하나를 우리 형식으로 변환 */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const parsePath = (path: any): TransitRouteInfo => {
+  const info = path.info;
+  const polylinePath: { lat: number; lng: number }[] = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subpaths: TransitSubPath[] = (path.subPath || []).map((sub: any) => {
+    let transportName = "";
+    if (sub.trafficType === 1) {
+      const laneName = sub.lane?.[0]?.name || "";
+      transportName = laneName.includes("호선") ? laneName : `${laneName} 지하철`;
+    } else if (sub.trafficType === 2) {
+      transportName = sub.lane?.[0]?.busNo || "버스";
+    } else {
+      transportName = "도보";
+    }
+
+    if (sub.passStopList?.stations) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sub.passStopList.stations.forEach((st: any) => {
+        if (st.y && st.x) {
+          polylinePath.push({ lat: parseFloat(st.y), lng: parseFloat(st.x) });
+        }
+      });
+    }
+
+    return {
+      trafficType: sub.trafficType as 1 | 2 | 3,
+      sectionTime: sub.sectionTime || 0,
+      distance: sub.distance || 0,
+      transportName,
+      startName: sub.startName || "",
+      endName: sub.endName || "",
+    };
+  });
+
+  return {
+    totalTime: info.totalTime || 0,
+    payment: info.payment || 0,
+    busTransitCount: info.busTransitCount || 0,
+    subwayTransitCount: info.subwayTransitCount || 0,
+    firstStartStation: info.firstStartStation || "",
+    lastEndStation: info.lastEndStation || "",
+    subpaths,
+    polylinePath: polylinePath.length > 0 ? polylinePath : undefined,
+    isWalkOnly: info.busTransitCount === 0 && info.subwayTransitCount === 0,
+  };
+};
+
+/** 사용자가 고를 후보 개수 */
+const MAX_CANDIDATES = 3;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -119,25 +172,29 @@ export async function GET(request: NextRequest) {
       // Handle short distance / walk only error (-98 or similar)
       // 이건 "가까워서 걸어가면 된다"는 정상 결과이므로 캐시해도 된다.
       if (errCode === "-98" || errCode === -98) {
-        const walkOnlyInfo: TransitRouteInfo = {
-          totalTime: 10,
-          payment: 0,
-          busTransitCount: 0,
-          subwayTransitCount: 0,
-          subpaths: [
+        const walkOnly: TransitRouteResponse = {
+          candidates: [
             {
-              trafficType: 3,
-              sectionTime: 10,
-              distance: 500,
-              transportName: "도보",
-              startName: "출발지",
-              endName: "도착지",
+              totalTime: 10,
+              payment: 0,
+              busTransitCount: 0,
+              subwayTransitCount: 0,
+              subpaths: [
+                {
+                  trafficType: 3,
+                  sectionTime: 10,
+                  distance: 500,
+                  transportName: "도보",
+                  startName: "출발지",
+                  endName: "도착지",
+                },
+              ],
+              isWalkOnly: true,
             },
           ],
-          isWalkOnly: true,
         };
-        writeCache(cacheKey, walkOnlyInfo);
-        return NextResponse.json(walkOnlyInfo);
+        writeCache(cacheKey, walkOnly);
+        return NextResponse.json(walkOnly);
       }
 
       return NextResponse.json({ error: errMsg }, { status: 400 });
@@ -151,66 +208,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Select the best/recommended path (first path)
-    const bestPath = paths[0];
-    const info = bestPath.info;
-
-    const polylinePath: { lat: number; lng: number }[] = [];
+    // ODsay는 여러 경로를 돌려준다. 사용자가 고를 수 있도록 상위 후보를 그대로 내려준다.
+    // (짧은 소요시간 순으로 정렬해 첫 번째가 기본 선택이 되게 한다)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const subpaths: TransitSubPath[] = (bestPath.subPath || []).map((sub: any) => {
-      let transportName = "";
-      if (sub.trafficType === 1) {
-        // Subway
-        const laneName = sub.lane?.[0]?.name || "";
-        transportName = laneName.includes("호선") ? laneName : `${laneName} 지하철`;
-      } else if (sub.trafficType === 2) {
-        // Bus
-        transportName = sub.lane?.[0]?.busNo || "버스";
-      } else {
-        // Walk
-        transportName = "도보";
-      }
+    const candidates: TransitRouteInfo[] = (paths as any[])
+      .map(parsePath)
+      .sort((a, b) => a.totalTime - b.totalTime)
+      .slice(0, MAX_CANDIDATES);
 
-      // Collect station coordinates for polyline path if available
-      if (sub.passStopList?.stations) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sub.passStopList.stations.forEach((st: any) => {
-          if (st.y && st.x) {
-            polylinePath.push({
-              lat: parseFloat(st.y),
-              lng: parseFloat(st.x),
-            });
-          }
-        });
-      }
-
-      return {
-        trafficType: sub.trafficType as 1 | 2 | 3,
-        sectionTime: sub.sectionTime || 0,
-        distance: sub.distance || 0,
-        transportName,
-        startName: sub.startName || "",
-        endName: sub.endName || "",
-      };
-    });
-
-    const routeInfo: TransitRouteInfo = {
-      totalTime: info.totalTime || 0,
-      payment: info.payment || 0,
-      busTransitCount: info.busTransitCount || 0,
-      subwayTransitCount: info.subwayTransitCount || 0,
-      firstStartStation: info.firstStartStation || "",
-      lastEndStation: info.lastEndStation || "",
-      subpaths,
-      polylinePath: polylinePath.length > 0 ? polylinePath : undefined,
-      isWalkOnly: info.busTransitCount === 0 && info.subwayTransitCount === 0,
-      fallbackApplied,
-    };
+    const body: TransitRouteResponse = { candidates, fallbackApplied };
 
     // 성공한 결과만 보관한다 (에러는 캐시하지 않아 다음 요청에서 즉시 다시 시도된다)
-    writeCache(cacheKey, routeInfo);
+    writeCache(cacheKey, body);
 
-    return NextResponse.json(routeInfo);
+    return NextResponse.json(body);
   } catch (err: any) {
     console.error("Transit API Error:", err);
     return NextResponse.json(

@@ -2,10 +2,10 @@ import { TransitMode } from "@/types/transit";
 
 export const TRANSIT_MODES: TransitMode[] = ["subway", "bus", "both"];
 
-export const TRANSIT_MODE_META: Record<TransitMode, { label: string; short: string }> = {
-  subway: { label: "지하철", short: "🚇 지하철" },
-  bus: { label: "버스", short: "🚌 버스" },
-  both: { label: "지하철+버스", short: "🚇🚌 지하철+버스" },
+export const TRANSIT_MODE_META: Record<TransitMode, { label: string }> = {
+  subway: { label: "지하철" },
+  bus: { label: "버스" },
+  both: { label: "지하철+버스" },
 };
 
 /** ODsay searchPubTransPathT의 SearchPathType (0: 지하철+버스, 1: 지하철, 2: 버스) */

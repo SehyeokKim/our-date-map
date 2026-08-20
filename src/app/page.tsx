@@ -134,6 +134,7 @@ export default function Home() {
     addSpot,
     updateSpot,
     setSpotTransitMode,
+    setSpotTransitRouteIndex,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
@@ -542,6 +543,7 @@ export default function Home() {
           onRenamePlan={setCurrentTitle}
           onUpdateSpot={updateSpot}
           onSelectTransitMode={setSpotTransitMode}
+          onSelectTransitRoute={setSpotTransitRouteIndex}
         />
       )}
 
