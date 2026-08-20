@@ -169,7 +169,7 @@ export default function Home() {
     currentAddress,
     openAddSpotAt,
     closeAddModal,
-  } = useKakaoMap(showToast);
+  } = useKakaoMap(showToast, appMode);
 
   // Load plan and auto-fit map bounds to encompass all course spots
   const handleLoadPlanWithFit = useCallback(

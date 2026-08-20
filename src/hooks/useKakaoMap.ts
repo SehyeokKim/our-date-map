@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DateSpot, LatLng } from "@/types/spot";
-import { PlannedSpot } from "@/types/planner";
+import { AppMode, PlannedSpot } from "@/types/planner";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function useKakaoMap(showToast: (message: string, type?: "success" | "error" | "info") => void) {
+export function useKakaoMap(
+  showToast: (message: string, type?: "success" | "error" | "info") => void,
+  appMode: AppMode = "memory"
+) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<any>(null);
   const [loadingMap, setLoadingMap] = useState<boolean>(true);
@@ -27,6 +30,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
   const plannedOverlaysRef = useRef<any[]>([]);
   const polylineRef = useRef<any | null>(null);
   const tempOverlayRef = useRef<any | null>(null);
+  const tempElRef = useRef<HTMLDivElement | null>(null);
   const geocoderRef = useRef<any | null>(null);
 
   // Helper for Reverse Geocoding
@@ -473,15 +477,16 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
         el.style.touchAction = "manipulation";
         (el.style as any).webkitTapHighlightColor = "transparent";
 
+        // 강조색은 --pin-accent 로 빼두고 아래에서 모드에 맞춰 주입한다
         el.innerHTML = `
           <div class="relative flex flex-col items-center pointer-events-auto">
-            <div class="w-10 h-10 rounded-full bg-memory border border-surface shadow-lg flex items-center justify-center hover:scale-110 transition-transform">
+            <div class="w-10 h-10 rounded-full border border-surface shadow-lg flex items-center justify-center hover:scale-110 transition-transform" style="background-color: var(--pin-accent)">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-on-accent">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
             </div>
-            <div class="w-1.5 h-1.5 bg-memory rounded-full -mt-0.5"></div>
+            <div class="w-1.5 h-1.5 rounded-full -mt-0.5" style="background-color: var(--pin-accent)"></div>
           </div>
         `;
 
@@ -521,14 +526,23 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
 
         overlay.setMap(map);
         tempOverlayRef.current = overlay;
+        tempElRef.current = el;
       }
+
+      // 추억 기록은 memory, 미래 플래닝은 plan 축을 따르도록 강조색을 갱신한다.
+      // 오버레이를 재사용하는 경로에서도 모드 변경이 반영되도록 매번 다시 설정한다.
+      tempElRef.current?.style.setProperty(
+        "--pin-accent",
+        appMode === "planning" ? "var(--plan)" : "var(--memory)"
+      );
     } else {
       if (tempOverlayRef.current) {
         tempOverlayRef.current.setMap(null);
         tempOverlayRef.current = null;
       }
+      tempElRef.current = null;
     }
-  }, [map, newSpotLatLng]);
+  }, [map, newSpotLatLng, appMode]);
 
   // Clean temp overlay when modal is closed
   const closeAddModal = useCallback(() => {
@@ -539,6 +553,7 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
       tempOverlayRef.current.setMap(null);
       tempOverlayRef.current = null;
     }
+    tempElRef.current = null;
   }, []);
 
   // Cleanup watch on unmount
