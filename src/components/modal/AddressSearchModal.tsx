@@ -33,6 +33,8 @@ interface AddressSearchModalProps {
   title?: string;
   subtitle?: string;
   accent?: keyof typeof ACCENT;
+  /** 주소를 모를 때 지도에 직접 핀을 찍어 등록하는 대안 경로 */
+  onPickOnMap?: () => void;
 }
 
 export const AddressSearchModal: React.FC<AddressSearchModalProps> = ({
@@ -42,6 +44,7 @@ export const AddressSearchModal: React.FC<AddressSearchModalProps> = ({
   title = "주소로 추가",
   subtitle = "주소나 장소 이름으로 검색해 핀을 찍어보세요",
   accent = "memory",
+  onPickOnMap,
 }) => {
   const c = ACCENT[accent];
   const { query, updateQuery, results, isSearching, reset } = useAddressSearch();
@@ -92,6 +95,18 @@ export const AddressSearchModal: React.FC<AddressSearchModalProps> = ({
               className={`w-full pl-10 pr-4 py-3 bg-surface border border-line rounded-2xl text-sm focus:outline-none focus:ring-2 ${c.ring} transition-all`}
             />
           </div>
+
+          {/* 주소를 모를 때: 지도에 직접 핀을 찍어 등록 */}
+          {onPickOnMap && (
+            <button
+              type="button"
+              onClick={onPickOnMap}
+              className="mt-2 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl border-2 border-dashed border-line text-ink-muted text-xs font-bold hover:bg-surface hover:text-ink transition-colors cursor-pointer"
+            >
+              <MapPin className="w-4 h-4" />
+              <span>핀으로 추가 — 지도에서 직접 위치 찍기</span>
+            </button>
+          )}
         </div>
 
         {/* Search Results */}

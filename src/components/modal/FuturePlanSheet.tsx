@@ -14,6 +14,7 @@ import {
   Pencil,
   Check,
   MapPinPlus,
+  Loader2,
 } from "lucide-react";
 
 interface FuturePlanSheetProps {
@@ -30,6 +31,11 @@ interface FuturePlanSheetProps {
   loadingTransit?: boolean;
   onPanToSpot?: (lat: number, lng: number) => void;
   onAddWaypoint?: () => void;
+  /** 편집 상태는 page에서 관리한다 — 새 플랜 생성 직후 자동으로 편집에 들어가야 하기 때문 */
+  isEditing?: boolean;
+  /** 편집 진입(수정) 또는 저장 후 종료(완료) */
+  onToggleEdit?: () => void;
+  isSaving?: boolean;
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
@@ -45,13 +51,11 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   loadingTransit,
   onPanToSpot,
   onAddWaypoint,
+  isEditing = false,
+  onToggleEdit,
+  isSaving = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  // 순서 조정·삭제·경유지 추가는 수정 모드에서만 노출해 평소 목록을 간결하게 유지한다
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-
-  // 토글 버튼이 펼쳐진 본문 안에 있으므로 따로 펼쳐 줄 필요가 없다
-  const toggleEditing = () => setIsEditing((prev) => !prev);
 
   // Helper for formatting distance (meters to km)
   const formatDistance = (meters?: number) => {
@@ -94,9 +98,9 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
               </div>
               <p className="text-[10px] text-ink-muted truncate">
                 {isEditing
-                  ? "순서 조정 · 삭제 · 경유지 추가를 할 수 있어요"
+                  ? "경유지 추가 · 순서 조정 · 삭제 후 완료를 누르세요"
                   : plannedSpots.length === 0
-                  ? "지도를 터치하여 방문할 코스를 추가하세요"
+                  ? "수정을 눌러 경유지를 추가해 보세요"
                   : "순서대로 이어지는 경로가 지도에 표시됩니다"}
               </p>
             </div>
@@ -150,20 +154,27 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                 )}
               </div>
 
-              {/* 코스 수정 토글 */}
+              {/* 편집 토글 — 완료를 누르면 변경사항이 저장된다 */}
               <button
                 type="button"
-                onClick={toggleEditing}
+                onClick={onToggleEdit}
+                disabled={isSaving}
                 aria-pressed={isEditing}
-                title={isEditing ? "수정 완료" : "코스 수정"}
-                className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${
+                title={isEditing ? "변경사항 저장하고 편집 종료" : "코스 수정"}
+                className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-60 ${
                   isEditing
                     ? "bg-plan text-on-accent"
                     : "bg-surface text-plan-strong border border-plan-line hover:bg-surface-2"
                 }`}
               >
-                {isEditing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
-                <span>{isEditing ? "완료" : "수정"}</span>
+                {isSaving ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : isEditing ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Pencil className="w-3.5 h-3.5" />
+                )}
+                <span>{isSaving ? "저장 중" : isEditing ? "완료" : "수정"}</span>
               </button>
             </div>
 
@@ -173,9 +184,9 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                 <div className="w-12 h-12 mx-auto rounded-full bg-plan-tint text-plan flex items-center justify-center">
                   <Sparkles className="w-6 h-6" />
                 </div>
-                <p className="text-xs font-semibold text-ink">등록된 미래 데이트 장소가 없습니다</p>
+                <p className="text-xs font-semibold text-ink">아직 등록된 경유지가 없습니다</p>
                 <p className="text-[11px] text-ink-muted max-w-xs mx-auto">
-                  지도 위 원하는 위치를 터치하면 이동 순서대로 코스 핀이 생성되고 길찾기 경로가 연결됩니다!
+                  아래 <b className="text-plan-strong">경유지 추가</b> 버튼으로 장소를 검색하거나, 주소를 모른다면 지도에 직접 핀을 찍어 추가할 수 있어요.
                 </p>
               </div>
             ) : (

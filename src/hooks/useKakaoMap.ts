@@ -7,7 +7,9 @@ import { AppMode, PlannedSpot } from "@/types/planner";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function useKakaoMap(
   showToast: (message: string, type?: "success" | "error" | "info") => void,
-  appMode: AppMode = "memory"
+  appMode: AppMode = "memory",
+  /** 지도를 클릭했을 때 등록용 핀을 찍을 수 있는지. 플래너 모드는 핀 선택 중일 때만 허용한다 */
+  allowMapPin: boolean = true
 ) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<any>(null);
@@ -439,6 +441,8 @@ export function useKakaoMap(
     let clickListener: any = null;
 
     clickListener = (mouseEvent: any) => {
+      if (!allowMapPin) return;
+
       const clickedLatLng = mouseEvent.latLng;
       const lat = clickedLatLng.getLat();
       const lng = clickedLatLng.getLng();
@@ -455,7 +459,7 @@ export function useKakaoMap(
         kakao.maps.event.removeListener(map, "click", clickListener);
       }
     };
-  }, [map, fetchAddress]);
+  }, [map, fetchAddress, allowMapPin]);
 
   // Handle temporary pin overlay rendering
   useEffect(() => {

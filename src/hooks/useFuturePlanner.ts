@@ -172,8 +172,10 @@ export function useFuturePlanner(
       customStartDate?: string,
       customEndDate?: string
     ) => {
-      if (plannedSpots.length === 0) {
-        showToast("저장할 장소가 없습니다. 지도에서 핀을 추가해 주세요.", "info");
+      // 생성 시점에 이미 빈 플랜이 DB에 들어가므로, 갱신(activePlanId 존재)일 때는
+      // 경유지가 없어도 저장을 허용한다. 신규 저장만 최소 1곳을 요구한다.
+      if (!activePlanId && plannedSpots.length === 0) {
+        showToast("저장할 장소가 없습니다. 경유지를 추가해 주세요.", "info");
         return;
       }
 
@@ -259,22 +261,56 @@ export function useFuturePlanner(
     ]
   );
 
-  // Start new plan with Date Range selection
+  // Start new plan with Date Range selection.
+  // 시나리오상 이 시점에 일정 목록에 나타나야 하므로 빈 플랜을 곧바로 DB에 만든다.
   const startNewDatePlan = useCallback(
-    (start: string, end: string, title?: string) => {
+    async (start: string, end: string, title?: string) => {
+      const finalTitle = title?.trim() || `${start} ~ ${end} 데이트`;
+
       setStartDate(start);
       setEndDate(end);
       setSelectedDate(start);
-      setCurrentTitle(title || `${start} ~ ${end} 데이트`);
+      setCurrentTitle(finalTitle);
       saveSpots([]);
       updateRouteSummary(null);
       setActivePlanId(null);
       setAppMode("planning");
       setIsCreateModalOpen(false);
       setIsPlanSheetOpen(true);
-      showToast(`'${title || start + " 데이트"}' 플래닝이 시작되었습니다. 지도를 터치해 장소를 추가하세요!`, "success");
+
+      setIsSavingDb(true);
+      try {
+        const now = new Date().toISOString();
+        const { data, error } = await supabase
+          .from("date_plans")
+          .insert({
+            user_id: userId || null,
+            created_by: userId || null,
+            title: finalTitle,
+            plan_date: start,
+            start_date: start,
+            end_date: end,
+            spots: [],
+            route_summary: null,
+            created_at: now,
+            updated_at: now,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setActivePlanId(data.id);
+        await fetchAllDatePlans();
+        showToast(`'${finalTitle}' 일정이 추가되었습니다. 경유지를 추가해 보세요!`, "success");
+      } catch (err) {
+        console.error("[useFuturePlanner] Failed creating plan:", err);
+        showToast("일정 생성에 실패했습니다. 네트워크와 권한을 확인해 주세요.", "error");
+      } finally {
+        setIsSavingDb(false);
+      }
     },
-    [saveSpots, updateRouteSummary, showToast]
+    [saveSpots, updateRouteSummary, showToast, userId, fetchAllDatePlans]
   );
 
   // Load a saved plan from DB into current active canvas

@@ -127,11 +127,18 @@ export default function Home() {
     startNewDatePlan,
     loadPlanFromDb,
     deletePlanFromDb,
+    savePlanToDb,
+    isSavingDb,
     addSpot,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
   } = useFuturePlanner(showToast, user?.id);
+
+  // 코스 편집 상태 — 새 플랜을 만들면 곧바로 편집에 들어가야 해서 시트 밖에서 관리한다
+  const [isEditingPlan, setIsEditingPlan] = useState<boolean>(false);
+  // "핀으로 추가" — 이 동안에만 플래너 모드에서 지도 클릭으로 핀을 찍을 수 있다
+  const [isPickingOnMap, setIsPickingOnMap] = useState<boolean>(false);
 
   // Kakao Mobility Directions API
   const { fetchRoute, loadingRoute } = useDirections();
@@ -170,18 +177,48 @@ export default function Home() {
     currentAddress,
     openAddSpotAt,
     closeAddModal,
-  } = useKakaoMap(showToast, appMode);
+  } = useKakaoMap(showToast, appMode, appMode === "memory" || isPickingOnMap);
 
   // Load plan and auto-fit map bounds to encompass all course spots
   const handleLoadPlanWithFit = useCallback(
     (plan: DatePlan) => {
       loadPlanFromDb(plan);
+      setIsEditingPlan(false);
+      setIsPickingOnMap(false);
       if (plan.spots && plan.spots.length > 0) {
         fitBounds(plan.spots.map((s: PlannedSpot) => ({ lat: s.latitude, lng: s.longitude })));
       }
     },
     [loadPlanFromDb, fitBounds]
   );
+
+  // 일정 생성 직후엔 바로 경유지를 넣을 수 있도록 편집 상태로 진입시킨다
+  const handleStartPlan = useCallback(
+    async (start: string, end: string, title?: string) => {
+      setIsEditingPlan(true);
+      setIsPickingOnMap(false);
+      await startNewDatePlan(start, end, title);
+    },
+    [startNewDatePlan]
+  );
+
+  // 편집 토글 — 완료를 누르면 현재 코스를 DB에 반영하고 편집을 닫는다
+  const handleTogglePlanEdit = useCallback(async () => {
+    if (!isEditingPlan) {
+      setIsEditingPlan(true);
+      return;
+    }
+    setIsPickingOnMap(false);
+    await savePlanToDb();
+    setIsEditingPlan(false);
+  }, [isEditingPlan, savePlanToDb]);
+
+  // "핀으로 추가" — 검색 창을 닫고 지도 클릭을 기다린다
+  const handlePickOnMap = useCallback(() => {
+    setIsAddressSearchOpen(false);
+    setIsPickingOnMap(true);
+    showToast("지도를 눌러 경유지 위치를 선택하세요 📍", "info");
+  }, [showToast]);
 
   // Load date spots from Supabase when map is ready
   useEffect(() => {
@@ -373,12 +410,16 @@ export default function Home() {
       {appMode === "planning" && (
         <AddPlannedSpotModal
           isOpen={isAddModalOpen}
-          onClose={closeAddModal}
+          onClose={() => {
+            closeAddModal();
+            setIsPickingOnMap(false);
+          }}
           latLng={newSpotLatLng}
           initialAddress={currentAddress}
           onSubmit={(title, memo, lat, lng, address) => {
             addSpot(title, memo, lat, lng, address);
             closeAddModal();
+            setIsPickingOnMap(false);
           }}
         />
       )}
@@ -418,6 +459,7 @@ export default function Home() {
             ? "검색한 장소를 코스 마지막에 추가해요"
             : "주소나 장소 이름으로 검색해 핀을 찍어보세요"
         }
+        onPickOnMap={addressSearchTarget === "planning" ? handlePickOnMap : undefined}
         onSelectLocation={(result) => {
           setIsAddressSearchOpen(false);
           // 경유지 추가로 열었다면 플래닝 모드를 유지해 현재 코스에 이어 붙인다
@@ -477,6 +519,9 @@ export default function Home() {
             setAddressSearchTarget("planning");
             setIsAddressSearchOpen(true);
           }}
+          isEditing={isEditingPlan}
+          onToggleEdit={handleTogglePlanEdit}
+          isSaving={isSavingDb}
         />
       )}
 
@@ -494,7 +539,7 @@ export default function Home() {
       <CreateDatePlanModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onStartPlan={startNewDatePlan}
+        onStartPlan={handleStartPlan}
       />
 
       {/* Dynamic Kakao Map SDK Script Loading */}

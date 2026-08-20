@@ -9,7 +9,9 @@
 
 ## 🚧 진행 중 / 예정 (In Progress / Planned)
 
-_현재 없음._
+- **데이트 플래너 플랜 생성/편집 시나리오 재정립** — 명세: [tasks/task-24-plan-creation-flow.md](tasks/task-24-plan-creation-flow.md)
+  - 구현 완료: 생성 즉시 DB 등록, 완료 시 저장, 지도 클릭 추가 폐지, 경유지 추가 · 핀으로 추가.
+  - 남은 확인: DB 쓰기 경로(생성·완료 저장)는 `!DB` 미지정으로 에이전트 미검증 — 사용자 확인 필요.
 
 ---
 
