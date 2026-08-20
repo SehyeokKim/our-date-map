@@ -27,6 +27,7 @@ import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModa
 import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
 import { AppMode, DatePlan, PlannedSpot } from "@/types/planner";
+import { getDefaultTransitMode } from "@/lib/transit";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -132,6 +133,7 @@ export default function Home() {
     isSavingDb,
     addSpot,
     updateSpot,
+    setSpotTransitMode,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
@@ -422,8 +424,17 @@ export default function Home() {
           }}
           latLng={newSpotLatLng}
           initialAddress={currentAddress}
-          onSubmit={(title, memo, lat, lng, address) => {
-            addSpot(title, memo, lat, lng, address);
+          showTransitMode={plannedSpots.length > 0}
+          defaultTransitMode={
+            plannedSpots.length > 0 && newSpotLatLng
+              ? getDefaultTransitMode(plannedSpots[plannedSpots.length - 1], {
+                  latitude: newSpotLatLng.lat,
+                  longitude: newSpotLatLng.lng,
+                })
+              : "both"
+          }
+          onSubmit={(title, memo, lat, lng, address, transitMode) => {
+            addSpot(title, memo, lat, lng, address, transitMode);
             closeAddModal();
             setIsPickingOnMap(false);
           }}
@@ -530,6 +541,7 @@ export default function Home() {
           isSaving={isSavingDb}
           onRenamePlan={setCurrentTitle}
           onUpdateSpot={updateSpot}
+          onSelectTransitMode={setSpotTransitMode}
         />
       )}
 

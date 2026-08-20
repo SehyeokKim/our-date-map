@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { PlannedSpot } from "@/types/planner";
-import { TransitRouteResult } from "@/types/transit";
+import { TransitMode, TransitRouteResult } from "@/types/transit";
+import { TRANSIT_MODES, TRANSIT_MODE_META } from "@/lib/transit";
+import { resolveTransitMode } from "@/hooks/useTransitRoute";
 import {
   Calendar,
   ChevronUp,
@@ -40,6 +42,8 @@ interface FuturePlanSheetProps {
   onRenamePlan?: (title: string) => void;
   /** 편집 모드에서 경유지 제목·메모를 바꾼다 (DB 반영은 완료 시) */
   onUpdateSpot?: (id: string, updates: { title: string; memo?: string }) => void;
+  /** 구간 이동수단 지정 — 도착 경유지 id에 저장한다 */
+  onSelectTransitMode?: (spotId: string, mode: TransitMode) => void;
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
@@ -60,6 +64,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   isSaving = false,
   onRenamePlan,
   onUpdateSpot,
+  onSelectTransitMode,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
@@ -390,7 +395,8 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
 
                       {/* Public Transit Route Card between Spot A and Spot B */}
                       {nextSpot && (
-                        <div className="my-1 mx-2 p-2.5 rounded-xl bg-plan-tint border border-plan-line flex items-center justify-between text-xs text-plan-strong shadow-xs animate-in fade-in duration-200">
+                        <div className="my-1 mx-2 rounded-xl bg-plan-tint border border-plan-line text-xs text-plan-strong shadow-xs animate-in fade-in duration-200">
+                        <div className="p-2.5 flex items-center justify-between">
                           {transit?.routeInfo ? (
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className="w-7 h-7 rounded-lg bg-plan text-on-accent flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -421,6 +427,48 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                               </span>
                             </div>
                           )}
+                        </div>
+
+                        {/* 구간 이동수단 — 수정 모드에서 직접 고른다 (선택값은 바꾸기 전까지 유지) */}
+                        {isEditing && onSelectTransitMode ? (
+                          <div className="px-2.5 pb-2.5 space-y-1">
+                            <div className="flex items-center gap-1">
+                              {TRANSIT_MODES.map((mode) => {
+                                const isSelected = resolveTransitMode(spot, nextSpot) === mode;
+                                return (
+                                  <button
+                                    key={mode}
+                                    type="button"
+                                    onClick={() => onSelectTransitMode(nextSpot.id, mode)}
+                                    aria-pressed={isSelected}
+                                    className={`flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all active:scale-95 cursor-pointer ${
+                                      isSelected
+                                        ? "bg-plan text-on-accent border-plan"
+                                        : "bg-surface text-ink-muted border-line hover:bg-surface-2"
+                                    }`}
+                                  >
+                                    {TRANSIT_MODE_META[mode].label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {transit?.fallbackApplied && (
+                              <p className="text-[10px] text-warn leading-tight">
+                                고른 수단으로는 경로가 없어 지하철+버스로 안내하고 있어요.
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          transit?.mode && (
+                            <div className="px-2.5 pb-2 -mt-1">
+                              <span className="text-[10px] text-ink-subtle">
+                                {TRANSIT_MODE_META[transit.mode].short}
+                                {transit.fallbackApplied ? " (대체 경로)" : ""}
+                                {nextSpot.transitMode ? "" : " · 자동"}
+                              </span>
+                            </div>
+                          )
+                        )}
                         </div>
                       )}
                     </React.Fragment>

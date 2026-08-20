@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PlannedSpot, AppMode, DatePlan, RouteSummaryData } from "@/types/planner";
+import { TransitMode } from "@/types/transit";
 import { supabase } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "our_date_map_planned_spots";
@@ -356,7 +357,14 @@ export function useFuturePlanner(
 
   // Add spot
   const addSpot = useCallback(
-    (title: string, memo: string | undefined, lat: number, lng: number, address?: string) => {
+    (
+      title: string,
+      memo: string | undefined,
+      lat: number,
+      lng: number,
+      address?: string,
+      transitMode?: TransitMode
+    ) => {
       const newSpot: PlannedSpot = {
         id: `plan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
         title: title.trim() || "미래 데이트 장소",
@@ -366,6 +374,7 @@ export function useFuturePlanner(
         address,
         order: plannedSpots.length + 1,
         createdAt: new Date().toISOString(),
+        transitMode,
       };
 
       const updated = [...plannedSpots, newSpot];
@@ -388,6 +397,15 @@ export function useFuturePlanner(
           ? { ...s, title: nextTitle || s.title, memo: nextMemo || undefined }
           : s
       );
+      saveSpots(updated);
+    },
+    [plannedSpots, saveSpots]
+  );
+
+  // 구간 이동수단 지정 — 도착 경유지에 저장하며, 한 번 고르면 다시 바꾸기 전까지 유지된다
+  const setSpotTransitMode = useCallback(
+    (id: string, mode: TransitMode) => {
+      const updated = plannedSpots.map((s) => (s.id === id ? { ...s, transitMode: mode } : s));
       saveSpots(updated);
     },
     [plannedSpots, saveSpots]
@@ -490,6 +508,7 @@ export function useFuturePlanner(
     fetchPlansForDate,
     addSpot,
     updateSpot,
+    setSpotTransitMode,
     removeSpot,
     moveSpotUp,
     moveSpotDown,

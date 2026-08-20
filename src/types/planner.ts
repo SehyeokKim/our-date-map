@@ -1,3 +1,5 @@
+import { TransitMode } from "@/types/transit";
+
 export interface PlannedSpot {
   id: string;
   title: string;
@@ -7,6 +9,12 @@ export interface PlannedSpot {
   address?: string;
   order: number;
   createdAt: string;
+  /**
+   * 직전 경유지에서 **이 장소로 오는** 이동수단.
+   * 사용자가 고르지 않았으면 undefined이며, 이때만 좌표 기반 기본값이 쓰인다.
+   * (한 번 고르면 다시 바꾸기 전까지 유지된다)
+   */
+  transitMode?: TransitMode;
 }
 
 export type AppMode = 'memory' | 'planning';

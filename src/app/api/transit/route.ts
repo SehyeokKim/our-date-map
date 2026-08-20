@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TransitRouteInfo, TransitSubPath } from "@/types/transit";
+import { ODSAY_PATH_TYPE, isTransitMode } from "@/lib/transit";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -7,6 +8,9 @@ export async function GET(request: NextRequest) {
   const SY = searchParams.get("SY");
   const EX = searchParams.get("EX");
   const EY = searchParams.get("EY");
+  const modeParam = searchParams.get("mode");
+  // 지정이 없으면 지하철+버스(0)로 폭넓게 탐색한다
+  const requestedPathType = isTransitMode(modeParam) ? ODSAY_PATH_TYPE[modeParam] : 0;
 
   if (!SX || !SY || !EX || !EY) {
     return NextResponse.json(
@@ -28,23 +32,46 @@ export async function GET(request: NextRequest) {
     const origin = request.nextUrl.origin || "http://localhost:3000";
     const refererHeader = request.headers.get("referer") || origin;
 
-    const odsayUrl = `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${SX}&SY=${SY}&EX=${EX}&EY=${EY}&apiKey=${encodeURIComponent(
-      apiKey
-    )}`;
+    const callOdsay = async (pathType: number) => {
+      const odsayUrl = `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${SX}&SY=${SY}&EX=${EX}&EY=${EY}&SearchPathType=${pathType}&apiKey=${encodeURIComponent(
+        apiKey
+      )}`;
 
-    const res = await fetch(odsayUrl, {
-      headers: {
-        Accept: "application/json",
-        Referer: refererHeader,
-      },
-      next: { revalidate: 3600 }, // Cache on Next.js server side for 1 hour
-    });
+      const res = await fetch(odsayUrl, {
+        headers: {
+          Accept: "application/json",
+          Referer: refererHeader,
+        },
+        next: { revalidate: 3600 }, // Cache on Next.js server side for 1 hour
+      });
 
-    if (!res.ok) {
-      throw new Error(`ODsay API HTTP 오류: ${res.status}`);
+      if (!res.ok) {
+        throw new Error(`ODsay API HTTP 오류: ${res.status}`);
+      }
+
+      return res.json();
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hasNoPath = (d: any) => Boolean(d?.error) || !d?.result?.path?.length;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isWalkOnly = (d: any) => {
+      const code = d?.error?.[0]?.code ?? d?.error?.code;
+      return code === "-98" || code === -98;
+    };
+
+    let data = await callOdsay(requestedPathType);
+    let fallbackApplied = false;
+
+    // 고른 수단으로는 길이 없을 수 있다 (예: 지하철이 없는 지역).
+    // 이때만 지하철+버스로 한 번 더 찾아보고, 대체했음을 응답에 표시한다.
+    if (requestedPathType !== 0 && hasNoPath(data) && !isWalkOnly(data)) {
+      const retry = await callOdsay(0);
+      if (!hasNoPath(retry)) {
+        data = retry;
+        fallbackApplied = true;
+      }
     }
-
-    const data = await res.json();
 
     // Check for ODsay specific error code
     if (data.error) {
@@ -136,6 +163,7 @@ export async function GET(request: NextRequest) {
       subpaths,
       polylinePath: polylinePath.length > 0 ? polylinePath : undefined,
       isWalkOnly: info.busTransitCount === 0 && info.subwayTransitCount === 0,
+      fallbackApplied,
     };
 
     return NextResponse.json(routeInfo);
