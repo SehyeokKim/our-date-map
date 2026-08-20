@@ -85,7 +85,7 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-ink mb-1">
-              계획 메모 (선택)
+              계획 메모
             </label>
             <textarea
               value={memo}

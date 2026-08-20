@@ -54,7 +54,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
               <Calendar className="w-4 h-4 text-on-accent" />
             </div>
             <div>
-              <h2 className="font-display text-sm text-on-accent">데이트 일정 목록 (DB)</h2>
+              <h2 className="font-display text-sm text-on-accent">데이트 일정 목록</h2>
               <p className="text-[10px] text-on-accent/80">날짜별로 저장된 과거 & 미래 데이트 코스</p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              🔮 미래 데이트 ({futurePlans.length})
+              🔮 데이트 계획 ({futurePlans.length})
             </button>
             <button
               onClick={() => setActiveTab("past")}
@@ -87,7 +87,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              ⏳ 과거 데이트 ({pastPlans.length})
+              ⏳ 데이트 기록 ({pastPlans.length})
             </button>
           </div>
 
