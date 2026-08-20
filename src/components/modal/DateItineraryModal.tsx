@@ -55,7 +55,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
             </div>
             <div>
               <h2 className="font-display text-sm text-on-accent">데이트 일정 목록</h2>
-              <p className="text-[10px] text-on-accent/80">날짜별로 저장된 과거 & 미래 데이트 코스</p>
+              <p className="text-[10px] text-on-accent/80">저장한 데이트 코스를 한곳에 정리했어요</p>
             </div>
           </div>
           <button

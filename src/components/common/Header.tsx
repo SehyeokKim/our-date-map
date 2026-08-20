@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-display text-ink text-sm tracking-tight">
-                {appMode === "memory" ? "우리들의 데이트 지도" : "미래 데이트 플래닝"}
+                {appMode === "memory" ? "우리들의 데이트 지도" : "데이트 플래너"}
               </h1>
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
@@ -112,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
             <p className="text-[11px] text-ink-muted leading-tight">
               {appMode === "memory"
                 ? "소중한 순간을 지도 위에 기록해요"
-                : "앞으로 다녀올 커플 데이터 코스를 계획해요"}
+                : "앞으로 다녀올 커플 데이트 코스를 계획해요"}
             </p>
           </div>
         </div>
@@ -195,7 +195,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-semibold">미래 데이트 플래닝</div>
+                <div className="text-xs font-semibold">데이트 플래너</div>
                 <div className="text-[10px] text-ink-muted">순서별 코스 세우기 & 길찾기</div>
               </div>
             </div>
