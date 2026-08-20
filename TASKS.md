@@ -10,7 +10,8 @@
 ## 🚧 진행 중 / 예정 (In Progress / Planned)
 
 - **사용자 테마 커스터마이징 (색상·폰트 등)** — 명세: [tasks/task-22-theme-customization.md](tasks/task-22-theme-customization.md)
-  - 1단계(설정 진입점: 햄버거 메뉴 "설정" + 테마 설정 placeholder) 완료. 상세 기능은 사용자 설명 대기 중.
+  - 완료: 설정 진입점, 테마 토큰 인프라(색상 3종 × 폰트 3종 독립 선택), 미리보기 후 적용 UI, 공용 셸(Header·지도 메뉴·Toast) 토큰화.
+  - 예정: 모달 12종 하드코딩 색 토큰 치환, 지도 마커/오버레이 토큰 연동.
 
 ---
 

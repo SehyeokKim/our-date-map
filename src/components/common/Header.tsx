@@ -78,38 +78,38 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Main Header Bar */}
       <header
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer bg-white/90 backdrop-blur-md border border-white/60 rounded-2xl shadow-lg shadow-black/5 px-4 py-3 flex items-center justify-between transition-all duration-200 active:scale-[0.99]"
+        className="cursor-pointer bg-surface/90 backdrop-blur-md border border-line/70 rounded-2xl shadow-[var(--shadow-card)] px-4 py-3 flex items-center justify-between transition-all duration-200 active:scale-[0.99]"
       >
         <div className="flex items-center gap-3">
           <div
             className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 ${
               appMode === "memory"
-                ? "bg-rose-50 border-rose-100 text-rose-500"
-                : "bg-violet-50 border-violet-100 text-violet-600"
+                ? "bg-memory-tint border-memory-line text-memory"
+                : "bg-plan-tint border-plan-line text-plan"
             }`}
           >
             {appMode === "memory" ? (
-              <Heart className="w-4 h-4 fill-rose-500" />
+              <Heart className="w-4 h-4 fill-memory" />
             ) : (
               <Sparkles className="w-4 h-4" />
             )}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-gray-800 text-sm tracking-tight">
+              <h1 className="font-display text-ink text-sm tracking-tight">
                 {appMode === "memory" ? "우리들의 데이트 지도" : "미래 데이트 플래닝"}
               </h1>
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
                   appMode === "memory"
-                    ? "bg-rose-50 text-rose-600 border-rose-200"
-                    : "bg-violet-50 text-violet-600 border-violet-200"
+                    ? "bg-memory-tint text-memory border-memory-line"
+                    : "bg-plan-tint text-plan border-plan-line"
                 }`}
               >
                 {appMode === "memory" ? "추억 기록" : "코스 플랜"}
               </span>
             </div>
-            <p className="text-[11px] text-gray-500 leading-tight">
+            <p className="text-[11px] text-ink-muted leading-tight">
               {appMode === "memory"
                 ? "소중한 순간을 지도 위에 기록해요"
                 : "앞으로 다녀올 커플 데이터 코스를 계획해요"}
@@ -138,14 +138,14 @@ export const Header: React.FC<HeaderProps> = ({
                 className="w-7 h-7 object-contain select-none pointer-events-none"
               />
               {pushEnabled && (
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border border-white" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-memory rounded-full border border-surface" />
               )}
             </button>
           )}
 
           <ChevronDown
-            className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${
-              isOpen ? "rotate-180 text-gray-700" : ""
+            className={`w-4 h-4 text-ink-subtle transition-transform duration-300 ${
+              isOpen ? "rotate-180 text-ink" : ""
             }`}
           />
         </div>
@@ -153,8 +153,8 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Interactive Dropdown Menu */}
       {isOpen && (
-        <div className="mt-2 bg-white/95 backdrop-blur-md border border-white/70 rounded-2xl shadow-xl p-2.5 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="text-[10px] font-semibold text-gray-400 px-3 pt-1 uppercase tracking-wider">
+        <div className="mt-2 bg-surface/95 backdrop-blur-md border border-line/70 rounded-2xl shadow-[var(--shadow-sheet)] p-2.5 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="text-[10px] font-semibold text-ink-subtle px-3 pt-1 uppercase tracking-wider">
             모드 선택
           </div>
 
@@ -163,20 +163,20 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => handleModeChange("memory")}
             className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150 text-left ${
               appMode === "memory"
-                ? "bg-rose-50/80 text-rose-700 font-semibold border border-rose-100"
-                : "hover:bg-gray-50 text-gray-700"
+                ? "bg-memory-tint text-memory-strong font-semibold border border-memory-line"
+                : "hover:bg-surface-2 text-ink-muted"
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-rose-100/70 flex items-center justify-center text-rose-600">
+              <div className="w-7 h-7 rounded-lg bg-memory-tint flex items-center justify-center text-memory">
                 <MapPin className="w-4 h-4" />
               </div>
               <div>
                 <div className="text-xs font-semibold">추억 데이트 지도</div>
-                <div className="text-[10px] text-gray-500">지금까지 함께했던 장소들</div>
+                <div className="text-[10px] text-ink-muted">지금까지 함께했던 장소들</div>
               </div>
             </div>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white border border-rose-200 text-rose-600 font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-surface border border-memory-line text-memory font-medium">
               {memoryCount}개
             </span>
           </button>
@@ -186,20 +186,20 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => handleModeChange("planning")}
             className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150 text-left ${
               appMode === "planning"
-                ? "bg-violet-50/80 text-violet-700 font-semibold border border-violet-100"
-                : "hover:bg-gray-50 text-gray-700"
+                ? "bg-plan-tint text-plan-strong font-semibold border border-plan-line"
+                : "hover:bg-surface-2 text-ink-muted"
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-violet-100/70 flex items-center justify-center text-violet-600">
+              <div className="w-7 h-7 rounded-lg bg-plan-tint flex items-center justify-center text-plan">
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
                 <div className="text-xs font-semibold">미래 데이트 플래닝</div>
-                <div className="text-[10px] text-gray-500">순서별 코스 세우기 & 길찾기</div>
+                <div className="text-[10px] text-ink-muted">순서별 코스 세우기 & 길찾기</div>
               </div>
             </div>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white border border-violet-200 text-violet-600 font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-surface border border-plan-line text-plan font-medium">
               {planningCount}개
             </span>
           </button>
@@ -212,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({
                   setIsOpen(false);
                   onOpenScheduleModal?.();
                 }}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold rounded-xl border border-violet-100 transition-all active:scale-95 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-plan-tint hover:bg-plan-line text-plan-strong text-xs font-bold rounded-xl border border-plan-line transition-all active:scale-95 cursor-pointer"
               >
                 <Calendar className="w-3.5 h-3.5" />
                 <span>일정 목록</span>
@@ -224,7 +224,7 @@ export const Header: React.FC<HeaderProps> = ({
           {!user && (
             <>
               {/* Divider */}
-              <div className="border-t border-gray-100 my-1" />
+              <div className="border-t border-line my-1" />
 
               <div className="pt-0.5 px-1">
                 <button

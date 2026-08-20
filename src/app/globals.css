@@ -1,16 +1,162 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   Theme tokens — Our Date Map
+   색상 테마 3종(sage / citrus / peach)과 폰트 3종을 독립된 축으로 관리한다.
+   컴포넌트는 역할 토큰(surface, ink, memory, plan, warn…)만 사용하고,
+   실제 색은 <html data-theme="..."> / <html data-font="..."> 가 결정한다.
+   ========================================================================== */
+
+/* ---------- Sage Letter (기본 라이트) ---------- */
+:root,
+[data-theme="sage"] {
+  --bg: #f8f9f5;
+  --surface: #ffffff;
+  --surface-2: #eff3ea;
+  --line: #e2e9dc;
+
+  --ink: #26302a;
+  --ink-muted: #5d6b60;
+  --ink-subtle: #7d8a80;
+
+  --memory: #c25e73;
+  --memory-strong: #a84a5e;
+  --memory-tint: #f7e9ec;
+  --memory-line: #f0d8de;
+
+  --plan: #4f7a6a;
+  --plan-strong: #3d6154;
+  --plan-tint: #e7ede2;
+  --plan-line: #d6e1ce;
+
+  --accent-soft: #a8bfa0;
+  --warn: #b4772b;
+  --warn-tint: #fbf1e2;
+  --on-accent: #f8f9f5;
+
+  --marker-ring: rgba(194, 94, 115, 0.3);
+  --marker-shadow: rgba(194, 94, 115, 0.5);
+  --shadow-sheet: 0 20px 25px -5px rgba(38, 48, 42, 0.16);
+  --shadow-card: 0 10px 15px -3px rgba(38, 48, 42, 0.1);
 }
 
+/* ---------- Citrus Pop (라이트) ---------- */
+[data-theme="citrus"] {
+  --bg: #fffaf3;
+  --surface: #ffffff;
+  --surface-2: #fbf3e8;
+  --line: #f2e6d6;
+
+  --ink: #2a2118;
+  --ink-muted: #6b5f50;
+  --ink-subtle: #8b7c68;
+
+  --memory: #f2761b;
+  --memory-strong: #c85c0e;
+  --memory-tint: #ffeeda;
+  --memory-line: #ffdcb4;
+
+  --plan: #0f766e;
+  --plan-strong: #0b5a54;
+  --plan-tint: #e2efed;
+  --plan-line: #c9e2de;
+
+  --accent-soft: #ffc179;
+  --warn: #b4322b;
+  --warn-tint: #fdeae8;
+  --on-accent: #fffaf3;
+
+  --marker-ring: rgba(242, 118, 27, 0.3);
+  --marker-shadow: rgba(242, 118, 27, 0.5);
+  --shadow-sheet: 0 20px 25px -5px rgba(42, 33, 24, 0.16);
+  --shadow-card: 0 10px 15px -3px rgba(42, 33, 24, 0.1);
+}
+
+/* ---------- Night Peach (웜 다크) ---------- */
+[data-theme="peach"] {
+  --bg: #1d1714;
+  --surface: #2a2220;
+  --surface-2: #332a27;
+  --line: #463a35;
+
+  --ink: #f4ece7;
+  --ink-muted: #c4b6ae;
+  --ink-subtle: #a3958d;
+
+  --memory: #ff9e7d;
+  --memory-strong: #ffb59a;
+  --memory-tint: rgba(255, 158, 125, 0.14);
+  --memory-line: rgba(255, 158, 125, 0.35);
+
+  --plan: #c9a7ff;
+  --plan-strong: #d8bdff;
+  --plan-tint: rgba(201, 167, 255, 0.16);
+  --plan-line: rgba(201, 167, 255, 0.35);
+
+  --accent-soft: #7d6f68;
+  --warn: #ffcf8a;
+  --warn-tint: rgba(255, 207, 138, 0.14);
+  --on-accent: #1d1714;
+
+  --marker-ring: rgba(255, 158, 125, 0.28);
+  --marker-shadow: rgba(255, 158, 125, 0.7);
+  --shadow-sheet: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 10px 20px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- 폰트 페어링 (색상과 독립적으로 선택) ---------- */
+:root,
+[data-font="gowun-noto"] {
+  --font-display: "Gowun Dodum", system-ui, sans-serif;
+  --font-body: "Noto Sans KR", system-ui, sans-serif;
+  --display-weight: 400;
+}
+
+[data-font="gothic-plex"] {
+  --font-display: "Gothic A1", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans KR", system-ui, sans-serif;
+  --display-weight: 800;
+}
+
+[data-font="gowun-plex"] {
+  --font-display: "Gowun Dodum", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans KR", system-ui, sans-serif;
+  --display-weight: 400;
+}
+
+/* 제목은 font-display, 그 외 전부 font-body.
+   굵기는 --display-weight가 결정하므로 제목에 font-bold를 직접 쓰지 않는다. */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* ---------- Tailwind v4 bridge (bg-surface, text-memory, border-line …) ---------- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-memory: var(--memory);
+  --color-memory-strong: var(--memory-strong);
+  --color-memory-tint: var(--memory-tint);
+  --color-memory-line: var(--memory-line);
+  --color-plan: var(--plan);
+  --color-plan-strong: var(--plan-strong);
+  --color-plan-tint: var(--plan-tint);
+  --color-plan-line: var(--plan-line);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-tint: var(--warn-tint);
+  --color-on-accent: var(--on-accent);
+
   --animate-bounce-in: bounce-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 
   @keyframes bounce-in {
@@ -25,20 +171,13 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
 }
 
-/* Custom User Geolocation Marker Styles */
+/* Custom User Geolocation Marker Styles (색상은 테마 토큰을 따른다) */
 .custom-user-marker {
   position: relative;
   display: flex;
@@ -54,7 +193,7 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: rgba(244, 63, 94, 0.3); /* rose-500 with opacity */
+  background-color: var(--marker-ring);
   animation: marker-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
   opacity: 0.75;
 }
@@ -64,9 +203,9 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background-color: rgb(244, 63, 94); /* rose-500 */
-  border: 2px solid white;
-  box-shadow: 0 4px 6px -1px rgba(244, 63, 94, 0.5), 0 2px 4px -1px rgba(244, 63, 94, 0.25);
+  background-color: var(--memory);
+  border: 2px solid var(--surface);
+  box-shadow: 0 4px 6px -1px var(--marker-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,7 +215,7 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: white;
+  background-color: var(--surface);
 }
 
 @keyframes marker-ping {
@@ -93,4 +232,3 @@ body {
     opacity: 0;
   }
 }
-

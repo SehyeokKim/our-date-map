@@ -266,7 +266,7 @@ export default function Home() {
   }, [initKakaoMap]);
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-gray-50">
+    <main className="relative w-screen h-screen overflow-hidden bg-bg">
       {/* Header with Mode Selection Dropdown, Kakao Auth & Profile Edit */}
       <Header
         appMode={appMode}

@@ -107,36 +107,36 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     <>
       {/* Loading & Error Screen */}
       {(loading || mapError) && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm px-6 text-center transition-opacity duration-500">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-bg/95 backdrop-blur-sm px-6 text-center transition-opacity duration-500">
           {mapError ? (
-            <div className="max-w-md p-6 bg-red-50 border border-red-100 rounded-2xl shadow-xl shadow-red-500/5 flex flex-col items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+            <div className="max-w-md p-6 bg-warn-tint border border-warn/25 rounded-2xl shadow-[var(--shadow-card)] flex flex-col items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-warn/15 flex items-center justify-center text-warn">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
-                <h3 className="font-semibold text-red-900 text-base">카카오 지도 로드 실패</h3>
-                <p className="text-xs text-red-700 leading-relaxed font-medium">{mapError}</p>
+                <h3 className="font-semibold text-ink text-base">카카오 지도 로드 실패</h3>
+                <p className="text-xs text-ink-muted leading-relaxed font-medium">{mapError}</p>
               </div>
-              <div className="w-full mt-2 pt-4 border-t border-red-200/50 text-left space-y-2">
-                <p className="text-[11px] text-gray-600 font-semibold">🔧 해결 방법:</p>
-                <ol className="text-[10px] text-gray-500 list-decimal list-inside space-y-1 leading-relaxed">
+              <div className="w-full mt-2 pt-4 border-t border-warn/25 text-left space-y-2">
+                <p className="text-[11px] text-ink-muted font-semibold">🔧 해결 방법:</p>
+                <ol className="text-[10px] text-ink-muted list-decimal list-inside space-y-1 leading-relaxed">
                   <li>
                     <a
                       href="https://developers.kakao.com/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-500 hover:underline font-semibold"
+                      className="text-memory hover:underline font-semibold"
                     >
                       카카오 개발자 센터
                     </a>
                     에 로그인합니다.
                   </li>
                   <li>
-                    등록된 애플리케이션의 <span className="font-semibold text-gray-700">플랫폼 &gt; Web</span> 설정으로 이동합니다.
+                    등록된 애플리케이션의 <span className="font-semibold text-ink">플랫폼 &gt; Web</span> 설정으로 이동합니다.
                   </li>
                   <li>
                     사이트 도메인에 현재 접속 주소(
-                    <span className="font-semibold text-gray-700 font-mono">http://localhost:3000</span>)가 등록되어 있는지 확인합니다.
+                    <span className="font-semibold text-ink font-mono">http://localhost:3000</span>)가 등록되어 있는지 확인합니다.
                   </li>
                 </ol>
               </div>
@@ -144,10 +144,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           ) : (
             <>
               <div className="relative flex items-center justify-center mb-4">
-                <div className="absolute w-16 h-16 rounded-full bg-rose-500/10 animate-pulse" />
-                <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+                <div className="absolute w-16 h-16 rounded-full bg-memory/10 animate-pulse" />
+                <Loader2 className="w-8 h-8 text-memory animate-spin" />
               </div>
-              <p className="text-sm font-medium text-gray-700 animate-pulse">지도를 불러오고 있습니다...</p>
+              <p className="text-sm font-medium text-ink-muted animate-pulse">지도를 불러오고 있습니다...</p>
             </>
           )}
         </div>
@@ -186,20 +186,20 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           <div ref={menuRef} className="relative">
             {/* Menu Popover */}
             {isMenuOpen && (
-              <div className="absolute bottom-14 right-0 w-max bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl shadow-black/10 overflow-hidden py-1.5">
+              <div className="absolute bottom-14 right-0 w-max bg-surface border border-line rounded-2xl shadow-[var(--shadow-sheet)] overflow-hidden py-1.5">
                 {onOpenProfileEdit && (
                   <button
                     onClick={() => {
                       onOpenProfileEdit();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-memory-tint hover:text-memory active:bg-memory-line transition-colors cursor-pointer"
                   >
                     {profileAvatarUrl ? (
                       <img
                         src={profileAvatarUrl}
                         alt="내 프로필"
-                        className="w-5 h-5 -mx-0.5 rounded-full object-cover border border-gray-200 select-none pointer-events-none"
+                        className="w-5 h-5 -mx-0.5 rounded-full object-cover border border-line select-none pointer-events-none"
                       />
                     ) : (
                       <UserIcon className="w-4 h-4" />
@@ -212,7 +212,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                     onOpenSpotList?.();
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-memory-tint hover:text-memory active:bg-memory-line transition-colors cursor-pointer"
                 >
                   <Heart className="w-4 h-4 fill-current" />
                   추억 모아보기
@@ -222,7 +222,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                     onOpenAddressSearch?.();
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-memory-tint hover:text-memory active:bg-memory-line transition-colors cursor-pointer"
                 >
                   <MapPinPlus className="w-4 h-4" />
                   주소로 추가
@@ -232,7 +232,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                     onOpenTrash?.();
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-memory-tint hover:text-memory active:bg-memory-line transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   휴지통
@@ -242,7 +242,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                     locateUser();
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-memory-tint hover:text-memory active:bg-memory-line transition-colors cursor-pointer"
                 >
                   <Navigation className="w-4 h-4 fill-current" />
                   현재 위치로
@@ -252,7 +252,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                     onOpenSettings?.();
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-memory-tint hover:text-memory active:bg-memory-line transition-colors cursor-pointer"
                 >
                   <Settings className="w-4 h-4" />
                   설정
@@ -263,7 +263,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             {/* Menu Toggle Button */}
             <button
               onClick={() => setIsMenuOpen((prev) => !prev)}
-              className="w-12 h-12 rounded-full bg-white/95 border border-gray-100/50 text-gray-700 flex items-center justify-center shadow-lg shadow-black/5 hover:text-rose-500 hover:border-rose-100 hover:bg-white active:scale-95 transition-all duration-200 cursor-pointer"
+              className="w-12 h-12 rounded-full bg-surface border border-line text-ink-muted flex items-center justify-center shadow-[var(--shadow-card)] hover:text-memory hover:border-memory-line active:scale-95 transition-all duration-200 cursor-pointer"
               aria-label="지도 메뉴"
               aria-expanded={isMenuOpen}
             >
