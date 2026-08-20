@@ -47,11 +47,8 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   // 순서 조정·삭제·경유지 추가는 수정 모드에서만 노출해 평소 목록을 간결하게 유지한다
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const toggleEditing = () => {
-    const next = !isEditing;
-    setIsEditing(next);
-    if (next) setIsExpanded(true); // 수정을 켜면 목록이 보이도록 함께 펼친다
-  };
+  // 토글 버튼이 펼쳐진 본문 안에 있으므로 따로 펼쳐 줄 필요가 없다
+  const toggleEditing = () => setIsEditing((prev) => !prev);
 
   // Helper for formatting distance (meters to km)
   const formatDistance = (meters?: number) => {
@@ -100,25 +97,6 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
           </div>
 
           <div className="flex items-center gap-1">
-            {/* 코스 수정 토글 (헤더 클릭 = 접기/펼치기 이므로 이벤트 전파를 막는다) */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleEditing();
-              }}
-              aria-pressed={isEditing}
-              title={isEditing ? "수정 완료" : "코스 수정"}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
-                isEditing
-                  ? "bg-plan text-on-accent"
-                  : "bg-surface text-plan-strong border border-plan-line hover:bg-plan-tint"
-              }`}
-            >
-              {isEditing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
-              <span>{isEditing ? "완료" : "수정"}</span>
-            </button>
-
             <button
               type="button"
               aria-label={isExpanded ? "코스 목록 접기" : "코스 목록 펼치기"}
@@ -136,25 +114,52 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
         {/* Content Body */}
         {isExpanded && (
           <div className="p-4 space-y-3 max-h-[42vh] overflow-y-auto">
-            {/* Route Stats Bar if route exists */}
-            {plannedSpots.length >= 2 && (
-              <div className="flex items-center justify-around bg-plan-tint rounded-2xl p-2.5 text-xs text-plan-strong border border-plan-line">
-                <div className="flex items-center gap-1.5 font-medium">
-                  <Route className="w-4 h-4 text-plan" />
-                  <span>
-                    {loadingRoute
-                      ? "경로 계산 중..."
-                      : formatDistance(routeDistance) || "경로 연결 완료"}
-                  </span>
-                </div>
-                {routeDuration && (
-                  <div className="flex items-center gap-1.5 font-medium border-l border-plan-line pl-3">
-                    <Clock className="w-4 h-4 text-plan" />
-                    <span>{formatDuration(routeDuration)}</span>
+            {/* 상단 바 — 왼쪽은 경로 요약(거리·시간), 오른쪽은 수정 토글.
+                경로 요약은 2곳 이상일 때만 계산되지만, 수정 버튼은 장소가 없을 때도
+                경유지를 추가할 수 있어야 하므로 바 자체는 항상 렌더링한다. */}
+            <div className="flex items-center justify-between gap-2 bg-plan-tint rounded-2xl pl-3 pr-2 py-2 border border-plan-line">
+              <div className="flex items-center gap-3 min-w-0 text-xs text-plan-strong">
+                {plannedSpots.length >= 2 ? (
+                  <>
+                    <div className="flex items-center gap-1.5 font-medium min-w-0">
+                      <Route className="w-4 h-4 text-plan shrink-0" />
+                      <span className="truncate">
+                        {loadingRoute
+                          ? "경로 계산 중..."
+                          : formatDistance(routeDistance) || "경로 연결 완료"}
+                      </span>
+                    </div>
+                    {routeDuration && (
+                      <div className="flex items-center gap-1.5 font-medium border-l border-plan-line pl-3 min-w-0">
+                        <Clock className="w-4 h-4 text-plan shrink-0" />
+                        <span className="truncate">{formatDuration(routeDuration)}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1.5 font-medium text-ink-muted min-w-0">
+                    <Route className="w-4 h-4 text-plan shrink-0" />
+                    <span className="truncate">장소가 2곳부터 경로가 표시돼요</span>
                   </div>
                 )}
               </div>
-            )}
+
+              {/* 코스 수정 토글 */}
+              <button
+                type="button"
+                onClick={toggleEditing}
+                aria-pressed={isEditing}
+                title={isEditing ? "수정 완료" : "코스 수정"}
+                className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${
+                  isEditing
+                    ? "bg-plan text-on-accent"
+                    : "bg-surface text-plan-strong border border-plan-line hover:bg-surface-2"
+                }`}
+              >
+                {isEditing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                <span>{isEditing ? "완료" : "수정"}</span>
+              </button>
+            </div>
 
             {/* Empty state guidance */}
             {plannedSpots.length === 0 ? (
