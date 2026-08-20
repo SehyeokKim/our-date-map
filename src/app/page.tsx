@@ -26,7 +26,7 @@ import { SettingsModal } from "@/components/modal/SettingsModal";
 import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModal";
 import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
-import { DatePlan, PlannedSpot } from "@/types/planner";
+import { AppMode, DatePlan, PlannedSpot } from "@/types/planner";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -36,6 +36,8 @@ export default function Home() {
   const [isSpotListOpen, setIsSpotListOpen] = useState<boolean>(false);
   const [isTrashOpen, setIsTrashOpen] = useState<boolean>(false);
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState<boolean>(false);
+  // 주소 검색을 어디서 열었는지 — "memory"는 추억 핀 등록, "planning"은 코스 경유지 추가
+  const [addressSearchTarget, setAddressSearchTarget] = useState<AppMode>("memory");
   const [deletedSpots, setDeletedSpots] = useState<DeletedDateSpot[]>([]);
   const [loadingTrash, setLoadingTrash] = useState<boolean>(false);
   const [isCustomPushModalOpen, setIsCustomPushModalOpen] = useState<boolean>(false);
@@ -289,7 +291,10 @@ export default function Home() {
         mapError={mapError}
         locateUser={locateUser}
         onOpenSpotList={() => setIsSpotListOpen(true)}
-        onOpenAddressSearch={() => setIsAddressSearchOpen(true)}
+        onOpenAddressSearch={() => {
+          setAddressSearchTarget("memory");
+          setIsAddressSearchOpen(true);
+        }}
         onOpenProfileEdit={user ? () => setIsProfileEditOpen(true) : undefined}
         onOpenSettings={() => setIsSettingsOpen(true)}
         profileAvatarUrl={avatarUrl}
@@ -401,13 +406,23 @@ export default function Home() {
         />
       )}
 
-      {/* Address Search Modal (주소로 추가 — 검색 후 핀 등록) */}
+      {/* Address Search Modal (추억 핀 등록 & 코스 경유지 추가 공용) */}
       <AddressSearchModal
         isOpen={isAddressSearchOpen}
         onClose={() => setIsAddressSearchOpen(false)}
+        accent={addressSearchTarget === "planning" ? "plan" : "memory"}
+        title={addressSearchTarget === "planning" ? "경유지 추가" : "주소로 추가"}
+        subtitle={
+          addressSearchTarget === "planning"
+            ? "검색한 장소를 코스 마지막에 추가해요"
+            : "주소나 장소 이름으로 검색해 핀을 찍어보세요"
+        }
         onSelectLocation={(result) => {
           setIsAddressSearchOpen(false);
-          if (appMode !== "memory") setAppMode("memory");
+          // 경유지 추가로 열었다면 플래닝 모드를 유지해 현재 코스에 이어 붙인다
+          if (addressSearchTarget === "memory" && appMode !== "memory") {
+            setAppMode("memory");
+          }
           openAddSpotAt(result.lat, result.lng, result.address || result.name);
         }}
       />
@@ -456,6 +471,10 @@ export default function Home() {
           transitRoutes={transitRoutes}
           loadingTransit={loadingTransit}
           onPanToSpot={(lat, lng) => panToSpot(lat, lng)}
+          onAddWaypoint={() => {
+            setAddressSearchTarget("planning");
+            setIsAddressSearchOpen(true);
+          }}
         />
       )}
 

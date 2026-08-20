@@ -39,5 +39,6 @@ _현재 없음._
 | 20 | 지도 햄버거 메뉴 (추억 모아보기·주소로 추가·휴지통·현재 위치로) & 기록 수정 & 핀 복원 | 08-14 | - | `src/components/map/MapContainer.tsx`, `src/components/modal/SpotListModal.tsx`, `AddressSearchModal.tsx`, `TrashModal.tsx`, `src/hooks/useAddressSearch.ts`, `useDateSpots.ts` |
 | 21 | 데이트 기록 동영상 업로드·재생 (원본 업로드, 핀당 30MB 초과 경고, `video_urls` 컬럼) | 08-14 | - | `supabase/migrations/20260814073021_*.sql`, `src/lib/upload.ts`, `src/hooks/useDateSpots.ts`, `src/components/modal/AddSpotModal.tsx`, `SpotDetailSheet.tsx` |
 | 22 | 테마 커스터마이징 — 색상 3종(세이지·시트러스·나이트 피치) × 폰트 3종 독립 선택, 미리보기 후 적용, 전 UI·지도 마커 토큰화 | 08-20 | - | `src/app/globals.css`, `src/app/layout.tsx`, `src/lib/theme.ts`, `src/hooks/useTheme.ts`, `src/components/modal/SettingsModal.tsx`, `src/hooks/useKakaoMap.ts` |
+| 23 | 코스 상세 수정 모드(순서 조정·삭제 이동) & 검색 기반 경유지 추가 | 08-20 | - | `src/components/modal/FuturePlanSheet.tsx`, `src/components/modal/AddressSearchModal.tsx`, `src/app/page.tsx` |
 
 > 완료일은 2026년 기준. 버전 `-`는 릴리스 태그 미지정 작업(상세는 `CHANGELOG.md` [Unreleased] 참조).

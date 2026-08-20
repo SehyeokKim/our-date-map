@@ -11,6 +11,9 @@ import {
   Clock,
   Route,
   Bus,
+  Pencil,
+  Check,
+  MapPinPlus,
 } from "lucide-react";
 
 interface FuturePlanSheetProps {
@@ -24,6 +27,7 @@ interface FuturePlanSheetProps {
   transitRoutes?: Record<string, TransitRouteResult>;
   loadingTransit?: boolean;
   onPanToSpot?: (lat: number, lng: number) => void;
+  onAddWaypoint?: () => void;
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
@@ -37,8 +41,17 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   transitRoutes,
   loadingTransit,
   onPanToSpot,
+  onAddWaypoint,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  // 순서 조정·삭제·경유지 추가는 수정 모드에서만 노출해 평소 목록을 간결하게 유지한다
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  const toggleEditing = () => {
+    const next = !isEditing;
+    setIsEditing(next);
+    if (next) setIsExpanded(true); // 수정을 켜면 목록이 보이도록 함께 펼친다
+  };
 
   // Helper for formatting distance (meters to km)
   const formatDistance = (meters?: number) => {
@@ -77,15 +90,40 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                 </span>
               </div>
               <p className="text-[10px] text-ink-muted">
-                {plannedSpots.length === 0
+                {isEditing
+                  ? "순서 조정 · 삭제 · 경유지 추가를 할 수 있어요"
+                  : plannedSpots.length === 0
                   ? "지도를 터치하여 방문할 코스를 추가하세요"
                   : "순서대로 이어지는 경로가 지도에 표시됩니다"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <button className="p-1 text-ink-subtle hover:text-ink-muted cursor-pointer">
+          <div className="flex items-center gap-1">
+            {/* 코스 수정 토글 (헤더 클릭 = 접기/펼치기 이므로 이벤트 전파를 막는다) */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleEditing();
+              }}
+              aria-pressed={isEditing}
+              title={isEditing ? "수정 완료" : "코스 수정"}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                isEditing
+                  ? "bg-plan text-on-accent"
+                  : "bg-surface text-plan-strong border border-plan-line hover:bg-plan-tint"
+              }`}
+            >
+              {isEditing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+              <span>{isEditing ? "완료" : "수정"}</span>
+            </button>
+
+            <button
+              type="button"
+              aria-label={isExpanded ? "코스 목록 접기" : "코스 목록 펼치기"}
+              className="p-1 text-ink-subtle hover:text-ink-muted cursor-pointer"
+            >
               <ChevronUp
                 className={`w-4 h-4 transition-transform duration-300 ${
                   isExpanded ? "rotate-180" : ""
@@ -171,7 +209,8 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                           </div>
                         </div>
 
-                        {/* Actions: Reorder & Delete */}
+                        {/* Actions: Reorder & Delete (수정 모드 전용) */}
+                        {isEditing && (
                         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                           <button
                             onClick={() => onMoveUp(index)}
@@ -197,6 +236,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                        )}
                       </div>
 
                       {/* Public Transit Route Card between Spot A and Spot B */}
@@ -238,6 +278,18 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                   );
                 })}
               </div>
+            )}
+
+            {/* 경유지 추가 (수정 모드 전용) — 코스 맨 뒤에 추가된 뒤 순서 조정으로 위치를 옮긴다 */}
+            {isEditing && onAddWaypoint && (
+              <button
+                type="button"
+                onClick={onAddWaypoint}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl border-2 border-dashed border-plan-line text-plan-strong text-xs font-bold hover:bg-plan-tint active:scale-[0.99] transition-all cursor-pointer"
+              >
+                <MapPinPlus className="w-4 h-4" />
+                <span>경유지 추가</span>
+              </button>
             )}
           </div>
         )}
