@@ -59,24 +59,24 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 max-w-md mx-auto px-4 pb-4 transition-all duration-300">
-      <div className="bg-white/95 backdrop-blur-md border border-violet-100 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="bg-surface border border-plan-line rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden">
         {/* Toggle Bar / Summary Header */}
         <div
           onClick={() => setIsExpanded(!isExpanded)}
-          className="p-3.5 flex items-center justify-between cursor-pointer border-b border-gray-100 bg-gradient-to-r from-violet-50/50 to-purple-50/50"
+          className="p-3.5 flex items-center justify-between cursor-pointer border-b border-line bg-plan-tint"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-sm shadow-violet-200">
+            <div className="w-8 h-8 rounded-full bg-plan text-on-accent flex items-center justify-center shadow-sm">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-gray-800 text-sm">데이트 코스 상세</h2>
-                <span className="bg-violet-100 text-violet-700 font-bold text-[11px] px-2 py-0.5 rounded-full">
+                <h2 className="font-display text-ink text-sm">데이트 코스 상세</h2>
+                <span className="bg-surface text-plan-strong font-bold text-[11px] px-2 py-0.5 rounded-full">
                   총 {plannedSpots.length}곳
                 </span>
               </div>
-              <p className="text-[10px] text-gray-500">
+              <p className="text-[10px] text-ink-muted">
                 {plannedSpots.length === 0
                   ? "지도를 터치하여 방문할 코스를 추가하세요"
                   : "순서대로 이어지는 경로가 지도에 표시됩니다"}
@@ -85,7 +85,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
+            <button className="p-1 text-ink-subtle hover:text-ink-muted cursor-pointer">
               <ChevronUp
                 className={`w-4 h-4 transition-transform duration-300 ${
                   isExpanded ? "rotate-180" : ""
@@ -100,9 +100,9 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
           <div className="p-4 space-y-3 max-h-[42vh] overflow-y-auto">
             {/* Route Stats Bar if route exists */}
             {plannedSpots.length >= 2 && (
-              <div className="flex items-center justify-around bg-violet-50/80 rounded-2xl p-2.5 text-xs text-violet-800 border border-violet-100">
+              <div className="flex items-center justify-around bg-plan-tint rounded-2xl p-2.5 text-xs text-plan-strong border border-plan-line">
                 <div className="flex items-center gap-1.5 font-medium">
-                  <Route className="w-4 h-4 text-violet-600" />
+                  <Route className="w-4 h-4 text-plan" />
                   <span>
                     {loadingRoute
                       ? "경로 계산 중..."
@@ -110,8 +110,8 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                   </span>
                 </div>
                 {routeDuration && (
-                  <div className="flex items-center gap-1.5 font-medium border-l border-violet-200 pl-3">
-                    <Clock className="w-4 h-4 text-violet-600" />
+                  <div className="flex items-center gap-1.5 font-medium border-l border-plan-line pl-3">
+                    <Clock className="w-4 h-4 text-plan" />
                     <span>{formatDuration(routeDuration)}</span>
                   </div>
                 )}
@@ -121,11 +121,11 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
             {/* Empty state guidance */}
             {plannedSpots.length === 0 ? (
               <div className="py-6 text-center space-y-2">
-                <div className="w-12 h-12 mx-auto rounded-full bg-violet-50 text-violet-500 flex items-center justify-center">
+                <div className="w-12 h-12 mx-auto rounded-full bg-plan-tint text-plan flex items-center justify-center">
                   <Sparkles className="w-6 h-6" />
                 </div>
-                <p className="text-xs font-semibold text-gray-700">등록된 미래 데이트 장소가 없습니다</p>
-                <p className="text-[11px] text-gray-400 max-w-xs mx-auto">
+                <p className="text-xs font-semibold text-ink">등록된 미래 데이트 장소가 없습니다</p>
+                <p className="text-[11px] text-ink-muted max-w-xs mx-auto">
                   지도 위 원하는 위치를 터치하면 이동 순서대로 코스 핀이 생성되고 길찾기 경로가 연결됩니다!
                 </p>
               </div>
@@ -138,7 +138,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
 
                   return (
                     <React.Fragment key={spot.id}>
-                      <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100 hover:border-violet-300 hover:bg-violet-50/50 transition-all shadow-2xs group">
+                      <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-2 border border-line hover:border-plan-line hover:bg-plan-tint transition-all shadow-2xs group">
                         {/* Clickable spot info area -> pans map to spot */}
                         <div
                           onClick={() => onPanToSpot?.(spot.latitude, spot.longitude)}
@@ -146,22 +146,22 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                           title="클릭 시 지도 위치로 이동"
                         >
                           {/* Order Badge */}
-                          <div className="w-7 h-7 rounded-full bg-violet-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm shadow-violet-200 group-hover:scale-110 transition-transform">
+                          <div className="w-7 h-7 rounded-full bg-plan text-on-accent font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
                             {spot.order}
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <div className="font-bold text-xs text-gray-800 group-hover:text-violet-700 transition-colors truncate">
+                            <div className="font-bold text-xs text-ink group-hover:text-plan-strong transition-colors truncate">
                               {spot.title}
                             </div>
                             {spot.address && (
-                              <div className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
+                              <div className="text-[10px] text-ink-subtle flex items-center gap-1 mt-0.5">
                                 <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="truncate">{spot.address}</span>
                               </div>
                             )}
                             {spot.memo && (
-                              <div className="text-[10px] text-violet-600 font-medium bg-violet-50/60 p-1.5 rounded-lg border border-violet-100/50 flex items-start gap-1 mt-1">
+                              <div className="text-[10px] text-plan-strong font-medium bg-plan-tint p-1.5 rounded-lg border border-plan-line/50 flex items-start gap-1 mt-1">
                                 <span className="flex-shrink-0 select-none">💬</span>
                                 <span className="whitespace-pre-wrap break-words flex-1 leading-relaxed">
                                   {spot.memo}
@@ -177,7 +177,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                             onClick={() => onMoveUp(index)}
                             disabled={index === 0}
                             title="순서 올리기"
-                            className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors cursor-pointer"
+                            className="p-1 rounded-lg hover:bg-surface text-ink-subtle hover:text-ink disabled:opacity-30 transition-colors cursor-pointer"
                           >
                             <ChevronUp className="w-4 h-4" />
                           </button>
@@ -185,14 +185,14 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                             onClick={() => onMoveDown(index)}
                             disabled={index === plannedSpots.length - 1}
                             title="순서 내리기"
-                            className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors cursor-pointer"
+                            className="p-1 rounded-lg hover:bg-surface text-ink-subtle hover:text-ink disabled:opacity-30 transition-colors cursor-pointer"
                           >
                             <ChevronDown className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => onRemoveSpot(spot.id)}
                             title="핀 삭제"
-                            className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-warn-tint text-ink-subtle hover:text-warn transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -201,17 +201,17 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
 
                       {/* Public Transit Route Card between Spot A and Spot B */}
                       {nextSpot && (
-                        <div className="my-1 mx-2 p-2.5 rounded-xl bg-violet-50/80 border border-violet-100 flex items-center justify-between text-xs text-violet-900 shadow-xs animate-in fade-in duration-200">
+                        <div className="my-1 mx-2 p-2.5 rounded-xl bg-plan-tint border border-plan-line flex items-center justify-between text-xs text-plan-strong shadow-xs animate-in fade-in duration-200">
                           {transit?.routeInfo ? (
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-violet-200">
+                              <div className="w-7 h-7 rounded-lg bg-plan text-on-accent flex items-center justify-center flex-shrink-0 shadow-sm">
                                 <Bus className="w-3.5 h-3.5" />
                               </div>
                               <div className="min-w-0">
-                                <div className="font-bold flex items-center gap-2 text-violet-950 text-[11px]">
+                                <div className="font-bold flex items-center gap-2 text-ink text-[11px]">
                                   <span>⏱️ 약 {transit.routeInfo.totalTime}분 소요</span>
                                 </div>
-                                <div className="text-[10px] text-violet-700 font-medium truncate mt-0.5 flex items-center gap-1">
+                                <div className="text-[10px] text-plan-strong font-medium truncate mt-0.5 flex items-center gap-1">
                                   <span>🚉</span>
                                   <span className="truncate">
                                     {transit.routeInfo.subpaths
@@ -223,8 +223,8 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                               </div>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2 text-violet-600 text-[11px]">
-                              <Bus className="w-3.5 h-3.5 text-violet-500" />
+                            <div className="flex items-center gap-2 text-plan text-[11px]">
+                              <Bus className="w-3.5 h-3.5 text-plan" />
                               <span>
                                 {loadingTransit
                                   ? "대중교통 경로 계산 중..."

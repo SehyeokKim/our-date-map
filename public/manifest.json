@@ -4,8 +4,8 @@
   "description": "우리둘만의 프라이빗 데이트 장소 및 사진 기록 앱",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#f8f9f5",
+  "theme_color": "#f8f9f5",
   "icons": [
     {
       "src": "/popcat.png",

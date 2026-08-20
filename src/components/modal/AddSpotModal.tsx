@@ -146,18 +146,18 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all duration-300">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-bounce-in flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-md bg-surface rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden animate-bounce-in flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-rose-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-memory-tint">
           <div className="flex items-center gap-2">
-            <Heart className="w-5 h-5 text-rose-500 fill-current" />
-            <h2 className="text-lg font-bold text-gray-900">데이트 기록 남기기</h2>
+            <Heart className="w-5 h-5 text-memory fill-current" />
+            <h2 className="font-display text-lg text-ink">데이트 기록 남기기</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             disabled={isUploading}
-            className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-surface/80 flex items-center justify-center text-ink-subtle hover:text-ink-muted hover:bg-surface transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -167,12 +167,12 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
           {/* Creator Badge Preview if logged in */}
           {currentUserNickname && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl text-amber-900 text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3 py-2 bg-warn-tint border border-warn/25 rounded-xl text-warn text-xs font-semibold">
               {currentUserAvatarUrl ? (
                 <img
                   src={currentUserAvatarUrl}
                   alt={currentUserNickname}
-                  className="w-5 h-5 rounded-full object-cover border border-amber-200"
+                  className="w-5 h-5 rounded-full object-cover border border-warn/30"
                 />
               ) : (
                 <span>✍️</span>
@@ -183,7 +183,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
 
           {/* Extract address preview */}
           {initialAddress && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 bg-rose-50/80 px-3 py-2 rounded-xl border border-rose-100">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-memory bg-memory-tint px-3 py-2 rounded-xl border border-memory-line">
               <MapPin className="w-4 h-4 flex-shrink-0" />
               <span className="truncate">{initialAddress}</span>
             </div>
@@ -191,47 +191,47 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
 
           {/* Place Title */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              장소 이름 <span className="text-rose-500">*</span>
+            <label className="block text-xs font-bold text-ink mb-1">
+              장소 이름 <span className="text-memory">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={initialAddress || "예: 남산서울타워, 성수동 맛집"}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all"
+              className="w-full px-4 py-3 bg-surface-2 border border-line rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all"
               disabled={isUploading}
             />
           </div>
 
           {/* Visited Date */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">데이트 날짜</label>
+            <label className="block text-xs font-bold text-ink mb-1">데이트 날짜</label>
             <div className="relative">
               <input
                 type="date"
                 value={visitedAt}
                 onChange={(e) => setVisitedAt(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all pr-10"
+                className="w-full px-4 py-3 bg-surface-2 border border-line rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all pr-10"
                 disabled={isUploading}
               />
-              <Calendar className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Calendar className="w-5 h-5 text-ink-subtle absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
           {/* Multiple Image Upload up to 10 */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-bold text-gray-700">
+              <label className="block text-xs font-bold text-ink">
                 추억 사진 (최대 10장)
               </label>
-              <span className="text-[11px] font-bold text-rose-500">{imageFiles.length} / 10</span>
+              <span className="text-[11px] font-bold text-memory">{imageFiles.length} / 10</span>
             </div>
 
             {/* Photo Previews Slider (tap a photo to set it as the representative thumbnail) */}
             {previewUrls.length > 0 && (
               <>
-                <p className="text-[10px] text-gray-400 mb-1.5 leading-tight">
+                <p className="text-[10px] text-ink-subtle mb-1.5 leading-tight">
                   사진을 누르면 대표 사진(썸네일)으로 지정됩니다.
                 </p>
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none">
@@ -241,8 +241,8 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
                       onClick={() => !isUploading && makeThumbnail(idx)}
                       className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 group cursor-pointer transition-all ${
                         idx === 0
-                          ? "border-2 border-rose-400 ring-2 ring-rose-200"
-                          : "border border-gray-200 hover:border-rose-300"
+                          ? "border-2 border-memory ring-2 ring-memory-line"
+                          : "border border-line hover:border-memory-line"
                       }`}
                     >
                       <img src={url} alt={`미리보기 ${idx + 1}`} className="w-full h-full object-cover" />
@@ -253,12 +253,12 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
                           removeImage(idx);
                         }}
                         disabled={isUploading}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-rose-600 transition-colors"
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
                       >
                         <X className="w-3 h-3" />
                       </button>
                       {idx === 0 ? (
-                        <span className="absolute bottom-1 left-1 bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                        <span className="absolute bottom-1 left-1 bg-memory text-on-accent text-[9px] font-bold px-1.5 py-0.5 rounded">
                           ⭐ 대표
                         </span>
                       ) : (
@@ -273,9 +273,9 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
             )}
 
             {imageFiles.length < 10 && (
-              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 hover:bg-gray-100/80 cursor-pointer transition-all">
-                <Upload className="w-5 h-5 text-gray-400 mb-1" />
-                <span className="text-xs text-gray-500 font-semibold">
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-line rounded-2xl bg-surface-2 hover:bg-line/60 cursor-pointer transition-all">
+                <Upload className="w-5 h-5 text-ink-subtle mb-1" />
+                <span className="text-xs text-ink-muted font-semibold">
                   {imageFiles.length === 0 ? "사진 추가하기 (최대 10장)" : "사진 추가하기"}
                 </span>
                 <input
@@ -293,9 +293,9 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
           {/* Video Upload (uploaded as-is, no compression) */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-bold text-gray-700">추억 동영상</label>
+              <label className="block text-xs font-bold text-ink">추억 동영상</label>
               {videoFiles.length > 0 && (
-                <span className="text-[11px] font-bold text-rose-500">
+                <span className="text-[11px] font-bold text-memory">
                   총 {formatFileSizeMB(videoFiles.reduce((s, f) => s + f.size, 0))}
                 </span>
               )}
@@ -306,20 +306,20 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
                 {videoFiles.map((file, idx) => (
                   <div
                     key={`${file.name}_${idx}`}
-                    className="flex items-center gap-2.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl"
+                    className="flex items-center gap-2.5 px-3 py-2 bg-surface-2 border border-line rounded-xl"
                   >
-                    <Film className="w-4 h-4 text-rose-400 shrink-0" />
-                    <span className="flex-1 min-w-0 text-xs font-medium text-gray-700 truncate">
+                    <Film className="w-4 h-4 text-memory shrink-0" />
+                    <span className="flex-1 min-w-0 text-xs font-medium text-ink-muted truncate">
                       {file.name}
                     </span>
-                    <span className="text-[10px] font-bold text-gray-400 shrink-0">
+                    <span className="text-[10px] font-bold text-ink-subtle shrink-0">
                       {formatFileSizeMB(file.size)}
                     </span>
                     <button
                       type="button"
                       onClick={() => removeVideo(idx)}
                       disabled={isUploading}
-                      className="w-5 h-5 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                      className="w-5 h-5 rounded-full bg-line text-ink-muted flex items-center justify-center hover:bg-memory hover:text-on-accent transition-colors shrink-0 cursor-pointer"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -328,9 +328,9 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
               </div>
             )}
 
-            <label className="flex items-center justify-center gap-1.5 w-full py-2.5 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 hover:bg-gray-100/80 cursor-pointer transition-all">
-              <Film className="w-4 h-4 text-gray-400" />
-              <span className="text-xs text-gray-500 font-semibold">동영상 추가하기</span>
+            <label className="flex items-center justify-center gap-1.5 w-full py-2.5 border-2 border-dashed border-line rounded-2xl bg-surface-2 hover:bg-line/60 cursor-pointer transition-all">
+              <Film className="w-4 h-4 text-ink-subtle" />
+              <span className="text-xs text-ink-muted font-semibold">동영상 추가하기</span>
               <input
                 type="file"
                 accept="video/*"
@@ -340,20 +340,20 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
                 disabled={isUploading}
               />
             </label>
-            <p className="mt-1 text-[10px] text-gray-400 leading-tight">
+            <p className="mt-1 text-[10px] text-ink-subtle leading-tight">
               원본 그대로 업로드됩니다. 핀당 권장 용량은 30MB입니다 (초과 시 확인 후 업로드).
             </p>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">우리의 이야기 (메모)</label>
+            <label className="block text-xs font-bold text-ink mb-1">우리의 이야기 (메모)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="이곳에서 나눈 이야기를 남겨보세요."
               rows={3}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all resize-none"
+              className="w-full px-4 py-3 bg-surface-2 border border-line rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all resize-none"
               disabled={isUploading}
             />
           </div>
@@ -363,7 +363,7 @@ export const AddSpotModal: React.FC<AddSpotModalProps> = ({
             <button
               type="submit"
               disabled={isUploading}
-              className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-extrabold text-sm transition-all shadow-md shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3.5 bg-memory hover:bg-memory-strong text-on-accent rounded-2xl font-extrabold text-sm transition-all shadow-[var(--shadow-card)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isUploading ? (
                 <>

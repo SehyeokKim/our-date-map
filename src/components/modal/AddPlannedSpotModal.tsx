@@ -39,21 +39,21 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
+      <div className="w-full max-w-md bg-surface rounded-t-3xl sm:rounded-3xl shadow-[var(--shadow-sheet)] p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+        <div className="flex items-center justify-between pb-2 border-b border-line">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-plan-tint text-plan flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-800 text-base">미래 데이트 플랜 추가</h3>
-              <p className="text-xs text-gray-500">방문하고 싶은 장소를 코스에 추가해요</p>
+              <h3 className="font-display text-ink text-base">미래 데이트 플랜 추가</h3>
+              <p className="text-xs text-ink-muted">방문하고 싶은 장소를 코스에 추가해요</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-surface-2 text-ink-subtle hover:text-ink-muted flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -61,7 +61,7 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
 
         {/* Address preview */}
         {initialAddress && (
-          <div className="flex items-center gap-1.5 px-3 py-2 bg-violet-50/60 rounded-xl text-violet-700 text-xs font-medium border border-violet-100">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-plan-tint rounded-xl text-plan-strong text-xs font-medium border border-plan-line">
             <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate">{initialAddress}</span>
           </div>
@@ -69,22 +69,22 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              장소 / 목적지 이름 <span className="text-rose-500">*</span>
+            <label className="block text-xs font-semibold text-ink mb-1">
+              장소 / 목적지 이름 <span className="text-memory">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="예: 성수동 온량, 남산타워 산책, 한강 공원 픽닉"
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 bg-surface-2 border border-line rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-plan focus:bg-surface transition-all"
               required
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
+            <label className="block text-xs font-semibold text-ink mb-1">
               계획 메모 (선택)
             </label>
             <textarea
@@ -92,7 +92,7 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
               onChange={(e) => setMemo(e.target.value)}
               placeholder="예: 오후 2시 예약완료, 창가 자리 요청하기"
               rows={2}
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white transition-all resize-none"
+              className="w-full px-3.5 py-2.5 bg-surface-2 border border-line rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-plan focus:bg-surface transition-all resize-none"
             />
           </div>
 
@@ -100,14 +100,14 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+              className="flex-1 py-3 bg-surface-2 text-ink-muted rounded-xl font-semibold text-sm hover:bg-line transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={!title.trim()}
-              className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-semibold text-sm hover:bg-violet-700 disabled:opacity-50 transition-all shadow-md shadow-violet-200"
+              className="flex-1 py-3 bg-plan text-on-accent rounded-xl font-semibold text-sm hover:bg-plan-strong disabled:opacity-50 transition-all shadow-[var(--shadow-card)]"
             >
               플랜 코스에 추가
             </button>

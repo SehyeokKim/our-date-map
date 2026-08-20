@@ -203,12 +203,12 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
 
         el.innerHTML = `
         <div class="relative flex flex-col items-center pointer-events-auto cursor-pointer">
-          <div class="w-10 h-10 rounded-full bg-white border border-rose-100 shadow-md flex items-center justify-center hover:scale-110 transition-transform duration-200 pointer-events-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500 pointer-events-none">
+          <div class="w-10 h-10 rounded-full bg-surface border border-memory-line shadow-md flex items-center justify-center hover:scale-110 transition-transform duration-200 pointer-events-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-memory pointer-events-none">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           </div>
-          <div class="w-1.5 h-1.5 bg-rose-500 rounded-full -mt-0.5 shadow-sm pointer-events-none"></div>
+          <div class="w-1.5 h-1.5 bg-memory rounded-full -mt-0.5 shadow-sm pointer-events-none"></div>
         </div>
       `;
 
@@ -287,10 +287,10 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
 
         el.innerHTML = `
           <div class="relative flex flex-col items-center hover:scale-105 transition-transform">
-            <div class="w-8 h-8 rounded-full bg-violet-600 border-2 border-white shadow-lg flex items-center justify-center text-white font-extrabold text-xs shadow-violet-300">
+            <div class="w-8 h-8 rounded-full bg-plan border-2 border-surface shadow-lg flex items-center justify-center text-on-accent font-extrabold text-xs">
               ${spot.order}
             </div>
-            <div class="mt-1 bg-white/95 backdrop-blur-sm border border-violet-200 px-2 py-0.5 rounded-full shadow-md text-[11px] font-bold text-violet-900 whitespace-nowrap max-w-[130px] truncate">
+            <div class="mt-1 bg-surface border border-plan-line px-2 py-0.5 rounded-full shadow-md text-[11px] font-bold text-plan-strong whitespace-nowrap max-w-[130px] truncate">
               ${spot.title}
             </div>
           </div>
@@ -345,11 +345,16 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
 
       const kakaoPath = pathCoords.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
 
+      // Kakao SDK 옵션은 CSS 클래스를 못 쓰므로 현재 테마의 --plan 토큰 값을 직접 읽는다
+      const planColor =
+        getComputedStyle(document.documentElement).getPropertyValue("--plan").trim() ||
+        "#4f7a6a";
+
       const polyline = new kakao.maps.Polyline({
         map: map,
         path: kakaoPath,
         strokeWeight: 5,
-        strokeColor: "#8B5CF6",
+        strokeColor: planColor,
         strokeOpacity: 0.9,
         strokeStyle: "solid",
       });
@@ -470,13 +475,13 @@ export function useKakaoMap(showToast: (message: string, type?: "success" | "err
 
         el.innerHTML = `
           <div class="relative flex flex-col items-center pointer-events-auto">
-            <div class="w-10 h-10 rounded-full bg-rose-500 border border-white shadow-lg flex items-center justify-center hover:scale-110 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-white">
+            <div class="w-10 h-10 rounded-full bg-memory border border-surface shadow-lg flex items-center justify-center hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-on-accent">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
             </div>
-            <div class="w-1.5 h-1.5 bg-rose-500 rounded-full -mt-0.5"></div>
+            <div class="w-1.5 h-1.5 bg-memory rounded-full -mt-0.5"></div>
           </div>
         `;
 

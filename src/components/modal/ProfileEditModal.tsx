@@ -78,15 +78,15 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all duration-300 pointer-events-auto">
-      <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-bounce-in flex flex-col pointer-events-auto">
+      <div className="relative w-full max-w-sm bg-surface rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden animate-bounce-in flex flex-col pointer-events-auto">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-rose-50/50">
-          <h2 className="text-base font-bold text-gray-900">프로필 수정</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-memory-tint">
+          <h2 className="font-display text-base text-ink">프로필 수정</h2>
           <button
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-surface/80 flex items-center justify-center text-ink-subtle hover:text-ink-muted hover:bg-surface transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -96,7 +96,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Profile Avatar Upload Preview */}
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-rose-200 shadow-md group">
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-memory-line shadow-md group">
               {previewUrl ? (
                 <img
                   src={previewUrl}
@@ -104,7 +104,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-rose-50 flex items-center justify-center text-rose-400">
+                <div className="w-full h-full bg-memory-tint flex items-center justify-center text-memory">
                   <UserIcon className="w-9 h-9" />
                 </div>
               )}
@@ -122,7 +122,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               </label>
             </div>
 
-            <label className="mt-1.5 text-xs font-semibold text-rose-600 hover:underline cursor-pointer flex items-center gap-1">
+            <label className="mt-1.5 text-xs font-semibold text-memory hover:underline cursor-pointer flex items-center gap-1">
               <Camera className="w-3.5 h-3.5" />
               <span>프로필 사진 선택</span>
               <input
@@ -137,15 +137,15 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 
           {/* Nickname Input */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              닉네임 <span className="text-rose-500">*</span>
+            <label className="block text-xs font-bold text-ink mb-1">
+              닉네임 <span className="text-memory">*</span>
             </label>
             <input
               type="text"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               placeholder="사용할 닉네임을 입력해 주세요"
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all font-medium"
+              className="w-full px-4 py-2.5 bg-surface-2 border border-line rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all font-medium"
               disabled={isSaving}
               maxLength={20}
             />
@@ -153,17 +153,17 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 
           {/* Partner Selection Dropdown */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
+            <label className="block text-xs font-bold text-ink mb-1 flex items-center justify-between">
               <span>알림 수신 상대방 (커플 파트너)</span>
-              <span className="text-[10px] text-rose-500 font-normal flex items-center gap-0.5">
-                <Heart className="w-3 h-3 fill-rose-500" />
+              <span className="text-[10px] text-memory font-normal flex items-center gap-0.5">
+                <Heart className="w-3 h-3 fill-memory" />
                 <span>찌르기 알림 대상</span>
               </span>
             </label>
             <select
               value={partnerId}
               onChange={(e) => setPartnerId(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all font-medium text-gray-800"
+              className="w-full px-3.5 py-2.5 bg-surface-2 border border-line rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all font-medium text-ink"
               disabled={isSaving || isLoadingPartners}
             >
               <option value="">전체 기기 전송 (상대방 지정 안함)</option>
@@ -173,7 +173,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-[10px] text-gray-400 leading-tight">
+            <p className="mt-1 text-[10px] text-ink-subtle leading-tight">
               선택 시 팝캣 알림이 이 상대방 기기로만 전송됩니다.
             </p>
           </div>
@@ -184,14 +184,14 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
+              className="flex-1 py-2.5 bg-surface-2 hover:bg-line text-ink-muted rounded-xl font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-rose-200 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex-1 py-2.5 bg-memory hover:bg-memory-strong text-on-accent rounded-xl font-bold text-xs transition-all shadow-[var(--shadow-card)] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {isSaving ? (
                 <>
@@ -213,7 +213,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 onClose();
               }}
               disabled={isSaving}
-              className="w-full mt-1 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-100 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="w-full mt-1 py-2.5 bg-surface hover:bg-memory-tint text-memory border border-memory-line rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>로그아웃</span>

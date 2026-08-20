@@ -43,21 +43,21 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all duration-300 pointer-events-auto">
-      <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col border border-white/60">
+      <div className="relative w-full max-w-sm bg-surface rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col border border-line">
         {/* Modal Header */}
-        <div className="p-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white flex items-center justify-between shadow-sm">
+        <div className="p-4 bg-plan text-on-accent flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-xs">
-              <Calendar className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-full bg-on-accent/20 flex items-center justify-center backdrop-blur-xs">
+              <Calendar className="w-4 h-4 text-on-accent" />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-white">새 데이트 일정 생성</h2>
-              <p className="text-[10px] text-violet-100">데이트 기간을 설정하고 장소를 추가해 보세요</p>
+              <h2 className="font-display text-sm text-on-accent">새 데이트 일정 생성</h2>
+              <p className="text-[10px] text-on-accent/80">데이트 기간을 설정하고 장소를 추가해 보세요</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-on-accent/20 text-on-accent transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -67,28 +67,28 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* Quick Presets */}
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+            <label className="block text-[11px] font-semibold text-ink-muted mb-1.5 uppercase tracking-wider">
               빠른 기간 선택
             </label>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => handleQuickPreset(0)}
-                className="flex-1 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 font-bold text-xs rounded-xl border border-violet-100 transition-all active:scale-95 cursor-pointer"
+                className="flex-1 py-1.5 bg-plan-tint hover:bg-plan-line text-plan-strong font-bold text-xs rounded-xl border border-plan-line transition-all active:scale-95 cursor-pointer"
               >
                 당일치기
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickPreset(1)}
-                className="flex-1 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 font-bold text-xs rounded-xl border border-violet-100 transition-all active:scale-95 cursor-pointer"
+                className="flex-1 py-1.5 bg-plan-tint hover:bg-plan-line text-plan-strong font-bold text-xs rounded-xl border border-plan-line transition-all active:scale-95 cursor-pointer"
               >
                 1박 2일
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickPreset(2)}
-                className="flex-1 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 font-bold text-xs rounded-xl border border-violet-100 transition-all active:scale-95 cursor-pointer"
+                className="flex-1 py-1.5 bg-plan-tint hover:bg-plan-line text-plan-strong font-bold text-xs rounded-xl border border-plan-line transition-all active:scale-95 cursor-pointer"
               >
                 2박 3일
               </button>
@@ -98,7 +98,7 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
           {/* Date Range Selection Inputs */}
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">시작일 🗓️</label>
+              <label className="block text-xs font-bold text-ink mb-1">시작일 🗓️</label>
               <input
                 type="date"
                 required
@@ -109,25 +109,25 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
                     setEndDate(e.target.value);
                   }
                 }}
-                className="w-full bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-800 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition-all cursor-pointer"
+                className="w-full bg-surface-2 border border-line text-xs font-semibold text-ink rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-plan focus:bg-surface transition-all cursor-pointer"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">종료일 🏁</label>
+              <label className="block text-xs font-bold text-ink mb-1">종료일 🏁</label>
               <input
                 type="date"
                 required
                 min={startDate}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-800 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition-all cursor-pointer"
+                className="w-full bg-surface-2 border border-line text-xs font-semibold text-ink rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-plan focus:bg-surface transition-all cursor-pointer"
               />
             </div>
           </div>
 
           {/* Title Input */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-ink mb-1">
               플랜 제목 (선택)
             </label>
             <input
@@ -139,7 +139,7 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
               }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 text-xs font-medium text-gray-800 rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition-all"
+              className="w-full bg-surface-2 border border-line text-xs font-medium text-ink rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-plan focus:bg-surface transition-all"
             />
           </div>
 
@@ -148,13 +148,13 @@ export const CreateDatePlanModal: React.FC<CreateDatePlanModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-line text-xs font-semibold text-ink-muted hover:bg-surface-2 transition-all cursor-pointer"
             >
               취소
             </button>
             <button
               type="submit"
-              className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-md shadow-violet-200 transition-all active:scale-98 cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-plan hover:bg-plan-strong text-on-accent text-xs font-bold shadow-[var(--shadow-card)] transition-all active:scale-98 cursor-pointer"
             >
               <Check className="w-4 h-4" />
               <span>장소 핀 찍기 시작</span>

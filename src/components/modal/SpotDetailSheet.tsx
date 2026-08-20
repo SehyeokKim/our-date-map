@@ -234,11 +234,11 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs p-4 transition-all duration-300 pointer-events-auto">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden z-10 animate-bounce-in flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-md bg-surface rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden z-10 animate-bounce-in flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-rose-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-memory-tint">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500 text-[11px] text-white font-bold shadow-xs">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-memory text-[11px] text-on-accent font-bold shadow-xs">
               {isEditing ? (
                 <>
                   <Pencil className="w-3 h-3" />
@@ -255,7 +255,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
               <button
                 type="button"
                 onClick={startEditing}
-                className="w-6 h-6 rounded-full bg-white text-gray-400 flex items-center justify-center hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
+                className="w-6 h-6 rounded-full bg-surface text-ink-subtle flex items-center justify-center hover:text-memory hover:bg-surface-2 transition-colors cursor-pointer"
                 aria-label="기록 수정"
               >
                 <Pencil className="w-3 h-3" />
@@ -266,7 +266,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-surface flex items-center justify-center text-ink-subtle hover:text-ink-muted hover:bg-surface-2 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -278,35 +278,35 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
             <>
               {/* Edit: Title */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">장소 제목</label>
+                <label className="block text-xs font-bold text-ink mb-1">장소 제목</label>
                 <input
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   disabled={isSaving}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all"
+                  className="w-full px-4 py-3 bg-surface-2 border border-line rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all"
                 />
               </div>
 
               {/* Edit: Visited Date */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">데이트 날짜</label>
+                <label className="block text-xs font-bold text-ink mb-1">데이트 날짜</label>
                 <input
                   type="date"
                   value={editDate}
                   onChange={(e) => setEditDate(e.target.value)}
                   disabled={isSaving}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all"
+                  className="w-full px-4 py-3 bg-surface-2 border border-line rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all"
                 />
               </div>
 
               {/* Edit: Photos */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
+                <label className="block text-xs font-bold text-ink mb-1">
                   사진 ({totalPhotoCount}/10)
                 </label>
                 {keptPhotos.length > 1 && (
-                  <p className="text-[10px] text-gray-400 mb-1.5 leading-tight">
+                  <p className="text-[10px] text-ink-subtle mb-1.5 leading-tight">
                     사진을 누르면 대표 사진(썸네일)으로 지정됩니다.
                   </p>
                 )}
@@ -317,8 +317,8 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                       onClick={() => !isSaving && makeKeptThumbnail(index)}
                       className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all ${
                         index === 0
-                          ? "border-2 border-rose-400 ring-1 ring-rose-200"
-                          : "border border-gray-200 hover:border-rose-300"
+                          ? "border-2 border-memory ring-1 ring-memory-line"
+                          : "border border-line hover:border-memory-line"
                       }`}
                     >
                       <img src={url} alt={`사진 ${index + 1}`} className="w-full h-full object-cover" />
@@ -329,13 +329,13 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                           removeKeptPhoto(index);
                         }}
                         disabled={isSaving}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-500 transition-colors cursor-pointer"
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
                         aria-label="사진 삭제"
                       >
                         <X className="w-3 h-3" />
                       </button>
                       {index === 0 && (
-                        <span className="absolute bottom-1 left-1 bg-rose-500 text-white text-[8px] font-bold px-1 py-0.5 rounded">
+                        <span className="absolute bottom-1 left-1 bg-memory text-on-accent text-[8px] font-bold px-1 py-0.5 rounded">
                           대표
                         </span>
                       )}
@@ -344,14 +344,14 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                   {newPreviews.map((url, index) => (
                     <div
                       key={url}
-                      className="relative aspect-square rounded-xl overflow-hidden border-2 border-rose-300"
+                      className="relative aspect-square rounded-xl overflow-hidden border-2 border-memory-line"
                     >
                       <img src={url} alt={`새 사진 ${index + 1}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeNewPhoto(index)}
                         disabled={isSaving}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-500 transition-colors cursor-pointer"
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
                         aria-label="새 사진 제거"
                       >
                         <X className="w-3 h-3" />
@@ -359,7 +359,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                     </div>
                   ))}
                   {totalPhotoCount < 10 && (
-                    <label className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-0.5 text-gray-400 hover:border-rose-300 hover:text-rose-400 cursor-pointer transition-colors">
+                    <label className="aspect-square rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-0.5 text-ink-subtle hover:border-memory-line hover:text-memory cursor-pointer transition-colors">
                       <ImagePlus className="w-5 h-5" />
                       <span className="text-[9px] font-bold">추가</span>
                       <input
@@ -378,9 +378,9 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
               {/* Edit: Videos */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-gray-700">동영상</label>
+                  <label className="block text-xs font-bold text-ink">동영상</label>
                   {newVideoFiles.length > 0 && (
-                    <span className="text-[11px] font-bold text-rose-500">
+                    <span className="text-[11px] font-bold text-memory">
                       새 파일 {formatFileSizeMB(newVideoFiles.reduce((s, f) => s + f.size, 0))}
                     </span>
                   )}
@@ -389,17 +389,17 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                   {keptVideos.map((url, index) => (
                     <div
                       key={url}
-                      className="flex items-center gap-2.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl"
+                      className="flex items-center gap-2.5 px-3 py-2 bg-surface-2 border border-line rounded-xl"
                     >
-                      <Film className="w-4 h-4 text-rose-400 shrink-0" />
-                      <span className="flex-1 min-w-0 text-xs font-medium text-gray-700 truncate">
+                      <Film className="w-4 h-4 text-memory shrink-0" />
+                      <span className="flex-1 min-w-0 text-xs font-medium text-ink-muted truncate">
                         {url.split("/").pop()?.split("?")[0] || `동영상 ${index + 1}`}
                       </span>
                       <button
                         type="button"
                         onClick={() => removeKeptVideo(index)}
                         disabled={isSaving}
-                        className="w-5 h-5 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                        className="w-5 h-5 rounded-full bg-line text-ink-muted flex items-center justify-center hover:bg-memory hover:text-on-accent transition-colors shrink-0 cursor-pointer"
                         aria-label="동영상 삭제"
                       >
                         <X className="w-3 h-3" />
@@ -409,27 +409,27 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                   {newVideoFiles.map((file, index) => (
                     <div
                       key={`${file.name}_${index}`}
-                      className="flex items-center gap-2.5 px-3 py-2 bg-rose-50/60 border border-rose-200 rounded-xl"
+                      className="flex items-center gap-2.5 px-3 py-2 bg-memory-tint border border-memory-line rounded-xl"
                     >
-                      <Film className="w-4 h-4 text-rose-500 shrink-0" />
-                      <span className="flex-1 min-w-0 text-xs font-medium text-gray-700 truncate">
+                      <Film className="w-4 h-4 text-memory shrink-0" />
+                      <span className="flex-1 min-w-0 text-xs font-medium text-ink-muted truncate">
                         {file.name}
                       </span>
-                      <span className="text-[10px] font-bold text-gray-400 shrink-0">
+                      <span className="text-[10px] font-bold text-ink-subtle shrink-0">
                         {formatFileSizeMB(file.size)}
                       </span>
                       <button
                         type="button"
                         onClick={() => removeNewVideo(index)}
                         disabled={isSaving}
-                        className="w-5 h-5 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                        className="w-5 h-5 rounded-full bg-line text-ink-muted flex items-center justify-center hover:bg-memory hover:text-on-accent transition-colors shrink-0 cursor-pointer"
                         aria-label="새 동영상 제거"
                       >
                         <X className="w-3 h-3" />
                       </button>
                     </div>
                   ))}
-                  <label className="flex items-center justify-center gap-1.5 w-full py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 hover:border-rose-300 hover:text-rose-400 cursor-pointer transition-colors">
+                  <label className="flex items-center justify-center gap-1.5 w-full py-2 border-2 border-dashed border-line rounded-xl text-ink-subtle hover:border-memory-line hover:text-memory cursor-pointer transition-colors">
                     <Film className="w-4 h-4" />
                     <span className="text-xs font-semibold">동영상 추가</span>
                     <input
@@ -446,13 +446,13 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
 
               {/* Edit: Story */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">우리의 이야기</label>
+                <label className="block text-xs font-bold text-ink mb-1">우리의 이야기</label>
                 <textarea
                   rows={4}
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   disabled={isSaving}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all resize-none"
+                  className="w-full px-4 py-3 bg-surface-2 border border-line rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all resize-none"
                 />
               </div>
 
@@ -462,7 +462,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                   type="button"
                   onClick={cancelEditing}
                   disabled={isSaving}
-                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-3 bg-surface-2 hover:bg-line text-ink-muted rounded-2xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                 >
                   취소
                 </button>
@@ -470,7 +470,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                   type="button"
                   onClick={handleSaveEdit}
                   disabled={isSaving || !editTitle.trim() || !editDate}
-                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-3 bg-memory hover:bg-memory-strong text-on-accent rounded-2xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? "저장 중..." : "저장"}
                 </button>
@@ -481,18 +481,18 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
               {/* Creator Badge & Place Title */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-ink-subtle uppercase tracking-wider block">
                     📍 장소
                   </span>
 
                   {/* Creator Info / Ownership Badge */}
                   {(creatorNickname || isOwner) && (
-                    <div className="flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/80 rounded-full px-2.5 py-0.5 text-[11px] text-amber-900 font-semibold">
+                    <div className="flex items-center gap-1.5 bg-warn-tint border border-warn/30 rounded-full px-2.5 py-0.5 text-[11px] text-warn font-semibold">
                       {creatorAvatarUrl ? (
                         <img
                           src={creatorAvatarUrl}
                           alt={creatorNickname || "작성자"}
-                          className="w-4 h-4 rounded-full object-cover border border-amber-300"
+                          className="w-4 h-4 rounded-full object-cover border border-warn/40"
                         />
                       ) : (
                         <span className="text-[10px]">✍️</span>
@@ -505,12 +505,12 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                   )}
                 </div>
 
-                <h2 className="text-xl font-extrabold text-gray-900 mt-0.5 leading-snug">
+                <h2 className="font-display text-xl text-ink mt-0.5 leading-snug">
                   {spot.title}
                 </h2>
                 {spot.address && (
-                  <p className="text-xs text-gray-500 flex items-center gap-1 font-medium mt-1">
-                    <MapPin className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                  <p className="text-xs text-ink-muted flex items-center gap-1 font-medium mt-1">
+                    <MapPin className="w-3.5 h-3.5 text-memory flex-shrink-0" />
                     {spot.address}
                   </p>
                 )}
@@ -518,7 +518,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
 
               {/* Full Gallery Media Carousel (photos + videos) */}
               {media.length > 0 && (
-                <div className="relative w-full aspect-4/3 rounded-2xl overflow-hidden border border-gray-100 bg-gray-900 group shadow-sm">
+                <div className="relative w-full aspect-4/3 rounded-2xl overflow-hidden border border-line bg-black group shadow-sm">
                   {media[currentImageIndex].type === "video" ? (
                     <video
                       key={media[currentImageIndex].url}
@@ -568,17 +568,17 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
               {/* Complete Full Text of '우리의 이야기' */}
               {spot.description && (
                 <div className="space-y-1.5 pt-1">
-                  <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-memory uppercase tracking-wider block">
                     우리의 이야기
                   </span>
-                  <div className="text-sm font-medium text-gray-700 bg-rose-50/20 rounded-2xl p-4 border border-rose-100/60 leading-relaxed whitespace-pre-wrap">
+                  <div className="text-sm font-medium text-ink-muted bg-memory-tint/40 rounded-2xl p-4 border border-memory-line/60 leading-relaxed whitespace-pre-wrap">
                     {spot.description}
                   </div>
                 </div>
               )}
 
               {/* Coordinates Info */}
-              <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 font-mono">
+              <div className="pt-2 border-t border-line flex items-center justify-between text-[11px] text-ink-subtle font-mono">
                 <span>위도: {spot.latitude.toFixed(6)}</span>
                 <span>경도: {spot.longitude.toFixed(6)}</span>
               </div>
@@ -590,7 +590,7 @@ export const SpotDetailSheet: React.FC<SpotDetailSheetProps> = ({
                     type="button"
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3 bg-warn-tint hover:bg-warn/25 text-warn rounded-2xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>{isDeleting ? "핀 삭제 처리 중..." : "핀 삭제"}</span>

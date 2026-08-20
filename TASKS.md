@@ -9,9 +9,7 @@
 
 ## 🚧 진행 중 / 예정 (In Progress / Planned)
 
-- **사용자 테마 커스터마이징 (색상·폰트 등)** — 명세: [tasks/task-22-theme-customization.md](tasks/task-22-theme-customization.md)
-  - 완료: 설정 진입점, 테마 토큰 인프라(색상 3종 × 폰트 3종 독립 선택), 미리보기 후 적용 UI, 공용 셸(Header·지도 메뉴·Toast) 토큰화.
-  - 예정: 모달 12종 하드코딩 색 토큰 치환, 지도 마커/오버레이 토큰 연동.
+_현재 없음._
 
 ---
 
@@ -40,5 +38,6 @@
 | 19 | 메모 들여쓰기 정렬 & 플래닝 진입 시 핀/경로 은닉 제어 | 07-27 | v0.9.2 | `src/components/modal/FuturePlanSheet.tsx`, `src/app/page.tsx` |
 | 20 | 지도 햄버거 메뉴 (추억 모아보기·주소로 추가·휴지통·현재 위치로) & 기록 수정 & 핀 복원 | 08-14 | - | `src/components/map/MapContainer.tsx`, `src/components/modal/SpotListModal.tsx`, `AddressSearchModal.tsx`, `TrashModal.tsx`, `src/hooks/useAddressSearch.ts`, `useDateSpots.ts` |
 | 21 | 데이트 기록 동영상 업로드·재생 (원본 업로드, 핀당 30MB 초과 경고, `video_urls` 컬럼) | 08-14 | - | `supabase/migrations/20260814073021_*.sql`, `src/lib/upload.ts`, `src/hooks/useDateSpots.ts`, `src/components/modal/AddSpotModal.tsx`, `SpotDetailSheet.tsx` |
+| 22 | 테마 커스터마이징 — 색상 3종(세이지·시트러스·나이트 피치) × 폰트 3종 독립 선택, 미리보기 후 적용, 전 UI·지도 마커 토큰화 | 08-20 | - | `src/app/globals.css`, `src/app/layout.tsx`, `src/lib/theme.ts`, `src/hooks/useTheme.ts`, `src/components/modal/SettingsModal.tsx`, `src/hooks/useKakaoMap.ts` |
 
 > 완료일은 2026년 기준. 버전 `-`는 릴리스 태그 미지정 작업(상세는 `CHANGELOG.md` [Unreleased] 참조).

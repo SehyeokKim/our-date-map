@@ -46,35 +46,35 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all duration-300 pointer-events-auto">
-      <div className="relative w-full max-w-md bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-white/60 max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-surface rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden flex flex-col border border-line max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="p-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white flex items-center justify-between shadow-sm">
+        <div className="p-4 bg-plan text-on-accent flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-xs">
-              <Calendar className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-full bg-on-accent/20 flex items-center justify-center backdrop-blur-xs">
+              <Calendar className="w-4 h-4 text-on-accent" />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-white">데이트 일정 목록 (DB)</h2>
-              <p className="text-[10px] text-violet-100">날짜별로 저장된 과거 & 미래 데이트 코스</p>
+              <h2 className="font-display text-sm text-on-accent">데이트 일정 목록 (DB)</h2>
+              <p className="text-[10px] text-on-accent/80">날짜별로 저장된 과거 & 미래 데이트 코스</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-on-accent/20 text-on-accent transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Selection & Create Button Bar */}
-        <div className="p-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between gap-2">
-          <div className="flex items-center p-1 bg-gray-200/60 rounded-xl">
+        <div className="p-3 bg-surface-2 border-b border-line flex items-center justify-between gap-2">
+          <div className="flex items-center p-1 bg-line/60 rounded-xl">
             <button
               onClick={() => setActiveTab("future")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "future"
-                  ? "bg-white text-violet-700 shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-surface text-plan-strong shadow-xs"
+                  : "text-ink-muted hover:text-ink"
               }`}
             >
               🔮 미래 데이트 ({futurePlans.length})
@@ -83,8 +83,8 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
               onClick={() => setActiveTab("past")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "past"
-                  ? "bg-white text-violet-700 shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-surface text-plan-strong shadow-xs"
+                  : "text-ink-muted hover:text-ink"
               }`}
             >
               ⏳ 과거 데이트 ({pastPlans.length})
@@ -96,7 +96,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
               onClose();
               onOpenCreateModal();
             }}
-            className="flex items-center gap-1 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+            className="flex items-center gap-1 bg-plan hover:bg-plan-strong text-on-accent font-bold text-xs px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>플랜 추가</span>
@@ -107,15 +107,15 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
         <div className="p-4 space-y-3 overflow-y-auto max-h-[60vh]">
           {displayedPlans.length === 0 ? (
             <div className="py-10 text-center space-y-2">
-              <div className="w-12 h-12 mx-auto rounded-full bg-violet-50 text-violet-400 flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto rounded-full bg-plan-tint text-plan flex items-center justify-center">
                 <Sparkles className="w-6 h-6" />
               </div>
-              <p className="text-xs font-bold text-gray-700">
+              <p className="text-xs font-bold text-ink">
                 {activeTab === "future"
                   ? "등록된 미래 데이트 일정이 없습니다"
                   : "저장된 과거 데이트 일정이 없습니다"}
               </p>
-              <p className="text-[11px] text-gray-400 max-w-xs mx-auto">
+              <p className="text-[11px] text-ink-muted max-w-xs mx-auto">
                 우측 상단 + 버튼을 눌러 데이트 기간을 설정하고 지도에 코스를 작성해 보세요!
               </p>
             </div>
@@ -123,14 +123,14 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
             displayedPlans.map((plan) => (
               <div
                 key={plan.id}
-                className="p-3.5 rounded-2xl bg-white border border-gray-100 hover:border-violet-200 shadow-sm hover:shadow-md transition-all flex flex-col gap-2 group"
+                className="p-3.5 rounded-2xl bg-surface border border-line hover:border-plan-line shadow-sm hover:shadow-md transition-all flex flex-col gap-2 group"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 mb-1">
+                    <span className="inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-plan-tint text-plan-strong mb-1">
                       📅 {formatDateRange(plan.start_date, plan.end_date, plan.plan_date)}
                     </span>
-                    <h3 className="font-bold text-sm text-gray-800 group-hover:text-violet-700 transition-colors">
+                    <h3 className="font-bold text-sm text-ink group-hover:text-plan-strong transition-colors">
                       {plan.title}
                     </h3>
                   </div>
@@ -138,7 +138,7 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
                   <button
                     onClick={() => onDeletePlan(plan.id)}
                     title="플랜 DB 삭제"
-                    className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                    className="p-1 text-ink-subtle hover:text-warn hover:bg-warn-tint rounded-lg transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -150,9 +150,9 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
                     {plan.spots.map((spot, idx) => (
                       <span
                         key={spot.id || idx}
-                        className="text-[10px] bg-gray-50 border border-gray-100 text-gray-700 px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
+                        className="text-[10px] bg-surface-2 border border-line text-ink-muted px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
                       >
-                        <MapPin className="w-2.5 h-2.5 text-violet-500" />
+                        <MapPin className="w-2.5 h-2.5 text-plan" />
                         <span>
                           {idx + 1}. {spot.title}
                         </span>
@@ -162,15 +162,15 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
                 )}
 
                 {/* Actions */}
-                <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
-                  <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                <div className="pt-2 border-t border-line flex items-center justify-between text-xs">
+                  <span className="text-[10px] text-ink-subtle flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     <span>총 {plan.spots?.length || 0}곳 코스</span>
                   </span>
 
                   <button
                     onClick={() => onLoadPlan(plan)}
-                    className="flex items-center gap-1 text-xs font-bold text-violet-700 hover:text-violet-900 hover:underline cursor-pointer"
+                    className="flex items-center gap-1 text-xs font-bold text-plan-strong hover:underline cursor-pointer"
                   >
                     <span>지도에서 코스 보기</span>
                     <ArrowRight className="w-3.5 h-3.5" />
