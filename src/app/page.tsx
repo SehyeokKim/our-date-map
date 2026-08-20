@@ -149,9 +149,11 @@ export default function Home() {
   const { fetchRoute, loadingRoute } = useDirections();
 
   // ODsay Public Transit Route API
+  // 경유지를 등록·수정하는 동안에만 조회하고, 그냥 볼 때는 저장된 결과를 쓴다 (일일 쿼터 보호)
   const { transitRoutes, loadingTransit } = useTransitRoute(
     plannedSpots,
-    currentRouteSummary?.transitRoutes
+    currentRouteSummary?.transitRoutes,
+    isEditingPlan
   );
 
   // Kakao Maps Instance & Markers
@@ -214,9 +216,19 @@ export default function Home() {
       return;
     }
     setIsPickingOnMap(false);
-    await savePlanToDb();
+
+    // 편집 중 받아온 대중교통 경로를 함께 저장해야 다음에 열어볼 때 다시 조회하지 않는다.
+    // 단, 실패한 구간까지 저장하면 조회 모드에서 그 실패가 영구히 굳어버리므로 성공분만 남긴다.
+    const succeeded = Object.fromEntries(
+      Object.entries(transitRoutes).filter(([, v]) => v.routeInfo)
+    );
+
+    await savePlanToDb(undefined, {
+      ...(currentRouteSummary ?? {}),
+      transitRoutes: succeeded,
+    });
     setIsEditingPlan(false);
-  }, [isEditingPlan, savePlanToDb]);
+  }, [isEditingPlan, savePlanToDb, currentRouteSummary, transitRoutes]);
 
   // "핀으로 추가" — 검색 창을 닫고 지도 클릭을 기다린다
   const handlePickOnMap = useCallback(() => {

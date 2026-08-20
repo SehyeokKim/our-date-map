@@ -15,7 +15,12 @@ export const resolveTransitMode = (from: PlannedSpot, to: PlannedSpot): TransitM
 
 export function useTransitRoute(
   plannedSpots: PlannedSpot[],
-  savedTransitRoutes?: Record<string, TransitRouteResult> | null
+  savedTransitRoutes?: Record<string, TransitRouteResult> | null,
+  /**
+   * ODsay를 실제로 호출할지 여부. 경유지를 등록·수정하는 동안에만 true로 두고,
+   * 단순 조회일 때는 저장된 결과만 보여준다 (일일 쿼터 보호).
+   */
+  enabled: boolean = true
 ) {
   const [transitRoutes, setTransitRoutes] = useState<Record<string, TransitRouteResult>>({});
   const [loadingTransit, setLoadingTransit] = useState<boolean>(false);
@@ -61,6 +66,25 @@ export function useTransitRoute(
   useEffect(() => {
     if (plannedSpots.length < 2) {
       setTransitRoutes({});
+      setLoadingTransit(false);
+      return;
+    }
+
+    // 조회 모드에서는 절대 API를 부르지 않고, 저장해 둔 결과만 그대로 보여준다.
+    if (!enabled) {
+      const viewRoutes: Record<string, TransitRouteResult> = {};
+      for (let i = 0; i < plannedSpots.length - 1; i++) {
+        const from = plannedSpots[i];
+        const to = plannedSpots[i + 1];
+        const pairKey = `${from.id}->${to.id}`;
+        viewRoutes[pairKey] = savedTransitRoutes?.[pairKey] ?? {
+          fromSpotId: from.id,
+          toSpotId: to.id,
+          routeInfo: null,
+          error: "수정을 눌러 경로를 불러오세요",
+        };
+      }
+      setTransitRoutes(viewRoutes);
       setLoadingTransit(false);
       return;
     }
@@ -135,7 +159,7 @@ export function useTransitRoute(
     return () => {
       isMounted = false;
     };
-  }, [plannedSpots, savedTransitRoutes, fetchPairTransitRoute]);
+  }, [plannedSpots, savedTransitRoutes, fetchPairTransitRoute, enabled]);
 
   return {
     transitRoutes,
