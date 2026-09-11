@@ -44,17 +44,19 @@
    - `보안` (Security): 보안 및 키 관리 개선.
 
 ## 6. Git & Vibe Coding Workflow & Command Flags
-1. **Default Branching Strategy (Without `!main`):**
-   - By default, ALWAYS create and work on a new feature branch (e.g., `feature/description` or `fix/description`).
-   - Push the feature branch to `origin` and output the PR link upon completion.
-2. **Direct Main Strategy (With `!main`):**
-   - ONLY when the user explicitly includes the `!main` flag in their prompt/command, skip branch creation and commit/push directly to `origin main`.
+1. **Branch Roles (`main` = deploy, `dev` = work):**
+   - `main` is the production/deploy branch. NEVER commit directly to `main`; it only moves forward by merging `dev`.
+   - `dev` is the default working branch. By default, commit and push all work directly to `origin dev` (switch to `dev` first if on another branch).
+   - For large or risky work only, a short-lived branch (e.g., `feat/description`, `fix/description`) may be cut from `dev` and merged back into `dev` — never into `main`.
+2. **Deploy: `dev` → `main` (ONLY with `!main` or an explicit deploy/merge request):**
+   - Commit/push the work to `dev` first, then fast-forward `main`: `git switch main; git merge --ff-only dev; git push origin main; git switch dev`.
+   - If fast-forward fails (e.g., a hotfix landed on `main`), merge `main` into `dev` first, verify, then retry. Never squash `dev` into `main` (it makes the two histories diverge).
 3. **Explain-Only Mode (With `!explain`):**
    - ONLY when the user prompt starts with or contains the `!explain` command (e.g. `!explain ...`), DO NOT make any code modifications. Act as if the user explicitly requested "코드를 변경하지 말고 설명만 해줘", providing clear analysis and explanations only.
 4. **Commit Convention:** Write clear commit messages following `docs/conventions.md` (Conventional Commits + Gitmoji), using standard types (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
 5. **Verification before Push:** Ensure code compiles without TypeScript errors (`npx tsc --noEmit`), update `CHANGELOG.md` and `TASKS.md`, create a Git commit, and push.
 6. **No AI Attribution (Strict):** Claude must NEVER appear as a GitHub contributor. Do not add `Co-Authored-By: Claude ...` trailers, "🤖 Generated with Claude Code" lines, or any other AI signature to commit messages, PR titles, or PR descriptions.
-7. **Post-Merge Branch Cleanup (Auto):** Immediately after a feature branch is merged into `main` (by any means — local merge or GitHub PR), delete the merged branch both locally (`git branch -d <branch>`) and remotely (`git push origin --delete <branch>`, skip if already gone). Also run `git fetch --prune` when noticing stale remote-tracking refs. Never leave merged branches behind.
+7. **Post-Merge Branch Cleanup (Auto):** Immediately after a short-lived branch is merged into `dev` (by any means — local merge or GitHub PR), delete the merged branch both locally (`git branch -d <branch>`) and remotely (`git push origin --delete <branch>`, skip if already gone). Also run `git fetch --prune` when noticing stale remote-tracking refs. Never leave merged branches behind. `main` and `dev` are permanent and must never be deleted.
 
 ## 7. API Key & Security Management (Strict)
 1. **Client Keys (`NEXT_PUBLIC_`):** Only keys intended for browser-side SDK rendering (e.g., `NEXT_PUBLIC_KAKAO_MAP_KEY`) may use the `NEXT_PUBLIC_` prefix in `.env.local`.

@@ -19,7 +19,24 @@
 
 ---
 
+## 브랜치 전략
+
+| 브랜치 | 역할 |
+| --- | --- |
+| `main` | **배포 브랜치.** 직접 커밋하지 않고, `dev`를 머지해서만 전진한다. |
+| `dev` | **기본 작업 브랜치.** 평소 작업은 `dev`에 바로 커밋·푸시한다. |
+| `<type>/...` | (선택) 크거나 위험한 작업만 `dev`에서 분기해 `dev`로 머지하는 단기 브랜치. |
+
+- **배포 흐름**: `dev` → `main` 머지. `!main` 플래그 또는 명시적인 배포 요청이 있을 때만 진행한다.
+- **머지 방식**: fast-forward(`git merge --ff-only dev`)로 `main`을 `dev`에 맞춘다. `dev`를 `main`에 Squash 하지 않는다(두 브랜치 히스토리가 어긋남).
+- fast-forward가 안 되면(예: `main`에 핫픽스가 먼저 들어간 경우) `main`을 `dev`에 먼저 머지·검증한 뒤 다시 시도한다.
+- `main`과 `dev`는 영구 브랜치이며 삭제하지 않는다.
+
+---
+
 ## 브랜치명 규칙
+
+아래 규칙은 `dev`에서 분기하는 단기 브랜치에 적용한다.
 
 - 형식: `<type>/<이슈번호>-<english-kebab-summary>`
   - `type`: TYPE 소문자. (`feature/`는 `feat/`와 동일하게 취급하며 `feat/`를 권장)
@@ -87,7 +104,7 @@ Refs #21
 
 ## Pull Request(PR) 규칙
 
-- **대상 브랜치**: `main`. 기능 브랜치를 `origin`에 푸시한 뒤 PR을 생성한다. (`!main` 플래그가 명시된 경우에만 `main` 직접 커밋 허용 — `CLAUDE.md` 6조 참조)
+- **대상 브랜치**: 단기 브랜치의 PR은 `dev`를 대상으로 한다. `main`은 `dev` 머지로만 갱신한다. (위 "브랜치 전략" 및 `CLAUDE.md` 6조 참조)
 - **제목**: 커밋과 동일한 `<gitmoji> [TYPE] #이슈번호 - 한 줄 설명` 형식.
 - **본문**: 아래 템플릿을 채운다.
 
@@ -109,8 +126,8 @@ Refs #21
 Closes #<이슈번호>
 ```
 
-- **Merge 방식**: 기능 브랜치 병합 시 **`Squash and Merge`**를 권장한다. (커밋 히스토리를 단일 커밋으로 요약)
-- **머지 후 브랜치 정리**: `main`에 머지된 브랜치는 즉시 로컬(`git branch -d`)과 원격(`git push origin --delete`)에서 모두 삭제한다. 머지된 브랜치를 남겨두지 않는다.
+- **Merge 방식**: 단기 브랜치를 `dev`에 병합할 때는 **`Squash and Merge`**를 권장한다. (커밋 히스토리를 단일 커밋으로 요약) `dev` → `main`은 Squash 없이 fast-forward로 머지한다.
+- **머지 후 브랜치 정리**: `dev`에 머지된 단기 브랜치는 즉시 로컬(`git branch -d`)과 원격(`git push origin --delete`)에서 모두 삭제한다. 머지된 브랜치를 남겨두지 않는다.
 - **AI 서명 금지**: 커밋 메시지·PR 제목·PR 본문 어디에도 `Co-Authored-By: Claude ...`, `🤖 Generated with Claude Code` 등 AI 서명을 넣지 않는다. GitHub contributor 목록에 Claude가 표시되지 않아야 한다.
 
 ---
