@@ -13,6 +13,8 @@ import { useWebPush } from "@/hooks/useWebPush";
 import { Header } from "@/components/common/Header";
 import { Toast } from "@/components/common/Toast";
 import { LoginPrompt } from "@/components/common/LoginPrompt";
+import { CoupleConnectPrompt } from "@/components/common/CoupleConnectPrompt";
+import { usePartnerLink } from "@/hooks/usePartnerLink";
 import { MapContainer } from "@/components/map/MapContainer";
 import { AddSpotModal } from "@/components/modal/AddSpotModal";
 import { SpotSummarySheet } from "@/components/modal/SpotSummarySheet";
@@ -63,13 +65,27 @@ export default function Home() {
     user,
     loading: authLoading,
     profile,
+    partner,
+    isCoupled,
+    profileLoading,
     nickname,
     avatarUrl,
     loginWithKakao,
     logout,
     updateProfile,
-    fetchAvailablePartners,
+    refetchProfile,
   } = useAuth();
+
+  // 태그 기반 커플 연결 (요청 → 수락). 연결이 맺어지거나 끊기면 프로필을 다시 불러온다
+  const {
+    receivedRequests,
+    sentRequests,
+    busy: partnerLinkBusy,
+    sendRequest,
+    respondRequest,
+    cancelRequest,
+    disconnect,
+  } = usePartnerLink(user?.id, isCoupled, refetchProfile);
 
   // Load custom push message from localStorage on mount
   useEffect(() => {
@@ -131,6 +147,7 @@ export default function Home() {
     startNewDatePlan,
     loadPlanFromDb,
     deletePlanFromDb,
+    fetchAllDatePlans,
     savePlanToDb,
     isSavingDb,
     addSpot,
@@ -248,6 +265,15 @@ export default function Home() {
       loadDateSpots();
     }
   }, [map, loadDateSpots]);
+
+  // 기록은 커플끼리만 보이므로, 연결이 맺어지거나 끊기면 핀과 일정을 다시 불러온다
+  const prevCoupledRef = useRef<boolean>(isCoupled);
+  useEffect(() => {
+    if (prevCoupledRef.current === isCoupled) return;
+    prevCoupledRef.current = isCoupled;
+    if (map) loadDateSpots();
+    fetchAllDatePlans();
+  }, [isCoupled, map, loadDateSpots, fetchAllDatePlans]);
 
   // Synchronize Markers & Polylines based on appMode and data changes
   useEffect(() => {
@@ -397,19 +423,33 @@ export default function Home() {
         onSendInstantPush={() => {
           const finalTitle = customPushMessage.title || "DateMap😘";
           const finalBody = customPushMessage.body || "뽁!";
-          const targetPartnerId =
-            profile?.partner_id ||
-            (typeof window !== "undefined"
-              ? localStorage.getItem("our_date_map_target_partner_id")
-              : null);
-          sendInstantPushNotification(finalTitle, finalBody, targetPartnerId, nickname, user?.id);
+          // 팝캣 알림은 서로 연결된 파트너에게만 보낸다
+          sendInstantPushNotification(finalTitle, finalBody, partner?.id ?? null, nickname, user?.id);
         }}
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
       />
 
-      {/* 기록은 커플 본인만 볼 수 있어, 로그인 전에는 로그인부터 안내한다 */}
+      {/* 커플 전용 앱 — ① 로그인 전에는 로그인, ② 로그인했지만 커플이 아니면 커플 연결부터 안내한다 */}
       {!authLoading && !user && <LoginPrompt onLoginWithKakao={loginWithKakao} />}
+      {!authLoading && user && !profileLoading && !isCoupled && (
+        <CoupleConnectPrompt
+          myTag={profile?.tag}
+          nickname={nickname}
+          avatarUrl={avatarUrl}
+          receivedRequests={receivedRequests}
+          sentRequests={sentRequests}
+          busy={partnerLinkBusy}
+          onSendRequest={sendRequest}
+          onRespondRequest={async (requestId, accept) => {
+            const result = await respondRequest(requestId, accept);
+            if (result.ok && accept) showToast("💞 커플로 연결됐어요!", "success");
+            return result;
+          }}
+          onCancelRequest={cancelRequest}
+          onLogout={logout}
+        />
+      )}
 
       {/* App Settings Modal (테마 설정 등) */}
       <SettingsModal
@@ -424,11 +464,20 @@ export default function Home() {
         onClose={() => setIsProfileEditOpen(false)}
         currentNickname={nickname}
         currentAvatarUrl={avatarUrl}
-        currentPartnerId={profile?.partner_id}
-        fetchAvailablePartners={fetchAvailablePartners}
+        myTag={profile?.tag}
+        partner={partner}
+        onDisconnect={async () => {
+          const result = await disconnect();
+          if (result.ok) {
+            showToast("커플 연결을 해제했어요.", "info");
+          } else {
+            showToast(result.message ?? "연결을 해제하지 못했어요.", "error");
+          }
+          return result.ok;
+        }}
         onLogout={logout}
-        onSave={async (newNickname, imageFile, partnerId) => {
-          const success = await updateProfile(newNickname, imageFile, partnerId);
+        onSave={async (newNickname, imageFile) => {
+          const success = await updateProfile(newNickname, imageFile);
           if (success) {
             showToast("✨ 프로필 정보가 성공적으로 수정되었습니다!", "success");
             await loadDateSpots();

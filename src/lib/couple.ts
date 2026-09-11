@@ -8,55 +8,6 @@ export interface CoupleSettings {
   updatedBy: string | null;
 }
 
-/**
- * 두 사람을 같은 커플로 묶는다.
- * - 어느 한쪽에 이미 커플이 있으면 그 커플에 합류시킨다(기존 공용 설정 유지).
- * - 둘 다 없으면 새로 만든다.
- * 파트너를 지정하는 시점에 호출되며, 실패해도 프로필 저장 자체는 막지 않는다.
- */
-export async function ensureCouple(
-  userId: string,
-  partnerId: string
-): Promise<string | null> {
-  try {
-    const { data: rows, error } = await supabase
-      .from("profiles")
-      .select("id, couple_id")
-      .in("id", [userId, partnerId]);
-
-    if (error) throw error;
-
-    const existingCoupleId =
-      rows?.map((r) => r.couple_id).find((id): id is string => Boolean(id)) ?? null;
-
-    let coupleId = existingCoupleId;
-
-    if (!coupleId) {
-      const { data: created, error: createError } = await supabase
-        .from("couples")
-        .insert({})
-        .select("id")
-        .single();
-
-      if (createError) throw createError;
-      coupleId = created.id;
-    }
-
-    // 아직 연결되지 않은 쪽만 붙인다 (이미 같은 커플이면 no-op)
-    const { error: linkError } = await supabase
-      .from("profiles")
-      .update({ couple_id: coupleId })
-      .in("id", [userId, partnerId]);
-
-    if (linkError) throw linkError;
-
-    return coupleId;
-  } catch (err) {
-    console.error("[couple] Failed to link couple:", err);
-    return null;
-  }
-}
-
 /** 내 프로필에 연결된 커플의 공용 설정을 읽는다 */
 export async function fetchCoupleSettings(
   userId: string

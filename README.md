@@ -85,17 +85,20 @@
   </tr>
 </table>
 
-### 💑 상대방과 커플로 연결해요
+### 💑 태그로 상대방과 커플 연결해요
 
 <table>
   <tr>
-    <td width="200"><img src="docs/screenshots/couple.png" width="200" alt="커플 파트너 연결"/></td>
+    <td width="200"><img src="docs/screenshots/couple-request.png" width="200" alt="태그로 커플 연결 요청"/></td>
+    <td width="200"><img src="docs/screenshots/couple-accept.png" width="200" alt="커플 연결 요청 수락"/></td>
     <td>
 
-- **카카오 로그인** 한 번으로 시작해요. 닉네임과 프로필 사진만 받고 이메일은 요청하지 않아요
-- 프로필에서 상대방을 **커플 파트너로 지정**하면 두 사람이 하나의 커플로 묶여요
-- 연결되면 팝캣 알림이 **상대방 기기로만** 가고, 테마 같은 설정을 **둘이 함께** 써요
-- 모든 기록은 **서로를 파트너로 지정한 두 사람만** 볼 수 있어요. 로그인하지 않았거나 다른 사람이 들어오면 아무것도 보이지 않아요
+- 둘이 함께 쓰는 앱이라 **카카오 로그인 → 커플 연결**을 마쳐야 지도가 열려요. 닉네임과 프로필 사진만 받고 이메일은 요청하지 않아요
+- 모든 사용자에게 바뀌지 않는 **4자리 태그(#0000)** 가 있어요. 닉네임은 자유롭게 바꿀 수 있고, 사람은 **태그로만** 찾아요
+- 상대방 태그로 **연결 요청**을 보내고, 상대방이 **수락**해야 연결돼요. 태그만으로는 상대의 닉네임·사진을 알 수 없어요
+- 상대방 요청이 먼저 와 있으면 수락 화면이, 내가 보낸 요청이 대기 중이면 기다리는 화면이 떠요
+- 연결되면 서로의 기록을 함께 보고 팝캣 알림·테마를 둘이 함께 써요. 프로필에서 연결을 해제할 수도 있어요 (기록은 지워지지 않아요)
+- 모든 기록은 **연결된 두 사람만** 볼 수 있어요. 로그인하지 않았거나 다른 사람이 들어오면 아무것도 보이지 않아요
 
 </td>
   </tr>
@@ -170,12 +173,14 @@ ODsay 일 1,000회 등 외부 API 쿼터를 보호하기 위해 경로 데이터
 ### 3. 데이터 무결성 설계
 - **소프트 삭제**: 핀 삭제 시 원본을 `deleted_date_spots`에 JSONB로 아카이빙 후 `deleted_at` 마킹 — **DB 트리거**가 동기화를 보장하고, 복원 API 제공
 - **정규화**: 작성자 메타데이터를 `date_spots`의 하드코딩 컬럼에서 `public.profiles` 테이블로 분리, FK 기반 관계형 JOIN(`select('*, profiles(...)')`)으로 조회
-- **마이그레이션**: Supabase CLI 마이그레이션 20개로 스키마·권한 변경 이력 관리
+- **마이그레이션**: Supabase CLI 마이그레이션 21개로 스키마·권한 변경 이력 관리
 
 ### 4. 커플 전용 접근 제어 (RLS)
 - 모든 기록(핀·플랜·휴지통·푸시 이력)은 **나 또는 서로를 파트너로 지정한 상대**만 읽을 수 있고, 로그인하지 않으면 아무것도 조회되지 않습니다
 - 커플 판정은 사용자가 직접 바꿀 수 있는 `couple_id` 대신 **상호 파트너 지정**(`A.partner_id = B` 이면서 `B.partner_id = A`)으로 해, 다른 사람이 커플 id만 바꿔 끼어드는 위장을 막습니다
 - 판정 로직은 `SECURITY DEFINER` 헬퍼 함수(`is_me_or_partner` 등)로 분리해 정책 재귀 없이 모든 테이블이 같은 기준을 씁니다
+- 커플 연결은 태그 기반 **요청 → 수락** DB 함수(`send_partner_request`·`respond_partner_request` 등)로만 이뤄지고, `partner_id`·`couple_id`·`tag`를 직접 바꾸는 수정은 트리거가 거부합니다
+- 다른 사람의 프로필은 연결된 파트너만 볼 수 있어, 사용자 목록이나 태그 조회로 닉네임·사진을 알아낼 수 없습니다
 - 수정·삭제는 작성자 본인만, 사진 저장소는 목록 조회를 막아 주소를 모르면 사진에 접근할 수 없습니다
 
 ### 5. 모바일 퍼스트 PWA
@@ -192,7 +197,8 @@ ODsay 일 1,000회 등 외부 API 쿼터를 보호하기 위해 경로 데이터
 | `date_spots` | 데이트 장소 핀 (사진 배열, 메모, 좌표, 작성자 FK, 소프트 삭제) |
 | `deleted_date_spots` | 삭제 핀 휴지통 (원본 JSONB 아카이브, 트리거 동기화) |
 | `date_plans` | 미래 데이트 플랜 (기간, 코스 핀 목록, `route_summary` JSONB 경로 캐시) |
-| `profiles` | 사용자 프로필 (닉네임, 아바타, 파트너 지정 `partner_id`, 소속 커플 `couple_id`) |
+| `profiles` | 사용자 프로필 (닉네임, 아바타, 식별 태그 `tag`, 연결된 파트너 `partner_id`, 소속 커플 `couple_id`) |
+| `partner_requests` | 커플 연결 요청 (요청자·대상, 대기·수락·거절·취소 상태) |
 | `couples` | 커플 단위 공용 설정 (테마·폰트 — 한쪽이 바꾸면 상대방에게도 적용) |
 | `push_subscriptions` | 기기별 Web Push 구독 정보 |
 | `push_messages` | 푸시 발송 이력 (발신/수신자, 제목/본문, 발송 시각) |
@@ -213,7 +219,7 @@ src/
 │   ├── auth/callback/route.ts    # Kakao OAuth 콜백 (세션 교환)
 │   └── page.tsx                  # 메인 지도 화면
 ├── components/
-│   ├── common/                   # Header, Toast, LoginPrompt
+│   ├── common/                   # Header, Toast, LoginPrompt, CoupleConnectPrompt
 │   ├── map/                      # MapContainer
 │   └── modal/                    # 스팟/플랜/프로필/푸시 모달 & 바텀 시트
 ├── hooks/                        # useKakaoMap, useDateSpots, useFuturePlanner,
@@ -221,7 +227,7 @@ src/
 ├── lib/                          # supabase 클라이언트, 이미지 압축 업로드
 └── types/                        # 도메인 타입 (spot, planner, transit, supabase)
 supabase/
-├── migrations/                   # 스키마 마이그레이션 20개
+├── migrations/                   # 스키마 마이그레이션 21개
 └── schema.sql                    # 통합 참조 스키마
 public/
 ├── manifest.json                 # PWA 매니페스트 (standalone)

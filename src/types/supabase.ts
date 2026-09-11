@@ -210,6 +210,48 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_requests: {
+        Row: {
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_requests_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photos: {
         Row: {
           created_at: string | null
@@ -247,6 +289,7 @@ export type Database = {
           nickname: string | null
           partner_id: string | null
           profile_image_url: string | null
+          tag: string
           updated_at: string
         }
         Insert: {
@@ -256,6 +299,7 @@ export type Database = {
           nickname?: string | null
           partner_id?: string | null
           profile_image_url?: string | null
+          tag?: string
           updated_at?: string
         }
         Update: {
@@ -265,6 +309,7 @@ export type Database = {
           nickname?: string | null
           partner_id?: string | null
           profile_image_url?: string | null
+          tag?: string
           updated_at?: string
         }
         Relationships: [
@@ -404,8 +449,30 @@ export type Database = {
     }
     Functions: {
       can_access_couple: { Args: { target_couple: string }; Returns: boolean }
+      cancel_partner_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      disconnect_partner: { Args: never; Returns: undefined }
+      generate_profile_tag: { Args: never; Returns: string }
+      get_partner_requests: {
+        Args: never
+        Returns: {
+          created_at: string
+          direction: string
+          id: string
+          other_avatar_url: string
+          other_nickname: string
+          other_tag: string
+        }[]
+      }
       has_mutual_partner: { Args: { target: string }; Returns: boolean }
       is_me_or_partner: { Args: { target: string }; Returns: boolean }
+      respond_partner_request: {
+        Args: { p_accept: boolean; p_request_id: string }
+        Returns: undefined
+      }
+      send_partner_request: { Args: { p_tag: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

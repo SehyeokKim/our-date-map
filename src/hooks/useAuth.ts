@@ -4,16 +4,20 @@ import { useState, useEffect, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase, signInWithKakao, signOut as supabaseSignOut } from "@/lib/supabase/client";
 import { uploadCompressedAvatar } from "@/lib/upload";
-import { ensureCouple } from "@/lib/couple";
 import { Profile } from "@/types/spot";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  // 상호 연결된 파트너의 프로필. RLS상 서로를 파트너로 지정한 사이에서만 읽힌다
+  const [partner, setPartner] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  // 프로필·파트너를 불러오는 중인지 — 끝나기 전에는 커플 연결 안내를 띄우지 않는다
+  const [profileLoading, setProfileLoading] = useState<boolean>(true);
 
-  // Fetch user profile from public.profiles table
+  // Fetch user profile (and the linked partner) from public.profiles table
   const fetchProfile = useCallback(async (userId: string) => {
+    setProfileLoading(true);
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -26,11 +30,22 @@ export function useAuth() {
         return;
       }
 
-      if (data) {
-        setProfile(data as Profile);
+      setProfile((data as Profile) ?? null);
+
+      if (data?.partner_id) {
+        const { data: partnerData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.partner_id)
+          .maybeSingle();
+        setPartner((partnerData as Profile) ?? null);
+      } else {
+        setPartner(null);
       }
     } catch (err) {
       console.error("Error loading user profile:", err);
+    } finally {
+      setProfileLoading(false);
     }
   }, []);
 
@@ -53,30 +68,28 @@ export function useAuth() {
       }
     }
 
-    // Check initial active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
+    const applySession = (currentUser: User | null) => {
       setUser(currentUser);
       if (currentUser) {
         fetchProfile(currentUser.id);
       } else {
         setProfile(null);
+        setPartner(null);
+        setProfileLoading(false);
       }
       setLoading(false);
+    };
+
+    // Check initial active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      applySession(session?.user ?? null);
     });
 
     // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        fetchProfile(currentUser.id);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
+      applySession(session?.user ?? null);
     });
 
     return () => {
@@ -97,18 +110,15 @@ export function useAuth() {
       await supabaseSignOut();
       setUser(null);
       setProfile(null);
+      setPartner(null);
     } catch (e) {
       console.error("Logout Error:", e);
     }
   }, []);
 
-  // Update profile nickname, profile image, and partner_id in Supabase
+  // 닉네임·프로필 사진만 수정한다. 파트너 연결은 연결 요청·수락으로만 바뀐다 (usePartnerLink)
   const updateProfile = useCallback(
-    async (
-      newNickname: string,
-      imageFile?: File | null,
-      partnerId?: string | null
-    ): Promise<boolean> => {
+    async (newNickname: string, imageFile?: File | null): Promise<boolean> => {
       if (!user) return false;
 
       try {
@@ -121,36 +131,19 @@ export function useAuth() {
           }
         }
 
-        const nowIso = new Date().toISOString();
-        const finalPartnerId =
-          partnerId !== undefined ? partnerId : profile?.partner_id || null;
-
-        const payload = {
-          id: user.id,
-          nickname: newNickname.trim(),
-          profile_image_url: avatarUrlToSave,
-          partner_id: finalPartnerId,
-          updated_at: nowIso,
-        };
-
         const { data, error } = await supabase
           .from("profiles")
-          .upsert(payload)
+          .update({
+            nickname: newNickname.trim(),
+            profile_image_url: avatarUrlToSave,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id)
           .select()
           .single();
 
         if (error) throw error;
-
-        if (data) {
-          setProfile(data as Profile);
-          if (finalPartnerId) {
-            localStorage.setItem("our_date_map_target_partner_id", finalPartnerId);
-            // 파트너를 지정하면 공용 설정을 담을 커플로 묶는다 (실패해도 프로필 저장은 유지)
-            await ensureCouple(user.id, finalPartnerId);
-          } else {
-            localStorage.removeItem("our_date_map_target_partner_id");
-          }
-        }
+        if (data) setProfile(data as Profile);
         return true;
       } catch (err) {
         console.error("Failed to update profile:", err);
@@ -159,26 +152,6 @@ export function useAuth() {
     },
     [user, profile]
   );
-
-  // Fetch all registered partner profiles except the logged in user
-  const fetchAvailablePartners = useCallback(async (): Promise<Profile[]> => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("nickname", { ascending: true });
-
-      if (error) {
-        console.error("Error fetching profiles:", error);
-        return [];
-      }
-
-      return ((data as Profile[]) || []).filter((p) => p.id !== user?.id);
-    } catch (err) {
-      console.error("Failed to fetch available partners:", err);
-      return [];
-    }
-  }, [user?.id]);
 
   // Default Fallback: If profiles table has no custom values, fallback to Kakao OAuth metadata
   const nickname =
@@ -198,16 +171,25 @@ export function useAuth() {
     ? rawAvatarUrl.replace(/^http:\/\//i, "https://")
     : null;
 
+  // 서로를 파트너로 지정한 사이여야 커플이다 (한쪽만 지정한 상태는 연결이 아니다)
+  const isCoupled = Boolean(user && partner && partner.partner_id === user.id);
+
+  const refetchProfile = useCallback(async () => {
+    if (user) await fetchProfile(user.id);
+  }, [user, fetchProfile]);
+
   return {
     user,
     profile,
+    partner: isCoupled ? partner : null,
+    isCoupled,
     loading,
+    profileLoading,
     nickname,
     avatarUrl,
     loginWithKakao,
     logout,
     updateProfile,
-    fetchAvailablePartners,
-    refetchProfile: () => user && fetchProfile(user.id),
+    refetchProfile,
   };
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Camera, Loader2, User as UserIcon, Heart, LogOut } from "lucide-react";
+import { X, Camera, Loader2, User as UserIcon, Heart, LogOut, Copy, Check, Unlink } from "lucide-react";
 import { Profile } from "@/types/spot";
 
 interface ProfileEditModalProps {
@@ -7,9 +7,13 @@ interface ProfileEditModalProps {
   onClose: () => void;
   currentNickname?: string | null;
   currentAvatarUrl?: string | null;
-  currentPartnerId?: string | null;
-  fetchAvailablePartners?: () => Promise<Profile[]>;
-  onSave: (newNickname: string, imageFile?: File | null, partnerId?: string | null) => Promise<boolean>;
+  /** 내 식별 태그 (#0000) */
+  myTag?: string;
+  /** 서로 연결된 파트너 */
+  partner?: Profile | null;
+  onSave: (newNickname: string, imageFile?: File | null) => Promise<boolean>;
+  /** 커플 연결 해제 — 성공하면 커플 연결 화면으로 돌아간다 */
+  onDisconnect?: () => Promise<boolean>;
   onLogout?: () => void;
 }
 
@@ -18,35 +22,26 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   onClose,
   currentNickname = "",
   currentAvatarUrl = null,
-  currentPartnerId = null,
-  fetchAvailablePartners,
+  myTag,
+  partner = null,
   onSave,
+  onDisconnect,
   onLogout,
 }) => {
   const [nickname, setNickname] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [partnerId, setPartnerId] = useState<string>("");
-  const [availablePartners, setAvailablePartners] = useState<Profile[]>([]);
-  const [isLoadingPartners, setIsLoadingPartners] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setNickname(currentNickname || "");
       setImageFile(null);
       setPreviewUrl(currentAvatarUrl || null);
-      setPartnerId(currentPartnerId || "");
-
-      if (fetchAvailablePartners) {
-        setIsLoadingPartners(true);
-        fetchAvailablePartners().then((partners) => {
-          setAvailablePartners(partners);
-          setIsLoadingPartners(false);
-        });
-      }
     }
-  }, [isOpen, currentNickname, currentAvatarUrl, currentPartnerId, fetchAvailablePartners]);
+  }, [isOpen, currentNickname, currentAvatarUrl]);
 
   if (!isOpen) return null;
 
@@ -69,23 +64,49 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
 
     setIsSaving(true);
-    const success = await onSave(nickname.trim(), imageFile, partnerId.trim() || null);
+    const success = await onSave(nickname.trim(), imageFile);
     setIsSaving(false);
     if (success) {
       onClose();
     }
   };
 
+  const copyMyTag = async () => {
+    if (!myTag) return;
+    try {
+      await navigator.clipboard.writeText(`#${myTag}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // 클립보드 권한이 없으면 화면의 태그를 보고 알려주면 된다
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!onDisconnect || !partner) return;
+    const confirmed = window.confirm(
+      `${partner.nickname || "상대방"}#${partner.tag ?? ""}님과의 커플 연결을 해제할까요?\n\n해제하면 서로의 기록이 보이지 않아요. 기록은 지워지지 않고, 다시 연결하면 보여요.`
+    );
+    if (!confirmed) return;
+
+    setIsDisconnecting(true);
+    const success = await onDisconnect();
+    setIsDisconnecting(false);
+    if (success) onClose();
+  };
+
+  const busy = isSaving || isDisconnecting;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all duration-300 pointer-events-auto">
-      <div className="relative w-full max-w-sm bg-surface rounded-3xl shadow-[var(--shadow-sheet)] overflow-hidden animate-bounce-in flex flex-col pointer-events-auto">
+      <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-surface rounded-3xl shadow-[var(--shadow-sheet)] animate-bounce-in flex flex-col pointer-events-auto">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-memory-tint">
           <h2 className="font-display text-base text-ink">프로필 수정</h2>
           <button
             type="button"
             onClick={onClose}
-            disabled={isSaving}
+            disabled={busy}
             className="w-8 h-8 rounded-full bg-surface/80 flex items-center justify-center text-ink-subtle hover:text-ink-muted hover:bg-surface transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -116,7 +137,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  disabled={isSaving}
+                  disabled={busy}
                   className="hidden"
                 />
               </label>
@@ -129,7 +150,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                disabled={isSaving}
+                disabled={busy}
                 className="hidden"
               />
             </label>
@@ -146,51 +167,92 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               onChange={(e) => setNickname(e.target.value)}
               placeholder="사용할 닉네임을 입력해 주세요"
               className="w-full px-4 py-2.5 bg-surface-2 border border-line rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all font-medium"
-              disabled={isSaving}
+              disabled={busy}
               maxLength={20}
             />
           </div>
 
-          {/* Partner Selection Dropdown */}
+          {/* 내 태그 — 닉네임은 바뀌어도 태그는 그대로다 */}
           <div>
-            <label className="block text-xs font-bold text-ink mb-1 flex items-center justify-between">
-              <span>알림 수신 상대방 (커플 파트너)</span>
-              <span className="text-[10px] text-memory font-normal flex items-center gap-0.5">
-                <Heart className="w-3 h-3 fill-memory" />
-                <span>찌르기 알림 대상</span>
-              </span>
-            </label>
-            <select
-              value={partnerId}
-              onChange={(e) => setPartnerId(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-surface-2 border border-line rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-memory focus:bg-surface transition-all font-medium text-ink"
-              disabled={isSaving || isLoadingPartners}
-            >
-              <option value="">전체 기기 전송 (상대방 지정 안함)</option>
-              {availablePartners.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nickname || "이름 없는 사용자"}
-                </option>
-              ))}
-            </select>
+            <label className="block text-xs font-bold text-ink mb-1">내 태그</label>
+            <div className="flex items-center justify-between px-4 py-2.5 bg-surface-2 border border-line rounded-xl">
+              <span className="text-sm font-bold text-memory tracking-wider">#{myTag ?? "····"}</span>
+              <button
+                type="button"
+                onClick={copyMyTag}
+                disabled={!myTag}
+                className="flex items-center gap-1 text-[11px] font-bold text-ink-muted hover:text-memory transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "복사됨" : "복사"}
+              </button>
+            </div>
             <p className="mt-1 text-[10px] text-ink-subtle leading-tight">
-              선택 시 팝캣 알림이 이 상대방 기기로만 전송됩니다.
+              닉네임을 바꿔도 태그는 그대로예요. 상대방은 이 태그로 나를 찾아요.
             </p>
           </div>
+
+          {/* 연결된 커플 파트너 */}
+          {partner && (
+            <div>
+              <label className="block text-xs font-bold text-ink mb-1 flex items-center justify-between">
+                <span>커플 파트너</span>
+                <span className="text-[10px] text-memory font-normal flex items-center gap-0.5">
+                  <Heart className="w-3 h-3 fill-memory" />
+                  <span>연결됨</span>
+                </span>
+              </label>
+              <div className="flex items-center gap-3 px-3 py-2.5 bg-surface-2 border border-line rounded-xl">
+                {partner.profile_image_url ? (
+                  <img
+                    src={partner.profile_image_url.replace(/^http:\/\//i, "https://")}
+                    alt=""
+                    className="w-8 h-8 rounded-full object-cover border border-line"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-memory-tint flex items-center justify-center text-memory">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                )}
+                <span className="flex-1 min-w-0 truncate text-xs font-bold text-ink">
+                  {partner.nickname || "상대방"}
+                  <span className="text-memory">#{partner.tag}</span>
+                </span>
+                {onDisconnect && (
+                  <button
+                    type="button"
+                    onClick={handleDisconnect}
+                    disabled={busy}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-ink-subtle hover:text-warn hover:bg-warn-tint transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isDisconnecting ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Unlink className="w-3.5 h-3.5" />
+                    )}
+                    연결 해제
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-[10px] text-ink-subtle leading-tight">
+                팝캣 알림은 파트너 기기로만 전송돼요.
+              </p>
+            </div>
+          )}
 
           {/* Action Buttons: 취소 & 저장 */}
           <div className="flex items-center gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              disabled={isSaving}
+              disabled={busy}
               className="flex-1 py-2.5 bg-surface-2 hover:bg-line text-ink-muted rounded-xl font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
             >
               취소
             </button>
             <button
               type="submit"
-              disabled={isSaving}
+              disabled={busy}
               className="flex-1 py-2.5 bg-memory hover:bg-memory-strong text-on-accent rounded-xl font-bold text-xs transition-all shadow-[var(--shadow-card)] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {isSaving ? (
@@ -212,7 +274,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 onLogout();
                 onClose();
               }}
-              disabled={isSaving}
+              disabled={busy}
               className="w-full mt-1 py-2.5 bg-surface hover:bg-memory-tint text-memory border border-memory-line rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <LogOut className="w-3.5 h-3.5" />

@@ -16,9 +16,30 @@ ALTER TABLE public.couples ENABLE ROW LEVEL SECURITY;
 GRANT ALL ON public.couples TO anon, authenticated, service_role;
 
 -- 0. 프로필 테이블 (profiles) 생성 및 트리거 설정
+
+-- 사용자 식별 태그(#0000) 발급 — 전체에서 겹치지 않는 4자리 숫자. 닉네임은 바뀔 수 있어 사용자 식별은 태그로만 한다
+CREATE OR REPLACE FUNCTION public.generate_profile_tag()
+RETURNS TEXT LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  candidate TEXT;
+BEGIN
+  IF (SELECT count(*) FROM public.profiles WHERE tag IS NOT NULL) >= 10000 THEN
+    RAISE EXCEPTION '더 이상 발급할 수 있는 태그가 없습니다';
+  END IF;
+  LOOP
+    candidate := lpad((floor(random() * 10000))::int::text, 4, '0');
+    EXIT WHEN NOT EXISTS (SELECT 1 FROM public.profiles WHERE tag = candidate);
+  END LOOP;
+  RETURN candidate;
+END;
+$$;
+
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nickname TEXT,
+    tag TEXT NOT NULL DEFAULT public.generate_profile_tag()
+        CONSTRAINT profiles_tag_unique UNIQUE
+        CONSTRAINT profiles_tag_format CHECK (tag ~ '^[0-9]{4}$'),
     profile_image_url TEXT,
     partner_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     couple_id UUID REFERENCES public.couples(id) ON DELETE SET NULL,
@@ -80,16 +101,62 @@ RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
     );
 $$;
 
--- 나·상호 파트너, 그리고 파트너 찾기를 위해 아직 짝이 없는 사용자만 보인다
-CREATE POLICY "Couple and unpaired users can read profiles" ON public.profiles FOR SELECT TO authenticated
-  USING (public.is_me_or_partner(id) OR NOT public.has_mutual_partner(id));
+-- 다른 사람의 프로필은 상호 파트너만 볼 수 있다 (상대는 목록이 아니라 태그로 찾는다)
+CREATE POLICY "Couple can read profiles" ON public.profiles FOR SELECT TO authenticated
+  USING (public.is_me_or_partner(id));
 CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated
   USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
+-- 커플 행은 연결 수락 함수(respond_partner_request)가 만든다 — 클라이언트 INSERT 정책 없음
 CREATE POLICY "Couple members can read couple" ON public.couples FOR SELECT TO authenticated USING (public.can_access_couple(id));
-CREATE POLICY "Authenticated users can create couple" ON public.couples FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Couple members can update couple" ON public.couples FOR UPDATE TO authenticated USING (public.can_access_couple(id));
+
+-- 0-c. 커플 연결 요청·수락 — partner_id·couple_id·tag는 아래 함수로만 바뀐다
+CREATE OR REPLACE FUNCTION public.guard_profile_link_columns()
+RETURNS TRIGGER LANGUAGE plpgsql SET search_path = '' AS $$
+BEGIN
+  IF current_setting('app.partner_link', true) IS DISTINCT FROM 'on' AND (
+    NEW.partner_id IS DISTINCT FROM OLD.partner_id
+    OR NEW.couple_id IS DISTINCT FROM OLD.couple_id
+    OR NEW.tag IS DISTINCT FROM OLD.tag
+  ) THEN
+    RAISE EXCEPTION '커플 연결과 태그는 연결 요청·수락으로만 바꿀 수 있어요';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS guard_profile_link_columns ON public.profiles;
+CREATE TRIGGER guard_profile_link_columns
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.guard_profile_link_columns();
+
+CREATE TABLE IF NOT EXISTS public.partner_requests (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    requester_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    target_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'canceled')),
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    responded_at TIMESTAMPTZ,
+    CONSTRAINT partner_requests_not_self CHECK (requester_id <> target_id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS partner_requests_one_pending
+  ON public.partner_requests (requester_id, target_id) WHERE status = 'pending';
+
+ALTER TABLE public.partner_requests ENABLE ROW LEVEL SECURITY;
+
+-- 읽기만 당사자에게 허용하고, 생성·응답·취소는 함수로만 한다
+CREATE POLICY "Requester or target can read partner_requests" ON public.partner_requests FOR SELECT TO authenticated
+  USING (auth.uid() = requester_id OR auth.uid() = target_id);
+
+-- 연결 함수 (로그인 사용자만 실행 가능, 본문은 20260911102320_partner_tags_and_requests.sql 참조)
+--   send_partner_request(p_tag)                  태그로 요청 보내기 — 상대 닉네임·사진은 돌려주지 않는다
+--   respond_partner_request(p_request_id, p_accept) 받은 요청 수락/거절 — 수락 시 서로를 파트너로 지정하고 새 커플 생성
+--   cancel_partner_request(p_request_id)         보낸 요청 취소
+--   disconnect_partner()                         커플 연결 해제 (기록은 지우지 않음)
+--   get_partner_requests()                       대기 중인 요청 — 받은 요청은 보낸 사람 닉네임·사진, 보낸 요청은 태그만
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$

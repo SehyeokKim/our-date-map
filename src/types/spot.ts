@@ -2,6 +2,8 @@ export interface Profile {
   id: string;
   nickname?: string | null;
   profile_image_url?: string | null;
+  /** 사용자 식별 태그 (#0000). 닉네임은 바뀔 수 있으므로 사람을 찾을 때는 태그만 쓴다 */
+  tag?: string;
   partner_id?: string | null;
   /** 공용 설정(테마·폰트 등)을 함께 쓰는 커플 그룹 */
   couple_id?: string | null;
