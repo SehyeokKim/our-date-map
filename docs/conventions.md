@@ -30,7 +30,7 @@
 - **배포 흐름**: `dev` → `main` 머지. `!main` 플래그 또는 명시적인 배포 요청이 있을 때만 진행한다.
 - **머지 방식**: fast-forward(`git merge --ff-only dev`)로 `main`을 `dev`에 맞춘다. `dev`를 `main`에 Squash 하지 않는다(두 브랜치 히스토리가 어긋남).
 - fast-forward가 안 되면(예: `main`에 핫픽스가 먼저 들어간 경우) `main`을 `dev`에 먼저 머지·검증한 뒤 다시 시도한다.
-- `main`과 `dev`는 영구 브랜치이며 삭제하지 않는다.
+- `main`과 `dev`는 영구 브랜치이며 삭제하지 않는다. GitHub 룰셋 `protect-main-dev`가 두 브랜치의 **삭제와 강제 푸시(force push)를 차단**한다(우회 허용 대상 없음).
 
 ---
 
