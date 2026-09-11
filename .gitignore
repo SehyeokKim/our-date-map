@@ -48,7 +48,3 @@ next-env.d.ts
 
 # supabase backups
 supabase/backups/
-
-# Claude Code local settings
-.claude/settings.local.json
-.claude/skills/

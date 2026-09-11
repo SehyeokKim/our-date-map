@@ -8,7 +8,7 @@ import { getStraightDistance } from "@/lib/route";
  * 이전에는 fetch에 `next: { revalidate: 3600 }`을 걸었는데, ODsay는 실패해도 HTTP 200에
  * 에러 본문을 담아 주기 때문에 **실패 응답까지 한 시간 동안 캐시**됐다. 그래서 키 인증 오류나
  * 일시적 장애가 한 번 나면 해당 구간이 한 시간 내내 "경로 없음"으로 굳어버렸다.
- * 이제 응답 본문을 확인한 뒤 성공한 것만 직접 캐시한다. (§9 쿼터 보호 요건은 그대로 충족)
+ * 이제 응답 본문을 확인한 뒤 성공한 것만 직접 캐시한다. (API 쿼터 보호 요건은 그대로 충족)
  */
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 500;

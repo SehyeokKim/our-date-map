@@ -2,6 +2,8 @@
 
 > 커플이 함께 쓰는 **데이트 기록 · 계획 PWA**.
 > 지도 위에 추억을 핀으로 남기고, 다음 데이트 코스를 짜고, 팝캣 버튼으로 서로에게 푸시 알림을 보냅니다.
+>
+> 현재 이 코드는 배포되어 서비스 중이며, 아래 [🚀 시작하기](#-시작하기)를 통해 직접 사용해볼 수 있습니다.
 
 ![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-61DAFB?logo=react&logoColor=black)
@@ -152,7 +154,7 @@ ODsay 일 1,000회 등 외부 API 쿼터를 보호하기 위해 경로 데이터
 ### 3. 데이터 무결성 설계
 - **소프트 삭제**: 핀 삭제 시 원본을 `deleted_date_spots`에 JSONB로 아카이빙 후 `deleted_at` 마킹 — **DB 트리거**가 동기화를 보장하고, 복원 API 제공
 - **정규화**: 작성자 메타데이터를 `date_spots`의 하드코딩 컬럼에서 `public.profiles` 테이블로 분리, FK 기반 관계형 JOIN(`select('*, profiles(...)')`)으로 조회
-- **RLS**: 전 테이블 Row Level Security 정책 적용, 마이그레이션 17개로 스키마 이력 관리
+- **RLS**: 전 테이블 Row Level Security 정책 적용, 마이그레이션 19개로 스키마 이력 관리
 
 ### 4. 모바일 퍼스트 PWA
 - `display: standalone` 매니페스트 + 풀스크린 무스크롤 지도 레이아웃으로 네이티브 앱 수준의 UX
@@ -168,7 +170,8 @@ ODsay 일 1,000회 등 외부 API 쿼터를 보호하기 위해 경로 데이터
 | `date_spots` | 데이트 장소 핀 (사진 배열, 메모, 좌표, 작성자 FK, 소프트 삭제) |
 | `deleted_date_spots` | 삭제 핀 휴지통 (원본 JSONB 아카이브, 트리거 동기화) |
 | `date_plans` | 미래 데이트 플랜 (기간, 코스 핀 목록, `route_summary` JSONB 경로 캐시) |
-| `profiles` | 사용자 프로필 (닉네임, 아바타, 파트너 지정 `partner_id`) |
+| `profiles` | 사용자 프로필 (닉네임, 아바타, 파트너 지정 `partner_id`, 소속 커플 `couple_id`) |
+| `couples` | 커플 단위 공용 설정 (테마·폰트 — 한쪽이 바꾸면 상대방에게도 적용) |
 | `push_subscriptions` | 기기별 Web Push 구독 정보 |
 | `push_messages` | 푸시 발송 이력 (발신/수신자, 제목/본문, 발송 시각) |
 
@@ -196,7 +199,7 @@ src/
 ├── lib/                          # supabase 클라이언트, 이미지 압축 업로드
 └── types/                        # 도메인 타입 (spot, planner, transit, supabase)
 supabase/
-├── migrations/                   # 스키마 마이그레이션 17개
+├── migrations/                   # 스키마 마이그레이션 19개
 └── schema.sql                    # 통합 참조 스키마
 public/
 ├── manifest.json                 # PWA 매니페스트 (standalone)
@@ -242,11 +245,3 @@ npm run dev        # http://localhost:3000
 npx supabase db push                                          # 마이그레이션 적용
 npx supabase gen types typescript --linked > src/types/supabase.ts   # 타입 생성
 ```
-
----
-
-## 📚 문서
-
-- [CHANGELOG.md](CHANGELOG.md) — 버전별 변경 이력 (Keep a Changelog / SemVer)
-- [TASKS.md](TASKS.md) — 작업 현황 인덱스
-- [docs/conventions.md](docs/conventions.md) — Git 커밋 · 브랜치 · PR 컨벤션 (Gitmoji)

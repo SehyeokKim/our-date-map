@@ -18,7 +18,7 @@ const FAILURE_RETRY_MS = 2 * 60 * 1000;
 
 const hasRoute = (r?: TransitRouteResult | null): boolean => Boolean(r?.routeInfo || r?.carRoute);
 
-// 새로고침해도 같은 구간을 다시 부르지 않도록 성공한 결과는 sessionStorage에도 둔다 (§9)
+// 새로고침해도 같은 구간을 다시 부르지 않도록 성공한 결과는 sessionStorage에도 둔다 (API 쿼터 보호)
 const readSession = (key: string): SegmentRoute | null => {
   try {
     const raw = sessionStorage.getItem(key);
