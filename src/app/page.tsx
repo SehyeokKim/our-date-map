@@ -26,8 +26,9 @@ import { SettingsModal } from "@/components/modal/SettingsModal";
 import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModal";
 import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
-import { AppMode, DatePlan, PlannedSpot } from "@/types/planner";
+import { AppMode, DatePlan, PlannedSpot, RouteDirectionsResult } from "@/types/planner";
 import { getDefaultTransitMode } from "@/lib/transit";
+import { getRoutePathKey } from "@/lib/route";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -117,7 +118,7 @@ export default function Home() {
     setAppMode,
     plannedSpots,
     currentRouteSummary,
-    updateRouteSummary,
+    patchRouteSummary,
     currentTitle,
     setCurrentTitle,
     allDatePlans,
@@ -147,6 +148,10 @@ export default function Home() {
 
   // Kakao Mobility Directions API
   const { fetchRoute, loadingRoute } = useDirections();
+  // 지금 화면의 경유지 서명 — 늦게 도착한 길찾기 응답이 현재 코스의 것인지 가려낸다
+  const currentPathKeyRef = useRef<string>("");
+  // 마지막으로 요청한 코스. 같은 코스를 중복 요청하지 않게 막고, 실패 시 받은 직선 경로를 보관한다
+  const routeRequestRef = useRef<{ key: string; fallback?: RouteDirectionsResult } | null>(null);
 
   // ODsay Public Transit Route API
   // 경유지를 등록·수정하는 동안에만 조회하고, 그냥 볼 때는 저장된 결과를 쓴다 (일일 쿼터 보호)
@@ -257,28 +262,58 @@ export default function Home() {
         renderPlannedSpotMarkers(plannedSpots);
 
         if (plannedSpots.length >= 2) {
-          // Use cached/saved route path if available, avoiding redundant Kakao API calls
-          if (currentRouteSummary?.path && currentRouteSummary.path.length > 0) {
+          const pathKey = getRoutePathKey(plannedSpots);
+          currentPathKeyRef.current = pathKey;
+
+          // 저장된 경로는 지금과 같은 경유지로 계산된 경우에만 재사용한다.
+          // (예전에는 경로가 있기만 하면 재사용해서, 경유지를 추가해도 선이 옛 구간에서 끊겼다)
+          if (
+            currentRouteSummary?.path &&
+            currentRouteSummary.path.length > 0 &&
+            currentRouteSummary.pathKey === pathKey
+          ) {
             renderRoutePolyline(currentRouteSummary.path);
             setRouteStats({
               distance: currentRouteSummary.distance,
               duration: currentRouteSummary.duration,
             });
+          } else if (routeRequestRef.current?.key === pathKey) {
+            // 이미 요청한 코스다 — 응답을 기다리는 중이면 그대로 두고, 실패했으면 직선 경로를 다시 그린다
+            const fallback = routeRequestRef.current.fallback;
+            if (fallback) {
+              renderRoutePolyline(fallback.path);
+              setRouteStats({});
+            }
           } else {
+            // 경유지가 바뀌었으니 옛 선은 지우고 새로 조회한다
+            routeRequestRef.current = { key: pathKey };
+            clearRoutePolyline();
+            setRouteStats({});
+
             fetchRoute(plannedSpots).then((res) => {
-              if (res.path && res.path.length > 0) {
+              // 응답을 기다리는 사이 경유지가 또 바뀌었다면 이 응답은 버린다
+              if (currentPathKeyRef.current !== pathKey) return;
+
+              if (res.isFallback) {
+                // 직선 경로는 보여주기만 하고 저장하지 않는다 (다음에 코스를 열 때 다시 시도)
+                routeRequestRef.current = { key: pathKey, fallback: res };
                 renderRoutePolyline(res.path);
-                updateRouteSummary({
-                  distance: res.distance,
-                  duration: res.duration,
-                  path: res.path,
-                  transitRoutes: transitRoutes,
-                });
+                return;
               }
-              setRouteStats({ distance: res.distance, duration: res.duration });
+
+              // 저장되면 이 effect가 다시 돌면서 위의 재사용 분기로 선과 거리·시간을 그린다.
+              // 요청 기록은 비워 둬야, 같은 경유지의 다른 플랜(예전 저장분)을 열었을 때 다시 조회된다
+              routeRequestRef.current = null;
+              patchRouteSummary({
+                distance: res.distance,
+                duration: res.duration,
+                path: res.path,
+                pathKey,
+              });
             });
           }
         } else {
+          currentPathKeyRef.current = "";
           clearRoutePolyline();
           setRouteStats({});
         }
@@ -303,8 +338,7 @@ export default function Home() {
     isPlanSheetOpen,
     currentRouteSummary,
     fetchRoute,
-    updateRouteSummary,
-    transitRoutes,
+    patchRouteSummary,
     renderSpotMarkers,
     clearMemorySpotMarkers,
     renderPlannedSpotMarkers,

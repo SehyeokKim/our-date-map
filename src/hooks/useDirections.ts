@@ -84,7 +84,7 @@ export function useDirections() {
         // Fallback straight lines
         const fallbackPath = spots.map((s) => ({ lat: s.latitude, lng: s.longitude }));
         setLoadingRoute(false);
-        return { path: fallbackPath };
+        return { path: fallbackPath, isFallback: true };
       }
     } catch (err) {
       console.warn("Route API error, falling back to straight lines:", err);
@@ -92,7 +92,7 @@ export function useDirections() {
       setLoadingRoute(false);
       // Fallback straight lines connecting spots
       const fallbackPath = spots.map((s) => ({ lat: s.latitude, lng: s.longitude }));
-      return { path: fallbackPath };
+      return { path: fallbackPath, isFallback: true };
     }
   }, []);
 

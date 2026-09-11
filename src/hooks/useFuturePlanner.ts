@@ -165,6 +165,21 @@ export function useFuturePlanner(
     }
   }, []);
 
+  // 일부 필드만 최신 상태에 병합한다. 길찾기 응답처럼 늦게 도착하는 값이
+  // 그 사이 바뀐 다른 필드(저장된 대중교통 경로 등)를 예전 값으로 덮어쓰지 않게 하기 위함이다.
+  // transitRoutes 참조도 그대로 유지되므로 useTransitRoute가 불필요하게 다시 조회하지 않는다.
+  const patchRouteSummary = useCallback((patch: Partial<RouteSummaryData>) => {
+    setCurrentRouteSummary((prev) => {
+      const next = { ...(prev ?? {}), ...patch };
+      try {
+        localStorage.setItem(STORAGE_ROUTE_KEY, JSON.stringify(next));
+      } catch (e) {
+        console.error("Failed to update route summary in localStorage:", e);
+      }
+      return next;
+    });
+  }, []);
+
   // Save active plan to Supabase DB
   const savePlanToDb = useCallback(
     async (
@@ -495,6 +510,7 @@ export function useFuturePlanner(
     plannedSpots,
     currentRouteSummary,
     updateRouteSummary,
+    patchRouteSummary,
     selectedDate,
     setSelectedDate,
     startDate,

@@ -29,12 +29,20 @@ export interface RouteDirectionsResult {
   distance?: number; // Total distance in meters
   duration?: number; // Total duration in seconds
   error?: string;
+  /** 길찾기 실패로 경유지를 직선으로 이은 임시 경로인지 여부 (저장하지 않는다) */
+  isFallback?: boolean;
 }
 
 export interface RouteSummaryData {
   distance?: number;
   duration?: number;
   path?: { lat: number; lng: number }[];
+  /**
+   * `path`를 계산할 때의 경유지 서명 (`getRoutePathKey`).
+   * 현재 경유지와 다르면 저장된 경로는 낡은 것이므로 다시 조회한다.
+   * 이 값이 없는 예전 저장분도 낡은 것으로 보고 한 번 다시 조회한다.
+   */
+  pathKey?: string;
   transitRoutes?: Record<string, any>;
 }
 
