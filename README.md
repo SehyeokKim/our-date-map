@@ -10,51 +10,112 @@
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-Standalone-5A0FC8?logo=pwa&logoColor=white)
 
-## 📱 화면 미리보기
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/screenshots/map.png" width="200" alt="추억 데이트 지도"/><br/><sub><b>추억 데이트 지도</b></sub></td>
-    <td align="center"><img src="docs/screenshots/spot-detail.png" width="200" alt="추억 상세 보기"/><br/><sub><b>추억 상세 보기</b></sub></td>
-    <td align="center"><img src="docs/screenshots/memories.png" width="200" alt="추억 모아보기"/><br/><sub><b>추억 모아보기 · 연도/월 필터</b></sub></td>
-    <td align="center"><img src="docs/screenshots/popcat.png" width="200" alt="팝캣 푸시"/><br/><sub><b>팝캣 푸시 알림</b></sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screenshots/itinerary.png" width="200" alt="데이트 일정 목록"/><br/><sub><b>데이트 일정 목록</b></sub></td>
-    <td align="center"><img src="docs/screenshots/plan.png" width="200" alt="코스 플래닝"/><br/><sub><b>코스 플래닝 · 구간별 대중교통</b></sub></td>
-    <td align="center"><img src="docs/screenshots/theme.png" width="200" alt="테마 설정"/><br/><sub><b>테마 설정</b></sub></td>
-    <td align="center"><img src="docs/screenshots/theme-dark.png" width="200" alt="나이트 피치 테마"/><br/><sub><b>나이트 피치 테마</b></sub></td>
-  </tr>
-</table>
-
-<sub>※ 스크린샷의 장소·사진·프로필은 모두 데모 데이터입니다. (사진: <a href="https://picsum.photos">Lorem Picsum</a> / Unsplash License)</sub>
-
 ---
 
 ## ✨ 주요 기능
 
-### 🗺️ 추억 데이트 지도
-- 지도 임의 위치 터치로 데이트 장소 핀 등록 (하트 커스텀 마커)
-- 장소당 **사진 최대 10장** 업로드 — 업로드 전 클라이언트에서 **300KB 이하로 자동 압축**
-- 2단계 상세 보기: 요약 팝업(대표 사진·한 줄 메모) → 전체 시트(사진 캐러셀·메모 전문)
-- 실시간 GPS 추적 & 펄싱 위치 마커, 원터치 내 위치 포커싱
-- 핀 삭제 시 하드 삭제 대신 **휴지통 테이블로 소프트 삭제 + 복원** 지원
+<sub>※ 스크린샷의 장소·사진·프로필은 모두 데모 데이터입니다. (사진: <a href="https://picsum.photos">Lorem Picsum</a> / Unsplash License)</sub>
 
-### 📅 미래 데이트 코스 플래닝
-- 날짜/기간을 정해 방문 순서대로 코스 핀 구성, DB 영구 저장 및 원터치 복원
-- **Kakao Mobility API** 기반 경유지 경로(Polyline) · 거리 · 소요시간 시각화
-- **ODsay API** 기반 핀 구간별 대중교통 카드(⏱️ 소요시간 · 🚉 노선), 단거리는 도보 안내로 자동 폴백
-- 과거/미래 탭으로 나뉜 데이트 일정 목록에서 "지도에서 코스 보기" 시 전체 코스가 화면에 맞게 카메라 자동 바운딩
+### 🗺️ 함께 간 곳을 지도 위에 기록해요
 
-### 🐱 커플 인터랙션 (Web Push)
-- 지도 위 **팝캣(Popcat) 버튼**을 누르면 상대방 기기로 즉시 푸시 알림 발송 (입 벌리는 애니메이션 + 쿨다운)
-- 더블클릭으로 알림 문구 커스텀(퀵 프리셋 지원), 파트너 지정 타겟 발송
-- 서비스 워커 백그라운드 수신, 발송 이력 DB 기록
+<table>
+  <tr>
+    <td width="200"><img src="docs/screenshots/map.png" width="200" alt="추억 데이트 지도"/></td>
+    <td width="200"><img src="docs/screenshots/spot-detail.png" width="200" alt="추억 상세 보기"/></td>
+    <td>
 
-### 👤 인증 & 프로필
-- **Kakao OAuth** 3초 로그인 (Supabase Auth + `@supabase/ssr`)
-- 닉네임/프로필 사진 수정 모달, 회원가입 시 프로필 자동 생성(DB 트리거)
-- 핀마다 작성자 추적 — `(내 기록)` 배지 표시
+- 지도를 터치하거나 **주소·장소명으로 검색**해 하트 핀을 남겨요
+- 장소마다 **사진 최대 10장과 동영상**을 올릴 수 있고, 사진은 업로드 전에 **300KB 이하로 자동 압축**돼요
+- 핀을 누르면 요약 팝업 → 상세 시트(사진 캐러셀·이야기 전문) 순서로 열려요
+- 누가 남긴 기록인지 **작성자 배지**로 보여줘요
+- 실수로 지운 핀은 30일 동안 **휴지통에서 복원**할 수 있어요
+
+</td>
+  </tr>
+</table>
+
+### 🔍 지난 추억을 한눈에 모아봐요
+
+<table>
+  <tr>
+    <td width="200"><img src="docs/screenshots/memories.png" width="200" alt="추억 모아보기"/></td>
+    <td>
+
+- 지금까지 다녀온 데이트 장소를 **최신순 목록**으로 모아봐요
+- **연도·월 칩**으로 추려볼 수 있어요. 실제 기록이 있는 연·월만 칩으로 나와요
+- **키워드 검색**은 제목·이야기·날짜를 모두 찾아요. `2026-08-16`, `8월` 같은 날짜 표기도 알아들어요
+- 항목을 누르면 지도가 그 장소로 이동하고 상세 보기가 열려요
+
+</td>
+  </tr>
+</table>
+
+### 📅 다음 데이트 코스를 함께 짜요
+
+<table>
+  <tr>
+    <td width="200"><img src="docs/screenshots/itinerary.png" width="200" alt="데이트 일정 목록"/></td>
+    <td width="200"><img src="docs/screenshots/plan.png" width="200" alt="코스 플래닝"/></td>
+    <td>
+
+- 날짜(기간)와 제목으로 플랜을 만들면 오늘을 기준으로 **데이트 계획 / 데이트 기록** 탭에 자동으로 나뉘어요
+- 경유지는 장소를 검색하거나 지도에 핀을 찍어 추가하고, 순서도 바꿀 수 있어요
+- **Kakao Mobility**로 코스 전체 경로선과 총 거리·소요시간을 그려요
+- 구간마다 이동수단을 **대중교통 / 자동차** 중에서 골라요. 대중교통은 **ODsay**로 도보 포함 최단 경로의 노선·소요시간을, 자동차는 최단 거리 경로를 보여줘요
+- 계산한 경로는 플랜에 함께 저장돼서, 다시 열 때는 **API를 다시 부르지 않고** 바로 그려요
+
+</td>
+  </tr>
+</table>
+
+### 💑 상대방과 커플로 연결해요
+
+<table>
+  <tr>
+    <td width="200"><img src="docs/screenshots/couple.png" width="200" alt="커플 파트너 연결"/></td>
+    <td>
+
+- **카카오 로그인** 한 번으로 시작해요. 닉네임과 프로필 사진만 받고 이메일은 요청하지 않아요
+- 프로필에서 상대방을 **커플 파트너로 지정**하면 두 사람이 하나의 커플로 묶여요
+- 연결되면 팝캣 알림이 **상대방 기기로만** 가고, 테마 같은 설정을 **둘이 함께** 써요
+
+</td>
+  </tr>
+</table>
+
+### 🐱 팝캣으로 상대방을 콕 찔러요
+
+<table>
+  <tr>
+    <td width="200"><img src="docs/screenshots/popcat.png" width="200" alt="팝캣 푸시 알림"/></td>
+    <td width="200"><img src="docs/screenshots/push-message.png" width="200" alt="푸시 알림 문구 설정"/></td>
+    <td>
+
+- 지도 위 **팝캣 버튼**을 누르면 팝캣이 입을 벌리면서 상대방 폰으로 **바로 푸시 알림**을 보내요 (연타 방지 쿨다운)
+- 버튼을 **더블클릭**하면 알림 문구를 바꿀 수 있고, "보고 싶어" 같은 빠른 문구도 준비돼 있어요
+- 앱을 닫아 둬도 **서비스 워커**가 백그라운드에서 알림을 받아요
+- 주고받은 알림은 DB에 이력으로 남아요
+
+</td>
+  </tr>
+</table>
+
+### 🎨 테마를 바꾸면 상대방에게도 적용돼요
+
+<table>
+  <tr>
+    <td width="200"><img src="docs/screenshots/theme.png" width="200" alt="테마 설정"/></td>
+    <td width="200"><img src="docs/screenshots/theme-dark.png" width="200" alt="나이트 피치 테마"/></td>
+    <td>
+
+- 색상 3종(세이지·시트러스·나이트 피치)과 폰트 3종을 따로 골라요
+- 미리보기 카드로 먼저 확인하고, **적용하기**를 눌러야 실제로 바뀌어요
+- 커플로 연결돼 있으면 테마가 **커플 공용 설정**으로 저장돼서, **상대방이 앱을 열면 같은 테마로 맞춰져요**
+- 화면이 그려지기 전에 저장된 테마를 먼저 적용해 깜빡임이 없고, PWA 상단바 색도 테마를 따라가요
+
+</td>
+  </tr>
+</table>
 
 ---
 
