@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWebPush } from "@/hooks/useWebPush";
 import { Header } from "@/components/common/Header";
 import { Toast } from "@/components/common/Toast";
+import { LoginPrompt } from "@/components/common/LoginPrompt";
 import { MapContainer } from "@/components/map/MapContainer";
 import { AddSpotModal } from "@/components/modal/AddSpotModal";
 import { SpotSummarySheet } from "@/components/modal/SpotSummarySheet";
@@ -60,6 +61,7 @@ export default function Home() {
   // Supabase Auth (Kakao OAuth & Profile Management)
   const {
     user,
+    loading: authLoading,
     profile,
     nickname,
     avatarUrl,
@@ -405,6 +407,9 @@ export default function Home() {
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
       />
+
+      {/* 기록은 커플 본인만 볼 수 있어, 로그인 전에는 로그인부터 안내한다 */}
+      {!authLoading && !user && <LoginPrompt onLoginWithKakao={loginWithKakao} />}
 
       {/* App Settings Modal (테마 설정 등) */}
       <SettingsModal

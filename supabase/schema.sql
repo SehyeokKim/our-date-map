@@ -11,13 +11,7 @@ CREATE TABLE IF NOT EXISTS public.couples (
 );
 
 ALTER TABLE public.couples ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow public read access to couples" ON public.couples FOR SELECT USING (true);
-CREATE POLICY "Allow authenticated insert to couples" ON public.couples FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow couple members to update couples" ON public.couples FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles p WHERE p.couple_id = couples.id AND p.id = auth.uid())
-    OR NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.couple_id = couples.id)
-);
+-- couples 정책은 헬퍼 함수가 필요해 profiles 뒤(0-b)에서 정의한다
 
 GRANT ALL ON public.couples TO anon, authenticated, service_role;
 
@@ -36,11 +30,66 @@ CREATE INDEX IF NOT EXISTS idx_profiles_couple_id ON public.profiles(couple_id);
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access to profiles" ON public.profiles FOR SELECT USING (true);
-CREATE POLICY "Allow users to insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "Allow users to update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-
 GRANT ALL ON public.profiles TO anon, authenticated, service_role;
+
+-- 0-b. 커플 접근 제어 헬퍼 — 커플 판정은 couple_id가 아니라 "상호 파트너 지정"으로 한다
+--      (couple_id는 본인이 임의로 바꿀 수 있어 위장이 가능하다). SECURITY DEFINER로 profiles RLS 재귀를 피한다
+CREATE OR REPLACE FUNCTION public.is_me_or_partner(target UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT target IS NOT NULL
+    AND auth.uid() IS NOT NULL
+    AND (
+      target = auth.uid()
+      OR EXISTS (
+        SELECT 1
+        FROM public.profiles me
+        JOIN public.profiles partner ON partner.id = me.partner_id
+        WHERE me.id = auth.uid() AND partner.id = target AND partner.partner_id = me.id
+      )
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION public.has_mutual_partner(target UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    JOIN public.profiles partner ON partner.id = p.partner_id
+    WHERE p.id = target AND partner.partner_id = p.id
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_couple(target_couple UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT auth.uid() IS NOT NULL
+    AND (
+      NOT EXISTS (SELECT 1 FROM public.profiles WHERE couple_id = target_couple)
+      OR EXISTS (
+        SELECT 1
+        FROM public.profiles me
+        WHERE me.id = auth.uid()
+          AND me.couple_id = target_couple
+          AND (
+            NOT EXISTS (SELECT 1 FROM public.profiles other WHERE other.couple_id = target_couple AND other.id <> me.id)
+            OR EXISTS (
+              SELECT 1 FROM public.profiles partner
+              WHERE partner.id = me.partner_id AND partner.partner_id = me.id AND partner.couple_id = target_couple
+            )
+          )
+      )
+    );
+$$;
+
+-- 나·상호 파트너, 그리고 파트너 찾기를 위해 아직 짝이 없는 사용자만 보인다
+CREATE POLICY "Couple and unpaired users can read profiles" ON public.profiles FOR SELECT TO authenticated
+  USING (public.is_me_or_partner(id) OR NOT public.has_mutual_partner(id));
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated
+  USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Couple members can read couple" ON public.couples FOR SELECT TO authenticated USING (public.can_access_couple(id));
+CREATE POLICY "Authenticated users can create couple" ON public.couples FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Couple members can update couple" ON public.couples FOR UPDATE TO authenticated USING (public.can_access_couple(id));
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -96,26 +145,15 @@ CREATE TABLE IF NOT EXISTS public.date_spots (
 -- RLS (Row Level Security) 활성화
 ALTER TABLE public.date_spots ENABLE ROW LEVEL SECURITY;
 
--- date_spots 테이블의 RLS 정책 정의
-CREATE POLICY "Allow public read access to date_spots" 
-ON public.date_spots 
-FOR SELECT 
-USING (true);
-
-CREATE POLICY "Allow authenticated and public insert to date_spots" 
-ON public.date_spots 
-FOR INSERT 
-WITH CHECK (true);
-
-CREATE POLICY "Allow users to update own date_spots" 
-ON public.date_spots 
-FOR UPDATE 
-USING (auth.uid() = user_id OR auth.uid() = created_by OR user_id IS NULL);
-
-CREATE POLICY "Allow users to delete own date_spots" 
-ON public.date_spots 
-FOR DELETE 
-USING (auth.uid() = user_id OR auth.uid() = created_by OR user_id IS NULL);
+-- date_spots 테이블의 RLS 정책 정의 — 읽기는 커플, 수정·삭제는 작성자 본인
+CREATE POLICY "Couple can read date_spots" ON public.date_spots FOR SELECT TO authenticated
+  USING (public.is_me_or_partner(user_id) OR public.is_me_or_partner(created_by));
+CREATE POLICY "Couple can insert date_spots" ON public.date_spots FOR INSERT TO authenticated
+  WITH CHECK (public.is_me_or_partner(COALESCE(created_by, user_id)));
+CREATE POLICY "Owner can update date_spots" ON public.date_spots FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id OR auth.uid() = created_by);
+CREATE POLICY "Owner can delete date_spots" ON public.date_spots FOR DELETE TO authenticated
+  USING (auth.uid() = user_id OR auth.uid() = created_by);
 
 -- 테이블 권한 부여
 GRANT ALL ON public.date_spots TO anon, authenticated, service_role;
@@ -162,40 +200,23 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('date-photos', 'date-photos', true)
 ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY "Allow public read access to date-photos"
-ON storage.objects
-FOR SELECT
-TO public
-USING (bucket_id = 'date-photos');
+-- 공개 버킷이라 사진 주소(public URL)는 열리지만, API 목록 조회는 업로드한 본인·파트너만 가능하다 (DELETE 정책 없음)
+CREATE POLICY "Couple can list date-photos" ON storage.objects FOR SELECT TO authenticated
+  USING (bucket_id = 'date-photos' AND public.is_me_or_partner(owner));
+CREATE POLICY "Authenticated users can upload date-photos" ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'date-photos');
 
-CREATE POLICY "Allow public insert access to date-photos"
-ON storage.objects
-FOR INSERT
-TO public
-WITH CHECK (bucket_id = 'date-photos');
-
--- 프로필 사진 저장을 위한 'avatars' 퍼블릭 버킷 생성
+-- 프로필 사진 저장을 위한 'avatars' 퍼블릭 버킷 생성 (경로: <user_id>/avatar_*.ext)
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('avatars', 'avatars', true)
 ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY "Allow public read access to avatars"
-ON storage.objects
-FOR SELECT
-TO public
-USING (bucket_id = 'avatars');
-
-CREATE POLICY "Allow public insert access to avatars"
-ON storage.objects
-FOR INSERT
-TO public
-WITH CHECK (bucket_id = 'avatars');
-
-CREATE POLICY "Allow public update access to avatars"
-ON storage.objects
-FOR UPDATE
-TO public
-USING (bucket_id = 'avatars');
+CREATE POLICY "Users can read own avatar folder" ON storage.objects FOR SELECT TO authenticated
+  USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "Users can upload to own avatar folder" ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "Users can update own avatar folder" ON storage.objects FOR UPDATE TO authenticated
+  USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
 
 -- 3. Web Push 알림 구독 테이블 (push_subscriptions) 생성
 CREATE TABLE IF NOT EXISTS public.push_subscriptions (
@@ -211,10 +232,15 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
 
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access to push_subscriptions" ON public.push_subscriptions FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access to push_subscriptions" ON public.push_subscriptions FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public update access to push_subscriptions" ON public.push_subscriptions FOR UPDATE USING (true);
-CREATE POLICY "Allow public delete access to push_subscriptions" ON public.push_subscriptions FOR DELETE USING (true);
+-- 파트너에게 알림을 보내려면 서버(요청자 세션)가 파트너의 구독을 읽고 만료 구독을 지울 수 있어야 한다
+CREATE POLICY "Couple can read push_subscriptions" ON public.push_subscriptions FOR SELECT TO authenticated
+  USING (public.is_me_or_partner(user_id));
+CREATE POLICY "Users can insert own push_subscriptions" ON public.push_subscriptions FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own push_subscriptions" ON public.push_subscriptions FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Couple can delete push_subscriptions" ON public.push_subscriptions FOR DELETE TO authenticated
+  USING (public.is_me_or_partner(user_id));
 
 GRANT ALL ON public.push_subscriptions TO anon, authenticated, service_role;
 
@@ -230,9 +256,16 @@ CREATE TABLE IF NOT EXISTS public.deleted_date_spots (
 
 ALTER TABLE public.deleted_date_spots ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access to deleted_date_spots" ON public.deleted_date_spots FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access to deleted_date_spots" ON public.deleted_date_spots FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow users to delete own deleted_date_spots" ON public.deleted_date_spots FOR DELETE USING (auth.uid() = deleted_by OR deleted_by IS NULL);
+CREATE POLICY "Couple can read deleted_date_spots" ON public.deleted_date_spots FOR SELECT TO authenticated
+  USING (
+    public.is_me_or_partner(deleted_by)
+    OR public.is_me_or_partner((spot_data->>'user_id')::uuid)
+    OR public.is_me_or_partner((spot_data->>'created_by')::uuid)
+  );
+CREATE POLICY "Couple can insert deleted_date_spots" ON public.deleted_date_spots FOR INSERT TO authenticated
+  WITH CHECK (public.is_me_or_partner(deleted_by));
+CREATE POLICY "Deleter can delete deleted_date_spots" ON public.deleted_date_spots FOR DELETE TO authenticated
+  USING (auth.uid() = deleted_by);
 
 GRANT ALL ON public.deleted_date_spots TO anon, authenticated, service_role;
 
@@ -253,10 +286,14 @@ CREATE TABLE IF NOT EXISTS public.date_plans (
 
 ALTER TABLE public.date_plans ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access to date_plans" ON public.date_plans FOR SELECT USING (true);
-CREATE POLICY "Allow authenticated and public insert to date_plans" ON public.date_plans FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow users to update own date_plans" ON public.date_plans FOR UPDATE USING (auth.uid() = user_id OR auth.uid() = created_by OR user_id IS NULL);
-CREATE POLICY "Allow users to delete own date_plans" ON public.date_plans FOR DELETE USING (auth.uid() = user_id OR auth.uid() = created_by OR user_id IS NULL);
+CREATE POLICY "Couple can read date_plans" ON public.date_plans FOR SELECT TO authenticated
+  USING (public.is_me_or_partner(user_id) OR public.is_me_or_partner(created_by));
+CREATE POLICY "Couple can insert date_plans" ON public.date_plans FOR INSERT TO authenticated
+  WITH CHECK (public.is_me_or_partner(COALESCE(created_by, user_id)));
+CREATE POLICY "Owner can update date_plans" ON public.date_plans FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id OR auth.uid() = created_by);
+CREATE POLICY "Owner can delete date_plans" ON public.date_plans FOR DELETE TO authenticated
+  USING (auth.uid() = user_id OR auth.uid() = created_by);
 
 GRANT ALL ON public.date_plans TO anon, authenticated, service_role;
 
@@ -274,8 +311,11 @@ CREATE TABLE IF NOT EXISTS public.push_messages (
 
 ALTER TABLE public.push_messages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access to push_messages" ON public.push_messages FOR SELECT USING (true);
-CREATE POLICY "Allow authenticated and public insert to push_messages" ON public.push_messages FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow users to delete own sent or received push_messages" ON public.push_messages FOR DELETE USING (auth.uid() = sender_id OR auth.uid() = receiver_id OR sender_id IS NULL);
+CREATE POLICY "Couple can read push_messages" ON public.push_messages FOR SELECT TO authenticated
+  USING (public.is_me_or_partner(sender_id) OR public.is_me_or_partner(receiver_id));
+CREATE POLICY "Sender can insert push_messages" ON public.push_messages FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = sender_id AND (receiver_id IS NULL OR public.is_me_or_partner(receiver_id)));
+CREATE POLICY "Sender or receiver can delete push_messages" ON public.push_messages FOR DELETE TO authenticated
+  USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 
 GRANT ALL ON public.push_messages TO anon, authenticated, service_role;
