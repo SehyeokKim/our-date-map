@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
                 x: wp.lng.toString(),
                 y: wp.lat.toString(),
             })) : [],
-            priority: 'RECOMMEND',
+            // 자동차 경로는 항상 이동 거리가 가장 짧은 경로로 기록한다
+            priority: 'DISTANCE',
         };
 
         const response = await fetch('https://apis-navi.kakaomobility.com/v1/waypoints/directions', {

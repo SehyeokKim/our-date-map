@@ -18,8 +18,6 @@ interface AddPlannedSpotModalProps {
     address?: string,
     transitMode?: TransitMode
   ) => void;
-  /** 직전 경유지에서 여기로 오는 이동수단의 추천 기본값 (수도권이면 지하철) */
-  defaultTransitMode?: TransitMode;
   /** 첫 경유지는 앞 구간이 없어 이동수단을 고를 필요가 없다 */
   showTransitMode?: boolean;
 }
@@ -30,20 +28,19 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
   latLng,
   initialAddress = "",
   onSubmit,
-  defaultTransitMode = "both",
   showTransitMode = false,
 }) => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [transitMode, setTransitMode] = useState<TransitMode>(defaultTransitMode);
+  const [transitMode, setTransitMode] = useState<TransitMode>("transit");
 
   useEffect(() => {
     if (isOpen) {
       setTitle("");
       setMemo("");
-      setTransitMode(defaultTransitMode);
+      setTransitMode("transit");
     }
-  }, [isOpen, defaultTransitMode]);
+  }, [isOpen]);
 
   if (!isOpen || !latLng) return null;
 
@@ -147,7 +144,7 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
                 })}
               </div>
               <p className="mt-1 text-[10px] text-ink-subtle leading-tight">
-                고른 수단으로 ODsay에서 경로를 찾아 추천해요. 나중에 코스에서 바꿀 수 있어요.
+                대중교통은 도보 포함, 자동차는 도로 기준으로 가장 짧은 경로를 기록해요. 나중에 코스에서 바꿀 수 있어요.
               </p>
             </div>
           )}

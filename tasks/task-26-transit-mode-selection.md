@@ -1,40 +1,42 @@
-# Task 26 — 구간별 이동수단 직접 지정 (ODsay)
+# Task 26 — 구간별 이동수단 지정 (대중교통 / 자동차)
 
 ## 목표
-경유지와 경유지 사이의 이동수단이 ODsay가 주는 대로 정해지던 것을, **사용자가 구간별로 직접 고르고** 그 수단으로 ODsay에서 경로를 받아오도록 한다.
+경유지와 경유지 사이의 이동수단을 **사용자가 구간별로 대중교통·자동차 중에서 고르고**, 수단마다 정해진 기준으로 경로를 기록한다.
 
 ## 규칙
-1. **기본값**: 출발·도착이 모두 수도권 전철권이면 `지하철`, 아니면 `지하철+버스`.
-2. **고정**: 사용자가 한 번 고르면 다시 바꾸기 전까지 유지된다(자동 재판정 없음).
+1. **선택지는 2개**: `대중교통` / `자동차`. (예전의 지하철·버스·지하철+버스 구분은 폐지)
+2. **대중교통**: 도보 + 대중교통(지하철·버스 모두) 기준으로 **이동 거리가 가장 짧은 경로** 하나를 자동으로 쓴다. 후보 선택 없음.
+3. **자동차**: Kakao Mobility `priority=DISTANCE`로 **이동 거리가 가장 짧은 경로**를 쓴다. (코스 전체 경로선도 같은 기준)
+4. **기본값**: 고르지 않으면 대중교통. 한 번 고르면 다시 바꾸기 전까지 유지된다.
 
 ## 설계
-- `TransitMode = "subway" | "bus" | "both"` → ODsay `SearchPathType` 1 / 2 / 0.
-- 선택값은 **도착 경유지**(`PlannedSpot.transitMode`)에 저장한다. "직전 경유지에서 이 장소로 오는 수단"이라는 뜻이라, 경유지를 추가할 때 그 자리에서 고르는 흐름과 맞는다. `date_plans.spots` JSONB에 그대로 들어가므로 **DB 스키마 변경 없음**.
-- 미지정(`undefined`)일 때만 좌표 기반 기본값을 쓴다 → 규칙 2가 자연히 지켜진다.
-- **수도권 판정**은 좌표 사각형 근사(`src/lib/transit.ts`). 위도 36.7–38.3 / 경도 126.3–127.95로 서울·인천·경기 전역과 천안·아산, 춘천, 여주까지 포함. 경계 부근은 부정확할 수 있으나 어디까지나 기본값이고 사용자가 바꿀 수 있다.
-- **캐시**: 같은 좌표쌍이라도 수단이 다르면 다른 경로이므로 캐시 키와 저장된 `route_summary` 재사용 판정에 수단(과 선택한 후보 번호)을 포함한다.
-- **호출 시점 제한**: ODsay는 **편집 중에만** 호출한다(`useTransitRoute(..., enabled)`). 조회만 할 때는 `route_summary`에 저장된 결과만 쓴다. 완료 시 성공한 구간만 함께 저장해, 다음 조회에서 재호출이 없고 일시적 실패가 굳지 않게 한다.
-- **후보 경로**: ODsay 응답의 여러 경로를 소요시간 순 상위 3개까지 내려주고 사용자가 고른다. 한 번의 응답을 나눠 쓰는 것이라 **호출 수는 늘지 않는다**. 선택은 `PlannedSpot.transitRouteIndex`에 저장.
-- **대체 탐색**: 고른 수단으로 경로가 없으면(지하철 없는 지역 등) `지하철+버스`로 **한 번만** 재조회하고 `fallbackApplied`로 표시한다. 실패한 구간에서만 발생하므로 쿼터 영향은 제한적.
+- `TransitMode = "transit" | "car"`. 선택값은 **도착 경유지**(`PlannedSpot.transitMode`)에 저장 — `date_plans.spots` JSONB이므로 **DB 스키마 변경 없음**.
+- 예전 값(`"subway" | "bus" | "both"`)은 `resolveTransitMode`에서 대중교통으로 읽는다. 기존 행 데이터는 건드리지 않는다.
+- **대중교통 거리** = ODsay `subPath[].distance` 합(도보 구간 포함). 거리가 같으면 소요시간이 짧은 경로. 700m 이내(-98)는 직선 거리 + 도보 속도(분당 67m)로 기록.
+- **자동차 구간**은 구간마다 `/api/directions`(출발·도착만)로 조회해 거리·시간만 저장한다. ODsay를 쓰지 않는다.
+
+## ODsay 쿼터 보호
+- `SearchPathType=0` 한 번의 응답에서 최단 경로를 고르므로 **구간당 최대 1회**. (예전의 대체 탐색 재호출 제거)
+- **편집 중에만** 호출(`useTransitRoute(..., enabled)`), 조회 시엔 `route_summary`의 저장분만 사용.
+- 저장된 결과는 **구간 단위로 재사용** — 수단이 바뀐 구간·없는 구간만 조회한다. (예전엔 한 구간만 달라도 전 구간을 다시 훑었다)
+- 클라이언트 캐시: 응답 대기 중인 요청까지 공유(동시 중복 방지) + 성공 결과 `sessionStorage` 보관(새로고침 후 재호출 방지) + **실패 구간 2분간 재호출 금지**.
+- 서버 캐시: 성공 응답만 1시간 인메모리 보관(좌표 쌍 키).
+- 예전 수단으로 저장된 구간은 편집에 들어갈 때 **구간당 한 번** 새 기준으로 재조회되고, 완료 시 저장되어 이후엔 호출 없음.
 
 ## 영향 파일
-- `src/lib/transit.ts` (신규), `src/types/transit.ts`, `src/types/planner.ts`
-- `src/app/api/transit/route.ts` — `mode` 파라미터 → `SearchPathType`, 대체 탐색
-- `src/hooks/useTransitRoute.ts` — 구간별 수단 적용, 캐시 키/재사용 판정
-- `src/hooks/useFuturePlanner.ts` — `addSpot(..., transitMode)`, `setSpotTransitMode`
-- `src/components/modal/AddPlannedSpotModal.tsx` — 추가 시 수단 선택
-- `src/components/modal/FuturePlanSheet.tsx` — 구간 카드에서 수단 변경
-- `src/app/page.tsx` — 배선 및 기본값 계산
+- `src/types/transit.ts`, `src/types/planner.ts`, `src/lib/transit.ts`, `src/lib/route.ts`, `src/lib/directions.ts`(신규)
+- `src/app/api/transit/route.ts` — 최단 거리 선택, 대체 탐색 제거
+- `src/app/api/directions/route.ts` — `priority: DISTANCE`
+- `src/hooks/useTransitRoute.ts` — 수단별 조회(ODsay/Kakao), 구간 단위 재사용, 캐시
+- `src/hooks/useDirections.ts`, `src/hooks/useFuturePlanner.ts`
+- `src/components/modal/AddPlannedSpotModal.tsx`, `src/components/modal/FuturePlanSheet.tsx`, `src/app/page.tsx`
 
 ## 검증 현황
-- [x] 수도권 코스에서 세 구간 모두 기본값이 `지하철`로 잡힘
-- [x] 구간별로 수단을 바꾸면 도착 경유지에 저장되고 선택 상태가 유지됨
-- [x] `/api/transit` 요청에 구간별 `mode`가 정확히 실림 (bus / both / subway)
-- [x] **ODsay 실제 경로 비교 — 완료.** 원인은 키 오류가 아니라 ODsay 허용 도메인에 `localhost`가 없던 것이었고,
-      등록 후 정상 동작. 용산역→스타필드 고양 기준 수단별로 실제 경로가 다르게 나온다:
-      지하철 62분(수도권 1호선→3호선) / 버스 79분(7016→703) / 지하철+버스 62분.
-- [x] 실패 응답이 1시간 캐시되던 문제 수정 (성공만 캐시)
+- [x] `/api/transit` 실호출(용산역→스타필드 고양): 도보 포함 16,692m / 72분 경로 선택 — 거리 = 도보 3구간 + 버스 2구간 합과 일치 (예전 최단 시간 기준은 지하철 62분)
+- [x] `/api/directions` 실호출: `priority DISTANCE` 적용 확인, 17.4km
+- [ ] 앱에서 구간 수단 전환(대중교통↔자동차) 후 카드 표시·완료 저장·재열람 시 무호출 확인 — 사용자 확인 필요
+- [ ] 700m 이내 도보 구간 표시 확인 (쿼터 절약을 위해 에이전트 미호출)
 
 ## 범위 밖 (후속)
-- 자동차·도보 등 ODsay 밖의 이동수단
-- 구간별 예상 요금·환승 정보를 수단 선택 UI에 미리 보여주기
+- 상단 요약 바(거리·시간)는 여전히 코스 전체 자동차 경로 기준 — 구간별 수단 합계로 바꿀지 검토
+- 지도 경로선을 구간 수단별(대중교통 노선 / 자동차 도로)로 나눠 그리기

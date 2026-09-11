@@ -10,6 +10,8 @@ export interface TransitSubPath {
 
 export interface TransitRouteInfo {
   totalTime: number; // minutes
+  /** 도보를 포함한 총 이동 거리(m). 예전에 저장된 경로에는 없을 수 있다 */
+  totalDistance?: number;
   payment: number; // KRW fare
   busTransitCount: number;
   subwayTransitCount: number;
@@ -18,32 +20,38 @@ export interface TransitRouteInfo {
   subpaths: TransitSubPath[];
   polylinePath?: { lat: number; lng: number }[];
   isWalkOnly?: boolean;
-  /** 요청한 수단으로 경로가 없어 지하철+버스로 대체 탐색했음을 알린다 */
-  fallbackApplied?: boolean;
 }
 
-/** 사용자가 구간별로 고르는 이동수단. ODsay searchPubTransPathT의 SearchPathType과 매핑된다. */
-export type TransitMode = "subway" | "bus" | "both";
+/** 자동차 구간 — Kakao Mobility 최단 거리 경로 */
+export interface CarRouteInfo {
+  totalTime: number; // minutes
+  totalDistance: number; // meters
+}
 
-/** `/api/transit` 응답 — 같은 이동수단으로 찾은 후보 경로들 */
+/**
+ * 사용자가 구간별로 고르는 이동수단.
+ * - transit: 도보 + 대중교통(지하철·버스 모두) 중 이동 거리가 가장 짧은 경로 (ODsay)
+ * - car: 이동 거리가 가장 짧은 자동차 경로 (Kakao Mobility)
+ */
+export type TransitMode = "transit" | "car";
+
+/** `/api/transit` 응답 — 도보 포함 이동 거리가 가장 짧은 대중교통 경로 하나 */
 export interface TransitRouteResponse {
-  candidates: TransitRouteInfo[];
-  fallbackApplied?: boolean;
+  route: TransitRouteInfo;
 }
 
 export interface TransitRouteResult {
   fromSpotId: string;
   toSpotId: string;
-  /** 실제로 표시할 경로 = candidates[selectedIndex] */
+  /** 대중교통 구간의 경로 */
   routeInfo: TransitRouteInfo | null;
-  /** 사용자가 고를 수 있는 후보 (최대 3개) */
-  candidates?: TransitRouteInfo[];
-  /** 사용자가 고른 후보의 위치 */
-  selectedIndex?: number;
-  /** 이 결과를 만들 때 사용한 이동수단 — 사용자가 바꾸면 캐시를 무효화하는 기준 */
+  /** 자동차 구간의 경로 */
+  carRoute?: CarRouteInfo | null;
+  /**
+   * 이 결과를 만들 때 사용한 이동수단 — 사용자가 바꾸면 다시 조회하는 기준.
+   * 예전에 저장된 결과에는 지금은 없는 값("subway" 등)이 들어 있을 수 있다.
+   */
   mode?: TransitMode;
-  /** 선택한 수단으로 경로가 없어 지하철+버스로 대체 탐색한 경우 */
-  fallbackApplied?: boolean;
   error?: string | null;
   loading?: boolean;
 }

@@ -8,3 +8,18 @@ import { PlannedSpot } from "@/types/planner";
 export const getRoutePathKey = (
   spots: Pick<PlannedSpot, "latitude" | "longitude">[]
 ): string => spots.map((s) => `${s.longitude.toFixed(6)},${s.latitude.toFixed(6)}`).join(";");
+
+/** 두 좌표 사이의 직선 거리(m) — 하버사인 공식 */
+export const getStraightDistance = (
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number }
+): number => {
+  const R = 6371000;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(to.lat - from.lat);
+  const dLng = toRad(to.lng - from.lng);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+};

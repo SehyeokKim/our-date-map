@@ -12,8 +12,9 @@
 - **데이트 플래너 플랜 생성/편집 시나리오 재정립** — 명세: [tasks/task-24-plan-creation-flow.md](tasks/task-24-plan-creation-flow.md)
   - 구현 완료: 생성 즉시 DB 등록, 완료 시 저장, 지도 클릭 추가 폐지, 경유지 추가 · 핀으로 추가.
   - 남은 확인: DB 쓰기 경로(생성·완료 저장)는 `!DB` 미지정으로 에이전트 미검증 — 사용자 확인 필요.
-- **구간별 이동수단 직접 지정 (ODsay)** — 명세: [tasks/task-26-transit-mode-selection.md](tasks/task-26-transit-mode-selection.md)
-  - 완료: 수단 선택 UI(추가/수정), 수도권 지하철 기본값, 선택값 고정, 수단별 캐시·대체 탐색, 수단별 경로 차이 확인.
+- **구간별 이동수단 지정 (대중교통 / 자동차)** — 명세: [tasks/task-26-transit-mode-selection.md](tasks/task-26-transit-mode-selection.md)
+  - 완료: 선택지 2종 축소, 대중교통 도보 포함 최단 거리·자동차 최단 거리 기록, 구간 단위 재사용·실패 재호출 억제로 ODsay 쿼터 보호.
+  - 남은 확인: 앱에서 수단 전환·완료 저장·재열람 동작 (사용자 확인 필요).
 - **커플 단위 공용 설정 (couples 테이블)** — 명세: [tasks/task-25-couple-shared-settings.md](tasks/task-25-couple-shared-settings.md)
   - 완료: 테이블·`profiles.couple_id`·RLS·백필 적용, 테마/폰트 커플 공유.
   - 후속: 실시간 반영(Realtime), 커플 해제·재지정 정리, 초대 흐름.

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PlannedSpot } from "@/types/planner";
 import { TransitMode, TransitRouteResult } from "@/types/transit";
-import { TRANSIT_MODES, TRANSIT_MODE_META } from "@/lib/transit";
-import { resolveTransitMode } from "@/hooks/useTransitRoute";
+import { TRANSIT_MODES, TRANSIT_MODE_META, resolveTransitMode } from "@/lib/transit";
 import {
   Calendar,
   ChevronUp,
@@ -13,6 +12,7 @@ import {
   Clock,
   Route,
   Bus,
+  Car,
   Pencil,
   Check,
   MapPinPlus,
@@ -44,8 +44,6 @@ interface FuturePlanSheetProps {
   onUpdateSpot?: (id: string, updates: { title: string; memo?: string }) => void;
   /** 구간 이동수단 지정 — 도착 경유지 id에 저장한다 */
   onSelectTransitMode?: (spotId: string, mode: TransitMode) => void;
-  /** 같은 수단의 후보 경로 중 하나를 고른다 */
-  onSelectTransitRoute?: (spotId: string, index: number) => void;
 }
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
@@ -67,7 +65,6 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   onRenamePlan,
   onUpdateSpot,
   onSelectTransitMode,
-  onSelectTransitRoute,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
@@ -268,6 +265,10 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                   const nextSpot = plannedSpots[index + 1];
                   const pairKey = nextSpot ? `${spot.id}->${nextSpot.id}` : null;
                   const transit = pairKey && transitRoutes ? transitRoutes[pairKey] : null;
+                  // 예전에 저장된 구간은 mode가 "subway" 등일 수 있으므로 자동차가 아니면 대중교통으로 본다
+                  const isCar = transit?.mode === "car";
+                  const segmentRoute = isCar ? transit?.carRoute : transit?.routeInfo;
+                  const SegmentIcon = isCar ? Car : Bus;
 
                   return (
                     <React.Fragment key={spot.id}>
@@ -396,47 +397,54 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                       </div>
                       )}
 
-                      {/* Public Transit Route Card between Spot A and Spot B */}
+                      {/* 구간 이동 카드 (Spot A → Spot B) — 대중교통 또는 자동차 최단 거리 경로 */}
                       {nextSpot && (
                         <div className="my-1 mx-2 rounded-xl bg-plan-tint border border-plan-line text-xs text-plan-strong shadow-xs animate-in fade-in duration-200">
                         <div className="p-2.5 flex items-center justify-between">
-                          {transit?.routeInfo ? (
+                          {segmentRoute ? (
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className="w-7 h-7 rounded-lg bg-plan text-on-accent flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <Bus className="w-3.5 h-3.5" />
+                                <SegmentIcon className="w-3.5 h-3.5" />
                               </div>
                               <div className="min-w-0">
                                 <div className="font-bold flex items-center gap-2 text-ink text-[11px]">
-                                  <span>약 {transit.routeInfo.totalTime}분 소요</span>
+                                  <span>
+                                    약 {segmentRoute.totalTime}분 소요
+                                    {segmentRoute.totalDistance
+                                      ? ` · ${formatDistance(segmentRoute.totalDistance)}`
+                                      : ""}
+                                  </span>
                                 </div>
                                 <div className="text-[10px] text-plan-strong font-medium truncate mt-0.5">
                                   <span className="truncate">
-                                    {transit.routeInfo.subpaths
-                                      .map((sp) => sp.transportName)
-                                      .filter(Boolean)
-                                      .join(" ➔ ") || "대중교통 이동"}
+                                    {isCar
+                                      ? "자동차 · 최단 거리"
+                                      : transit?.routeInfo?.subpaths
+                                          .map((sp) => sp.transportName)
+                                          .filter(Boolean)
+                                          .join(" ➔ ") || "대중교통 이동"}
                                   </span>
                                 </div>
                               </div>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-plan text-[11px]">
-                              <Bus className="w-3.5 h-3.5 text-plan" />
+                              <SegmentIcon className="w-3.5 h-3.5 text-plan" />
                               <span>
-                                {loadingTransit
-                                  ? "대중교통 경로 계산 중..."
-                                  : transit?.error || "대중교통 경로 탐색 불가"}
+                                {transit?.loading || (!transit && loadingTransit)
+                                  ? "경로 계산 중..."
+                                  : transit?.error || "경로 탐색 불가"}
                               </span>
                             </div>
                           )}
                         </div>
 
-                        {/* 구간 이동수단 + 후보 경로 — 수정 모드에서만 고른다 */}
+                        {/* 구간 이동수단 — 수정 모드에서만 고른다 */}
                         {isEditing && onSelectTransitMode && (
-                          <div className="px-2.5 pb-2.5 space-y-1.5">
+                          <div className="px-2.5 pb-2.5">
                             <div className="flex items-center gap-1">
                               {TRANSIT_MODES.map((mode) => {
-                                const isSelected = resolveTransitMode(spot, nextSpot) === mode;
+                                const isSelected = resolveTransitMode(nextSpot) === mode;
                                 return (
                                   <button
                                     key={mode}
@@ -454,49 +462,6 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                                 );
                               })}
                             </div>
-
-                            {/* 고른 수단으로 찾은 후보 경로 (최대 3개) */}
-                            {transit?.candidates && transit.candidates.length > 0 && (
-                              <div className="space-y-1">
-                                {transit.candidates.map((cand, ci) => {
-                                  const isPicked = (transit.selectedIndex ?? 0) === ci;
-                                  const line =
-                                    cand.subpaths
-                                      .filter((sp) => sp.trafficType !== 3)
-                                      .map((sp) => sp.transportName)
-                                      .filter(Boolean)
-                                      .join(" ➔ ") || "도보 이동";
-                                  return (
-                                    <button
-                                      key={ci}
-                                      type="button"
-                                      onClick={() => onSelectTransitRoute?.(nextSpot.id, ci)}
-                                      aria-pressed={isPicked}
-                                      className={`w-full text-left px-2 py-1.5 rounded-lg border transition-all active:scale-[0.99] cursor-pointer ${
-                                        isPicked
-                                          ? "bg-surface border-plan ring-1 ring-plan"
-                                          : "bg-surface/60 border-line hover:bg-surface"
-                                      }`}
-                                    >
-                                      <div className="flex items-center justify-between gap-2">
-                                        <span className="text-[10px] font-bold text-ink shrink-0">
-                                          약 {cand.totalTime}분
-                                        </span>
-                                        <span className="text-[10px] text-ink-muted truncate">
-                                          {line}
-                                        </span>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-
-                            {transit?.fallbackApplied && (
-                              <p className="text-[10px] text-warn leading-tight">
-                                고른 수단으로는 경로가 없어 지하철+버스로 안내하고 있어요.
-                              </p>
-                            )}
                           </div>
                         )}
                         </div>

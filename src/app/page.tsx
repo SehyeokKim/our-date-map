@@ -27,7 +27,6 @@ import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModa
 import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
 import { AppMode, DatePlan, PlannedSpot, RouteDirectionsResult } from "@/types/planner";
-import { getDefaultTransitMode } from "@/lib/transit";
 import { getRoutePathKey } from "@/lib/route";
 
 export default function Home() {
@@ -135,7 +134,6 @@ export default function Home() {
     addSpot,
     updateSpot,
     setSpotTransitMode,
-    setSpotTransitRouteIndex,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
@@ -225,7 +223,7 @@ export default function Home() {
     // 편집 중 받아온 대중교통 경로를 함께 저장해야 다음에 열어볼 때 다시 조회하지 않는다.
     // 단, 실패한 구간까지 저장하면 조회 모드에서 그 실패가 영구히 굳어버리므로 성공분만 남긴다.
     const succeeded = Object.fromEntries(
-      Object.entries(transitRoutes).filter(([, v]) => v.routeInfo)
+      Object.entries(transitRoutes).filter(([, v]) => v.routeInfo || v.carRoute)
     );
 
     await savePlanToDb(undefined, {
@@ -472,14 +470,6 @@ export default function Home() {
           latLng={newSpotLatLng}
           initialAddress={currentAddress}
           showTransitMode={plannedSpots.length > 0}
-          defaultTransitMode={
-            plannedSpots.length > 0 && newSpotLatLng
-              ? getDefaultTransitMode(plannedSpots[plannedSpots.length - 1], {
-                  latitude: newSpotLatLng.lat,
-                  longitude: newSpotLatLng.lng,
-                })
-              : "both"
-          }
           onSubmit={(title, memo, lat, lng, address, transitMode) => {
             addSpot(title, memo, lat, lng, address, transitMode);
             closeAddModal();
@@ -589,7 +579,6 @@ export default function Home() {
           onRenamePlan={setCurrentTitle}
           onUpdateSpot={updateSpot}
           onSelectTransitMode={setSpotTransitMode}
-          onSelectTransitRoute={setSpotTransitRouteIndex}
         />
       )}
 

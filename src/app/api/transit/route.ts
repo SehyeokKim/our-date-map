@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TransitRouteInfo, TransitRouteResponse, TransitSubPath } from "@/types/transit";
-import { ODSAY_PATH_TYPE, isTransitMode } from "@/lib/transit";
+import { getStraightDistance } from "@/lib/route";
 
 /**
  * 성공한 조회 결과만 1시간 보관한다.
@@ -69,8 +69,12 @@ const parsePath = (path: any): TransitRouteInfo => {
     };
   });
 
+  // 도보 구간(trafficType 3)까지 모두 더한 실제 이동 거리
+  const subpathDistance = subpaths.reduce((sum, sp) => sum + sp.distance, 0);
+
   return {
     totalTime: info.totalTime || 0,
+    totalDistance: subpathDistance || info.totalDistance || 0,
     payment: info.payment || 0,
     busTransitCount: info.busTransitCount || 0,
     subwayTransitCount: info.subwayTransitCount || 0,
@@ -82,8 +86,17 @@ const parsePath = (path: any): TransitRouteInfo => {
   };
 };
 
-/** 사용자가 고를 후보 개수 */
-const MAX_CANDIDATES = 3;
+/** 이동 거리가 가장 짧은 경로. 거리가 같으면 더 빨리 도착하는 쪽을 고른다 */
+const pickShortest = (routes: TransitRouteInfo[]): TransitRouteInfo =>
+  routes.reduce((best, cur) => {
+    const bestDistance = best.totalDistance ?? Infinity;
+    const curDistance = cur.totalDistance ?? Infinity;
+    if (curDistance !== bestDistance) return curDistance < bestDistance ? cur : best;
+    return cur.totalTime < best.totalTime ? cur : best;
+  });
+
+/** 도보 속도 (분당 약 67m ≈ 시속 4km) */
+const WALK_METERS_PER_MIN = 67;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -91,9 +104,6 @@ export async function GET(request: NextRequest) {
   const SY = searchParams.get("SY");
   const EX = searchParams.get("EX");
   const EY = searchParams.get("EY");
-  const modeParam = searchParams.get("mode");
-  // 지정이 없으면 지하철+버스(0)로 폭넓게 탐색한다
-  const requestedPathType = isTransitMode(modeParam) ? ODSAY_PATH_TYPE[modeParam] : 0;
 
   if (!SX || !SY || !EX || !EY) {
     return NextResponse.json(
@@ -111,8 +121,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // 네트워크로 나가기 전에 캐시부터 확인한다 (좌표 + 이동수단 조합이 키)
-  const cacheKey = `${SX},${SY}->${EX},${EY}@${requestedPathType}`;
+  // 네트워크로 나가기 전에 캐시부터 확인한다 (좌표 쌍이 키)
+  const cacheKey = `${SX},${SY}->${EX},${EY}`;
   const cached = readCache(cacheKey);
   if (cached) {
     return NextResponse.json(cached);
@@ -122,76 +132,61 @@ export async function GET(request: NextRequest) {
     const origin = request.nextUrl.origin || "http://localhost:3000";
     const refererHeader = request.headers.get("referer") || origin;
 
-    const callOdsay = async (pathType: number) => {
-      const odsayUrl = `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${SX}&SY=${SY}&EX=${EX}&EY=${EY}&SearchPathType=${pathType}&apiKey=${encodeURIComponent(
-        apiKey
-      )}`;
+    // SearchPathType=0: 지하철·버스를 모두 섞은 경로를 한 번에 받는다.
+    // 이 응답 하나에서 가장 짧은 경로를 고르므로 구간당 ODsay 호출은 최대 1회다.
+    const odsayUrl = `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${SX}&SY=${SY}&EX=${EX}&EY=${EY}&SearchPathType=0&apiKey=${encodeURIComponent(
+      apiKey
+    )}`;
 
-      const res = await fetch(odsayUrl, {
-        headers: {
-          Accept: "application/json",
-          Referer: refererHeader,
-        },
-        // 에러 본문까지 캐시되지 않도록 프레임워크 캐시는 끄고 위 successCache로 직접 관리한다
-        cache: "no-store",
-      });
+    const res = await fetch(odsayUrl, {
+      headers: {
+        Accept: "application/json",
+        Referer: refererHeader,
+      },
+      // 에러 본문까지 캐시되지 않도록 프레임워크 캐시는 끄고 위 successCache로 직접 관리한다
+      cache: "no-store",
+    });
 
-      if (!res.ok) {
-        throw new Error(`ODsay API HTTP 오류: ${res.status}`);
-      }
-
-      return res.json();
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const hasNoPath = (d: any) => Boolean(d?.error) || !d?.result?.path?.length;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const isWalkOnly = (d: any) => {
-      const code = d?.error?.[0]?.code ?? d?.error?.code;
-      return code === "-98" || code === -98;
-    };
-
-    let data = await callOdsay(requestedPathType);
-    let fallbackApplied = false;
-
-    // 고른 수단으로는 길이 없을 수 있다 (예: 지하철이 없는 지역).
-    // 이때만 지하철+버스로 한 번 더 찾아보고, 대체했음을 응답에 표시한다.
-    if (requestedPathType !== 0 && hasNoPath(data) && !isWalkOnly(data)) {
-      const retry = await callOdsay(0);
-      if (!hasNoPath(retry)) {
-        data = retry;
-        fallbackApplied = true;
-      }
+    if (!res.ok) {
+      throw new Error(`ODsay API HTTP 오류: ${res.status}`);
     }
+
+    const data = await res.json();
 
     // Check for ODsay specific error code
     if (data.error) {
       const errCode = data.error[0]?.code || data.error?.code;
       const errMsg = data.error[0]?.message || data.error?.message || "경로를 찾을 수 없습니다.";
 
-      // Handle short distance / walk only error (-98 or similar)
-      // 이건 "가까워서 걸어가면 된다"는 정상 결과이므로 캐시해도 된다.
+      // -98: 출발·도착이 가까워(700m 이내) 걸어가면 된다는 정상 결과이므로 캐시해도 된다.
+      // ODsay가 거리를 주지 않으므로 직선 거리와 도보 속도로 기록한다.
       if (errCode === "-98" || errCode === -98) {
+        const distance = Math.round(
+          getStraightDistance(
+            { lat: Number(SY), lng: Number(SX) },
+            { lat: Number(EY), lng: Number(EX) }
+          )
+        );
+        const minutes = Math.max(1, Math.round(distance / WALK_METERS_PER_MIN));
         const walkOnly: TransitRouteResponse = {
-          candidates: [
-            {
-              totalTime: 10,
-              payment: 0,
-              busTransitCount: 0,
-              subwayTransitCount: 0,
-              subpaths: [
-                {
-                  trafficType: 3,
-                  sectionTime: 10,
-                  distance: 500,
-                  transportName: "도보",
-                  startName: "출발지",
-                  endName: "도착지",
-                },
-              ],
-              isWalkOnly: true,
-            },
-          ],
+          route: {
+            totalTime: minutes,
+            totalDistance: distance,
+            payment: 0,
+            busTransitCount: 0,
+            subwayTransitCount: 0,
+            subpaths: [
+              {
+                trafficType: 3,
+                sectionTime: minutes,
+                distance,
+                transportName: "도보",
+                startName: "출발지",
+                endName: "도착지",
+              },
+            ],
+            isWalkOnly: true,
+          },
         };
         writeCache(cacheKey, walkOnly);
         return NextResponse.json(walkOnly);
@@ -208,15 +203,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // ODsay는 여러 경로를 돌려준다. 사용자가 고를 수 있도록 상위 후보를 그대로 내려준다.
-    // (짧은 소요시간 순으로 정렬해 첫 번째가 기본 선택이 되게 한다)
+    // ODsay가 돌려준 여러 경로 중 도보를 포함한 이동 거리가 가장 짧은 것 하나만 쓴다
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const candidates: TransitRouteInfo[] = (paths as any[])
-      .map(parsePath)
-      .sort((a, b) => a.totalTime - b.totalTime)
-      .slice(0, MAX_CANDIDATES);
-
-    const body: TransitRouteResponse = { candidates, fallbackApplied };
+    const body: TransitRouteResponse = { route: pickShortest((paths as any[]).map(parsePath)) };
 
     // 성공한 결과만 보관한다 (에러는 캐시하지 않아 다음 요청에서 즉시 다시 시도된다)
     writeCache(cacheKey, body);
