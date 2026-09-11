@@ -10,11 +10,24 @@
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-Standalone-5A0FC8?logo=pwa&logoColor=white)
 
-<!-- TODO: 스크린샷/데모 GIF 추가
-| 추억 지도 | 코스 플래닝 | 팝캣 푸시 |
-| --- | --- | --- |
-| <img src="docs/screenshots/map.png" width="240"/> | <img src="docs/screenshots/plan.png" width="240"/> | <img src="docs/screenshots/popcat.png" width="240"/> |
--->
+## 📱 화면 미리보기
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/map.png" width="200" alt="추억 데이트 지도"/><br/><sub><b>추억 데이트 지도</b></sub></td>
+    <td align="center"><img src="docs/screenshots/spot-detail.png" width="200" alt="추억 상세 보기"/><br/><sub><b>추억 상세 보기</b></sub></td>
+    <td align="center"><img src="docs/screenshots/memories.png" width="200" alt="추억 모아보기"/><br/><sub><b>추억 모아보기 · 연도/월 필터</b></sub></td>
+    <td align="center"><img src="docs/screenshots/popcat.png" width="200" alt="팝캣 푸시"/><br/><sub><b>팝캣 푸시 알림</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/itinerary.png" width="200" alt="데이트 일정 목록"/><br/><sub><b>데이트 일정 목록</b></sub></td>
+    <td align="center"><img src="docs/screenshots/plan.png" width="200" alt="코스 플래닝"/><br/><sub><b>코스 플래닝 · 구간별 대중교통</b></sub></td>
+    <td align="center"><img src="docs/screenshots/theme.png" width="200" alt="테마 설정"/><br/><sub><b>테마 설정</b></sub></td>
+    <td align="center"><img src="docs/screenshots/theme-dark.png" width="200" alt="나이트 피치 테마"/><br/><sub><b>나이트 피치 테마</b></sub></td>
+  </tr>
+</table>
+
+<sub>※ 스크린샷의 장소·사진·프로필은 모두 데모 데이터입니다. (사진: <a href="https://picsum.photos">Lorem Picsum</a> / Unsplash License)</sub>
 
 ---
 
