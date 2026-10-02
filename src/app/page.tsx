@@ -266,14 +266,27 @@ export default function Home() {
     }
   }, [map, loadDateSpots]);
 
-  // 기록은 커플끼리만 보이므로, 연결이 맺어지거나 끊기면 핀과 일정을 다시 불러온다
-  const prevCoupledRef = useRef<boolean>(isCoupled);
+  // 기록은 커플끼리만 보이므로, 로그인 사용자가 바뀌거나 연결이 맺어지거나 끊기면 핀과 일정을 다시 불러온다
+  const accessKey = `${user?.id ?? ""}|${isCoupled}`;
+  const prevAccessKeyRef = useRef<string>(accessKey);
   useEffect(() => {
-    if (prevCoupledRef.current === isCoupled) return;
-    prevCoupledRef.current = isCoupled;
+    if (prevAccessKeyRef.current === accessKey) return;
+    prevAccessKeyRef.current = accessKey;
     if (map) loadDateSpots();
     fetchAllDatePlans();
-  }, [isCoupled, map, loadDateSpots, fetchAllDatePlans]);
+  }, [accessKey, map, loadDateSpots, fetchAllDatePlans]);
+
+  // 홈 화면 앱은 백그라운드에서 돌아와도 새로 로드되지 않으므로,
+  // 다른 기기에서 추가·수정한 기록이 보이도록 화면에 다시 나타날 때마다 새로 불러온다
+  useEffect(() => {
+    const handleVisible = () => {
+      if (document.visibilityState !== "visible" || !user) return;
+      if (map) loadDateSpots();
+      fetchAllDatePlans();
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    return () => document.removeEventListener("visibilitychange", handleVisible);
+  }, [user, map, loadDateSpots, fetchAllDatePlans]);
 
   // Synchronize Markers & Polylines based on appMode and data changes
   useEffect(() => {
@@ -394,7 +407,10 @@ export default function Home() {
         onTogglePush={togglePushNotification}
         pushLoading={pushLoading}
         onOpenCustomPushModal={() => setIsCustomPushModalOpen(true)}
-        onOpenScheduleModal={() => setIsScheduleModalOpen(true)}
+        onOpenScheduleModal={() => {
+          setIsScheduleModalOpen(true);
+          fetchAllDatePlans();
+        }}
       />
 
       <Toast toast={toast} />
