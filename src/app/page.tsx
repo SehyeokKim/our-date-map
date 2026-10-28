@@ -6,8 +6,7 @@ import { ToastState, DeletedDateSpot } from "@/types/spot";
 import { useKakaoMap } from "@/hooks/useKakaoMap";
 import { useDateSpots } from "@/hooks/useDateSpots";
 import { useFuturePlanner } from "@/hooks/useFuturePlanner";
-import { useDirections } from "@/hooks/useDirections";
-import { useTransitRoute } from "@/hooks/useTransitRoute";
+import { useSegmentRoutes } from "@/hooks/useSegmentRoutes";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebPush } from "@/hooks/useWebPush";
 import { Header } from "@/components/common/Header";
@@ -24,17 +23,18 @@ import { TrashModal } from "@/components/modal/TrashModal";
 import { AddressSearchModal } from "@/components/modal/AddressSearchModal";
 import { FuturePlanSheet } from "@/components/modal/FuturePlanSheet";
 import { AddPlannedSpotModal } from "@/components/modal/AddPlannedSpotModal";
+import { RouteOptionsSheet } from "@/components/modal/RouteOptionsSheet";
 import { ProfileEditModal } from "@/components/modal/ProfileEditModal";
 import { SettingsModal } from "@/components/modal/SettingsModal";
 import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModal";
 import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
-import { AppMode, DatePlan, PlannedSpot, RouteDirectionsResult } from "@/types/planner";
-import { getRoutePathKey } from "@/lib/route";
+import { AppMode, DatePlan, PlannedSpot } from "@/types/planner";
+import { buildRouteLines, getRoutePathKey } from "@/lib/route";
+import { readSavedRoute, segmentPairKey } from "@/lib/transit";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
-  const [routeStats, setRouteStats] = useState<{ distance?: number; duration?: number }>({});
   const [isProfileEditOpen, setIsProfileEditOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isSpotListOpen, setIsSpotListOpen] = useState<boolean>(false);
@@ -135,7 +135,7 @@ export default function Home() {
     setAppMode,
     plannedSpots,
     currentRouteSummary,
-    patchRouteSummary,
+    patchSegmentRoute,
     currentTitle,
     setCurrentTitle,
     allDatePlans,
@@ -152,7 +152,6 @@ export default function Home() {
     isSavingDb,
     addSpot,
     updateSpot,
-    setSpotTransitMode,
     removeSpot,
     moveSpotUp,
     moveSpotDown,
@@ -163,19 +162,17 @@ export default function Home() {
   // "핀으로 추가" — 이 동안에만 플래너 모드에서 지도 클릭으로 핀을 찍을 수 있다
   const [isPickingOnMap, setIsPickingOnMap] = useState<boolean>(false);
 
-  // Kakao Mobility Directions API
-  const { fetchRoute, loadingRoute } = useDirections();
-  // 지금 화면의 경유지 서명 — 늦게 도착한 길찾기 응답이 현재 코스의 것인지 가려낸다
-  const currentPathKeyRef = useRef<string>("");
-  // 마지막으로 요청한 코스. 같은 코스를 중복 요청하지 않게 막고, 실패 시 받은 직선 경로를 보관한다
-  const routeRequestRef = useRef<{ key: string; fallback?: RouteDirectionsResult } | null>(null);
-
-  // ODsay Public Transit Route API
+  // 구간별 경로 (카카오 대중교통·도보, Kakao Mobility 자동차)
   // 경유지를 등록·수정하는 동안에만 조회하고, 그냥 볼 때는 저장된 결과를 쓴다 (일일 쿼터 보호)
-  const { transitRoutes, loadingTransit } = useTransitRoute(
+  const { segmentRoutes, loadingRoutes, searchRoutes } = useSegmentRoutes(
     plannedSpots,
     currentRouteSummary?.transitRoutes,
-    isEditingPlan
+    isEditingPlan,
+    patchSegmentRoute
+  );
+  // 경로 목록을 연 구간
+  const [routePicker, setRoutePicker] = useState<{ from: PlannedSpot; to: PlannedSpot } | null>(
+    null
   );
 
   // Kakao Maps Instance & Markers
@@ -194,7 +191,7 @@ export default function Home() {
     clearMemorySpotMarkers,
     renderPlannedSpotMarkers,
     clearPlannedSpotMarkers,
-    renderRoutePolyline,
+    renderRouteLines,
     clearRoutePolyline,
     summarySpot,
     closeSummary,
@@ -238,19 +235,25 @@ export default function Home() {
       return;
     }
     setIsPickingOnMap(false);
+    setRoutePicker(null);
 
-    // 편집 중 받아온 대중교통 경로를 함께 저장해야 다음에 열어볼 때 다시 조회하지 않는다.
-    // 단, 실패한 구간까지 저장하면 조회 모드에서 그 실패가 영구히 굳어버리므로 성공분만 남긴다.
-    const succeeded = Object.fromEntries(
-      Object.entries(transitRoutes).filter(([, v]) => v.routeInfo || v.carRoute)
+    // 편집 중 고른 구간 경로를 함께 저장해야 다음에 열어볼 때 다시 조회하지 않는다.
+    // 지금 코스에 없는 구간(삭제·순서 변경으로 끊긴 구간)과 읽을 수 없는 값은 버린다.
+    const currentPairs = new Set(
+      plannedSpots.slice(1).map((to, i) => segmentPairKey(plannedSpots[i].id, to.id))
+    );
+    const kept = Object.fromEntries(
+      Object.entries(currentRouteSummary?.transitRoutes ?? {}).filter(
+        ([pairKey, value]) => currentPairs.has(pairKey) && readSavedRoute(value)
+      )
     );
 
     await savePlanToDb(undefined, {
       ...(currentRouteSummary ?? {}),
-      transitRoutes: succeeded,
+      transitRoutes: kept,
     });
     setIsEditingPlan(false);
-  }, [isEditingPlan, savePlanToDb, currentRouteSummary, transitRoutes]);
+  }, [isEditingPlan, savePlanToDb, currentRouteSummary, plannedSpots]);
 
   // "핀으로 추가" — 검색 창을 닫고 지도 클릭을 기다린다
   const handlePickOnMap = useCallback(() => {
@@ -301,70 +304,33 @@ export default function Home() {
         renderPlannedSpotMarkers(plannedSpots);
 
         if (plannedSpots.length >= 2) {
-          const pathKey = getRoutePathKey(plannedSpots);
-          currentPathKeyRef.current = pathKey;
-
-          // 저장된 경로는 지금과 같은 경유지로 계산된 경우에만 재사용한다.
-          // (예전에는 경로가 있기만 하면 재사용해서, 경유지를 추가해도 선이 옛 구간에서 끊겼다)
+          const lines = buildRouteLines(
+            plannedSpots,
+            (fromId, toId) => segmentRoutes[segmentPairKey(fromId, toId)]?.route
+          );
+          // 구간 경로가 하나도 없는 예전 플랜은 그때 저장해 둔 코스 전체 자동차 경로를 그대로 보여준다
+          const legacyPath = currentRouteSummary?.path;
+          const hasSegmentPath = lines.some((line) => line.style !== "pending");
           if (
-            currentRouteSummary?.path &&
-            currentRouteSummary.path.length > 0 &&
-            currentRouteSummary.pathKey === pathKey
+            !hasSegmentPath &&
+            legacyPath &&
+            legacyPath.length > 1 &&
+            currentRouteSummary?.pathKey === getRoutePathKey(plannedSpots)
           ) {
-            renderRoutePolyline(currentRouteSummary.path);
-            setRouteStats({
-              distance: currentRouteSummary.distance,
-              duration: currentRouteSummary.duration,
-            });
-          } else if (routeRequestRef.current?.key === pathKey) {
-            // 이미 요청한 코스다 — 응답을 기다리는 중이면 그대로 두고, 실패했으면 직선 경로를 다시 그린다
-            const fallback = routeRequestRef.current.fallback;
-            if (fallback) {
-              renderRoutePolyline(fallback.path);
-              setRouteStats({});
-            }
+            renderRouteLines([{ path: legacyPath, style: "vehicle" }]);
           } else {
-            // 경유지가 바뀌었으니 옛 선은 지우고 새로 조회한다
-            routeRequestRef.current = { key: pathKey };
-            clearRoutePolyline();
-            setRouteStats({});
-
-            fetchRoute(plannedSpots).then((res) => {
-              // 응답을 기다리는 사이 경유지가 또 바뀌었다면 이 응답은 버린다
-              if (currentPathKeyRef.current !== pathKey) return;
-
-              if (res.isFallback) {
-                // 직선 경로는 보여주기만 하고 저장하지 않는다 (다음에 코스를 열 때 다시 시도)
-                routeRequestRef.current = { key: pathKey, fallback: res };
-                renderRoutePolyline(res.path);
-                return;
-              }
-
-              // 저장되면 이 effect가 다시 돌면서 위의 재사용 분기로 선과 거리·시간을 그린다.
-              // 요청 기록은 비워 둬야, 같은 경유지의 다른 플랜(예전 저장분)을 열었을 때 다시 조회된다
-              routeRequestRef.current = null;
-              patchRouteSummary({
-                distance: res.distance,
-                duration: res.duration,
-                path: res.path,
-                pathKey,
-              });
-            });
+            renderRouteLines(lines);
           }
         } else {
-          currentPathKeyRef.current = "";
           clearRoutePolyline();
-          setRouteStats({});
         }
       } else {
         clearPlannedSpotMarkers();
         clearRoutePolyline();
-        setRouteStats({});
       }
     } else {
       clearPlannedSpotMarkers();
       clearRoutePolyline();
-      setRouteStats({});
       if (spots) {
         renderSpotMarkers(spots);
       }
@@ -376,13 +342,12 @@ export default function Home() {
     plannedSpots,
     isPlanSheetOpen,
     currentRouteSummary,
-    fetchRoute,
-    patchRouteSummary,
+    segmentRoutes,
     renderSpotMarkers,
     clearMemorySpotMarkers,
     renderPlannedSpotMarkers,
     clearPlannedSpotMarkers,
-    renderRoutePolyline,
+    renderRouteLines,
     clearRoutePolyline,
   ]);
 
@@ -539,9 +504,8 @@ export default function Home() {
           }}
           latLng={newSpotLatLng}
           initialAddress={currentAddress}
-          showTransitMode={plannedSpots.length > 0}
-          onSubmit={(title, memo, lat, lng, address, transitMode) => {
-            addSpot(title, memo, lat, lng, address, transitMode);
+          onSubmit={(title, memo, lat, lng, address) => {
+            addSpot(title, memo, lat, lng, address);
             closeAddModal();
             setIsPickingOnMap(false);
           }}
@@ -633,11 +597,8 @@ export default function Home() {
           onRemoveSpot={removeSpot}
           onMoveUp={moveSpotUp}
           onMoveDown={moveSpotDown}
-          routeDistance={routeStats.distance}
-          routeDuration={routeStats.duration}
-          loadingRoute={loadingRoute}
-          transitRoutes={transitRoutes}
-          loadingTransit={loadingTransit}
+          segmentRoutes={segmentRoutes}
+          loadingRoutes={loadingRoutes}
           onPanToSpot={(lat, lng) => panToSpot(lat, lng)}
           onAddWaypoint={() => {
             setAddressSearchTarget("planning");
@@ -648,7 +609,28 @@ export default function Home() {
           isSaving={isSavingDb}
           onRenamePlan={setCurrentTitle}
           onUpdateSpot={updateSpot}
-          onSelectTransitMode={setSpotTransitMode}
+          onOpenRouteOptions={(from, to) => setRoutePicker({ from, to })}
+        />
+      )}
+
+      {/* 구간 경로 고르기 (편집 중에만 열린다) */}
+      {appMode === "planning" && isEditingPlan && routePicker && (
+        <RouteOptionsSheet
+          from={routePicker.from}
+          to={routePicker.to}
+          selected={
+            segmentRoutes[segmentPairKey(routePicker.from.id, routePicker.to.id)]?.route ?? null
+          }
+          searchRoutes={searchRoutes}
+          onSelect={(route) => {
+            patchSegmentRoute(segmentPairKey(routePicker.from.id, routePicker.to.id), {
+              fromSpotId: routePicker.from.id,
+              toSpotId: routePicker.to.id,
+              route,
+            });
+            setRoutePicker(null);
+          }}
+          onClose={() => setRoutePicker(null)}
         />
       )}
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PlannedSpot } from "@/types/planner";
-import { TransitMode, TransitRouteResult } from "@/types/transit";
-import { TRANSIT_MODES, TRANSIT_MODE_META, resolveTransitMode } from "@/lib/transit";
+import { RouteMode, SegmentRouteState } from "@/types/transit";
+import { formatMeters, formatMinutes, routeStepsSummary, segmentPairKey } from "@/lib/transit";
 import {
   Calendar,
   ChevronUp,
@@ -13,6 +13,8 @@ import {
   Route,
   Bus,
   Car,
+  Footprints,
+  ChevronRight,
   Pencil,
   Check,
   MapPinPlus,
@@ -26,11 +28,9 @@ interface FuturePlanSheetProps {
   onRemoveSpot: (id: string) => void;
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
-  routeDistance?: number;
-  routeDuration?: number;
-  loadingRoute?: boolean;
-  transitRoutes?: Record<string, TransitRouteResult>;
-  loadingTransit?: boolean;
+  /** 구간별 경로 (`"출발 id->도착 id"` 키) */
+  segmentRoutes?: Record<string, SegmentRouteState>;
+  loadingRoutes?: boolean;
   onPanToSpot?: (lat: number, lng: number) => void;
   onAddWaypoint?: () => void;
   /** 편집 상태는 page에서 관리한다 — 새 플랜 생성 직후 자동으로 편집에 들어가야 하기 때문 */
@@ -42,9 +42,15 @@ interface FuturePlanSheetProps {
   onRenamePlan?: (title: string) => void;
   /** 편집 모드에서 경유지 제목·메모를 바꾼다 (DB 반영은 완료 시) */
   onUpdateSpot?: (id: string, updates: { title: string; memo?: string }) => void;
-  /** 구간 이동수단 지정 — 도착 경유지 id에 저장한다 */
-  onSelectTransitMode?: (spotId: string, mode: TransitMode) => void;
+  /** 편집 모드에서 구간 카드를 누르면 경로 목록을 연다 */
+  onOpenRouteOptions?: (from: PlannedSpot, to: PlannedSpot) => void;
 }
+
+const MODE_ICON: Record<RouteMode, React.ElementType> = {
+  transit: Bus,
+  car: Car,
+  walk: Footprints,
+};
 
 export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   planTitle,
@@ -52,11 +58,8 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   onRemoveSpot,
   onMoveUp,
   onMoveDown,
-  routeDistance,
-  routeDuration,
-  loadingRoute,
-  transitRoutes,
-  loadingTransit,
+  segmentRoutes,
+  loadingRoutes,
   onPanToSpot,
   onAddWaypoint,
   isEditing = false,
@@ -64,7 +67,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   isSaving = false,
   onRenamePlan,
   onUpdateSpot,
-  onSelectTransitMode,
+  onOpenRouteOptions,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
@@ -97,22 +100,14 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
     }
   }, [isEditing]);
 
-  // Helper for formatting distance (meters to km)
-  const formatDistance = (meters?: number) => {
-    if (!meters) return null;
-    if (meters < 1000) return `${meters}m`;
-    return `${(meters / 1000).toFixed(1)}km`;
-  };
-
-  // Helper for formatting duration (seconds to min/hrs)
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return null;
-    const mins = Math.round(seconds / 60);
-    if (mins < 60) return `약 ${mins}분`;
-    const hrs = Math.floor(mins / 60);
-    const remainMins = mins % 60;
-    return `약 ${hrs}시간 ${remainMins}분`;
-  };
+  // 상단 요약 — 구간마다 고른 경로의 합계. 경로가 없는 구간이 있으면 일부 합계임을 알린다
+  const segmentList = plannedSpots
+    .slice(1)
+    .map((to, i) => segmentRoutes?.[segmentPairKey(plannedSpots[i].id, to.id)]);
+  const routedSegments = segmentList.filter((s) => s?.route);
+  const totalDuration = routedSegments.reduce((sum, s) => sum + (s?.route?.duration ?? 0), 0);
+  const totalDistance = routedSegments.reduce((sum, s) => sum + (s?.route?.distance ?? 0), 0);
+  const isPartialTotal = routedSegments.length < segmentList.length;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 max-w-md mx-auto px-4 pb-4 transition-all duration-300">
@@ -204,15 +199,17 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                     <div className="flex items-center gap-1.5 font-medium min-w-0">
                       <Route className="w-4 h-4 text-plan shrink-0" />
                       <span className="truncate">
-                        {loadingRoute
-                          ? "경로 계산 중..."
-                          : formatDistance(routeDistance) || "경로 연결 완료"}
+                        {routedSegments.length === 0
+                          ? loadingRoutes
+                            ? "경로 계산 중..."
+                            : "구간 경로가 아직 없어요"
+                          : `${formatMeters(totalDistance)}${isPartialTotal ? " (일부 구간)" : ""}`}
                       </span>
                     </div>
-                    {routeDuration && (
+                    {routedSegments.length > 0 && (
                       <div className="flex items-center gap-1.5 font-medium border-l border-plan-line pl-3 min-w-0">
                         <Clock className="w-4 h-4 text-plan shrink-0" />
-                        <span className="truncate">{formatDuration(routeDuration)}</span>
+                        <span className="truncate">약 {formatMinutes(totalDuration)}</span>
                       </div>
                     )}
                   </>
@@ -263,12 +260,12 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
               <div className="space-y-2">
                 {plannedSpots.map((spot, index) => {
                   const nextSpot = plannedSpots[index + 1];
-                  const pairKey = nextSpot ? `${spot.id}->${nextSpot.id}` : null;
-                  const transit = pairKey && transitRoutes ? transitRoutes[pairKey] : null;
-                  // 예전에 저장된 구간은 mode가 "subway" 등일 수 있으므로 자동차가 아니면 대중교통으로 본다
-                  const isCar = transit?.mode === "car";
-                  const segmentRoute = isCar ? transit?.carRoute : transit?.routeInfo;
-                  const SegmentIcon = isCar ? Car : Bus;
+                  const segment = nextSpot
+                    ? segmentRoutes?.[segmentPairKey(spot.id, nextSpot.id)]
+                    : undefined;
+                  const segmentRoute = segment?.route ?? null;
+                  const SegmentIcon = MODE_ICON[segmentRoute?.mode ?? "transit"];
+                  const canPickRoute = isEditing && Boolean(onOpenRouteOptions);
 
                   return (
                     <React.Fragment key={spot.id}>
@@ -397,75 +394,54 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                       </div>
                       )}
 
-                      {/* 구간 이동 카드 (Spot A → Spot B) — 대중교통 또는 자동차 최단 거리 경로 */}
-                      {nextSpot && (
-                        <div className="my-1 mx-2 rounded-xl bg-plan-tint border border-plan-line text-xs text-plan-strong shadow-xs animate-in fade-in duration-200">
-                        <div className="p-2.5 flex items-center justify-between">
-                          {segmentRoute ? (
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-7 h-7 rounded-lg bg-plan text-on-accent flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <SegmentIcon className="w-3.5 h-3.5" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="font-bold flex items-center gap-2 text-ink text-[11px]">
-                                  <span>
-                                    약 {segmentRoute.totalTime}분 소요
-                                    {segmentRoute.totalDistance
-                                      ? ` · ${formatDistance(segmentRoute.totalDistance)}`
-                                      : ""}
-                                  </span>
-                                </div>
-                                <div className="text-[10px] text-plan-strong font-medium truncate mt-0.5">
-                                  <span className="truncate">
-                                    {isCar
-                                      ? "자동차 · 최단 거리"
-                                      : transit?.routeInfo?.subpaths
-                                          .map((sp) => sp.transportName)
-                                          .filter(Boolean)
-                                          .join(" ➔ ") || "대중교통 이동"}
-                                  </span>
-                                </div>
-                              </div>
+                      {/* 구간 이동 카드 (Spot A → Spot B). 편집 중에는 눌러서 경로 목록을 연다 */}
+                      {nextSpot && (() => {
+                        const body = (
+                          <>
+                            <div className="w-7 h-7 rounded-lg bg-plan text-on-accent flex items-center justify-center flex-shrink-0 shadow-sm">
+                              <SegmentIcon className="w-3.5 h-3.5" />
                             </div>
-                          ) : (
-                            <div className="flex items-center gap-2 text-plan text-[11px]">
-                              <SegmentIcon className="w-3.5 h-3.5 text-plan" />
-                              <span>
-                                {transit?.loading || (!transit && loadingTransit)
-                                  ? "경로 계산 중..."
-                                  : transit?.error || "경로 탐색 불가"}
+                            <div className="min-w-0 flex-1">
+                              {segmentRoute ? (
+                                <>
+                                  <div className="font-bold text-ink text-[11px] truncate">
+                                    약 {formatMinutes(segmentRoute.duration)} · {formatMeters(segmentRoute.distance)}
+                                    {segmentRoute.fare ? ` · ${segmentRoute.fare.toLocaleString()}원` : ""}
+                                  </div>
+                                  <div className="text-[10px] text-plan-strong font-medium truncate mt-0.5">
+                                    {routeStepsSummary(segmentRoute)}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-plan-strong text-[11px]">
+                                  {segment?.loading || (!segment && loadingRoutes)
+                                    ? "경로 계산 중..."
+                                    : segment?.error || "경로를 불러오지 못했어요"}
+                                </div>
+                              )}
+                            </div>
+                            {canPickRoute && (
+                              <span className="shrink-0 flex items-center text-[10px] font-bold text-plan-strong">
+                                경로 변경
+                                <ChevronRight className="w-3.5 h-3.5" aria-hidden />
                               </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 구간 이동수단 — 수정 모드에서만 고른다 */}
-                        {isEditing && onSelectTransitMode && (
-                          <div className="px-2.5 pb-2.5">
-                            <div className="flex items-center gap-1">
-                              {TRANSIT_MODES.map((mode) => {
-                                const isSelected = resolveTransitMode(nextSpot) === mode;
-                                return (
-                                  <button
-                                    key={mode}
-                                    type="button"
-                                    onClick={() => onSelectTransitMode(nextSpot.id, mode)}
-                                    aria-pressed={isSelected}
-                                    className={`flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all active:scale-95 cursor-pointer ${
-                                      isSelected
-                                        ? "bg-plan text-on-accent border-plan"
-                                        : "bg-surface text-ink-muted border-line hover:bg-surface-2"
-                                    }`}
-                                  >
-                                    {TRANSIT_MODE_META[mode].label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                        </div>
-                      )}
+                            )}
+                          </>
+                        );
+                        const cardClass =
+                          "my-1 mx-2 w-[calc(100%-1rem)] p-2.5 flex items-center gap-2.5 rounded-xl bg-plan-tint border border-plan-line text-left text-xs shadow-xs animate-in fade-in duration-200";
+                        return canPickRoute ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenRouteOptions?.(spot, nextSpot)}
+                            className={`${cardClass} min-h-11 cursor-pointer hover:border-plan transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plan`}
+                          >
+                            {body}
+                          </button>
+                        ) : (
+                          <div className={cardClass}>{body}</div>
+                        );
+                      })()}
                     </React.Fragment>
                   );
                 })}

@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { X, MapPin, Sparkles } from "lucide-react";
-import { TransitMode } from "@/types/transit";
-import { TRANSIT_MODES, TRANSIT_MODE_META } from "@/lib/transit";
 
 interface AddPlannedSpotModalProps {
   isOpen: boolean;
@@ -15,11 +13,8 @@ interface AddPlannedSpotModalProps {
     memo: string | undefined,
     lat: number,
     lng: number,
-    address?: string,
-    transitMode?: TransitMode
+    address?: string
   ) => void;
-  /** 첫 경유지는 앞 구간이 없어 이동수단을 고를 필요가 없다 */
-  showTransitMode?: boolean;
 }
 
 export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
@@ -28,17 +23,14 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
   latLng,
   initialAddress = "",
   onSubmit,
-  showTransitMode = false,
 }) => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [transitMode, setTransitMode] = useState<TransitMode>("transit");
 
   useEffect(() => {
     if (isOpen) {
       setTitle("");
       setMemo("");
-      setTransitMode("transit");
     }
   }, [isOpen]);
 
@@ -53,8 +45,7 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
       memo || undefined,
       latLng.lat,
       latLng.lng,
-      initialAddress,
-      showTransitMode ? transitMode : undefined
+      initialAddress
     );
   };
 
@@ -116,38 +107,6 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
               className="w-full px-3.5 py-2.5 bg-surface-2 border border-line rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-plan focus:bg-surface transition-all resize-none"
             />
           </div>
-
-          {/* 직전 경유지에서 여기로 오는 이동수단 */}
-          {showTransitMode && (
-            <div>
-              <label className="block text-xs font-semibold text-ink mb-1">
-                여기로 오는 이동수단
-              </label>
-              <div className="flex items-center gap-1.5">
-                {TRANSIT_MODES.map((mode) => {
-                  const isSelected = transitMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setTransitMode(mode)}
-                      aria-pressed={isSelected}
-                      className={`flex-1 py-1.5 rounded-xl text-[11px] font-bold border transition-all active:scale-95 cursor-pointer ${
-                        isSelected
-                          ? "bg-plan text-on-accent border-plan"
-                          : "bg-surface-2 text-ink-muted border-line hover:bg-plan-tint"
-                      }`}
-                    >
-                      {TRANSIT_MODE_META[mode].label}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-1 text-[10px] text-ink-subtle leading-tight">
-                대중교통은 도보 포함, 자동차는 도로 기준으로 가장 짧은 경로를 기록해요. 나중에 코스에서 바꿀 수 있어요.
-              </p>
-            </div>
-          )}
 
           <div className="pt-2 flex items-center gap-2">
             <button

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PlannedSpot, AppMode, DatePlan, RouteSummaryData } from "@/types/planner";
-import { TransitMode } from "@/types/transit";
+import { SavedSegmentRoute } from "@/types/transit";
 import { supabase } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "our_date_map_planned_spots";
@@ -165,12 +165,14 @@ export function useFuturePlanner(
     }
   }, []);
 
-  // 일부 필드만 최신 상태에 병합한다. 길찾기 응답처럼 늦게 도착하는 값이
-  // 그 사이 바뀐 다른 필드(저장된 대중교통 경로 등)를 예전 값으로 덮어쓰지 않게 하기 위함이다.
-  // transitRoutes 참조도 그대로 유지되므로 useTransitRoute가 불필요하게 다시 조회하지 않는다.
-  const patchRouteSummary = useCallback((patch: Partial<RouteSummaryData>) => {
+  // 구간 경로 하나를 저장분에 넣는다. 자동으로 채워진 경로와 사용자가 고른 경로 모두 여기로 온다.
+  // 같은 틱에 여러 구간이 들어와도 서로 덮어쓰지 않도록 최신 상태 위에 병합한다.
+  const patchSegmentRoute = useCallback((pairKey: string, saved: SavedSegmentRoute) => {
     setCurrentRouteSummary((prev) => {
-      const next = { ...(prev ?? {}), ...patch };
+      const next = {
+        ...(prev ?? {}),
+        transitRoutes: { ...(prev?.transitRoutes ?? {}), [pairKey]: saved },
+      };
       try {
         localStorage.setItem(STORAGE_ROUTE_KEY, JSON.stringify(next));
       } catch (e) {
@@ -377,8 +379,7 @@ export function useFuturePlanner(
       memo: string | undefined,
       lat: number,
       lng: number,
-      address?: string,
-      transitMode?: TransitMode
+      address?: string
     ) => {
       const newSpot: PlannedSpot = {
         id: `plan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
@@ -389,7 +390,6 @@ export function useFuturePlanner(
         address,
         order: plannedSpots.length + 1,
         createdAt: new Date().toISOString(),
-        transitMode,
       };
 
       const updated = [...plannedSpots, newSpot];
@@ -412,15 +412,6 @@ export function useFuturePlanner(
           ? { ...s, title: nextTitle || s.title, memo: nextMemo || undefined }
           : s
       );
-      saveSpots(updated);
-    },
-    [plannedSpots, saveSpots]
-  );
-
-  // 구간 이동수단 지정 — 도착 경유지에 저장하며, 한 번 고르면 다시 바꾸기 전까지 유지된다.
-  const setSpotTransitMode = useCallback(
-    (id: string, mode: TransitMode) => {
-      const updated = plannedSpots.map((s) => (s.id === id ? { ...s, transitMode: mode } : s));
       saveSpots(updated);
     },
     [plannedSpots, saveSpots]
@@ -496,7 +487,7 @@ export function useFuturePlanner(
     plannedSpots,
     currentRouteSummary,
     updateRouteSummary,
-    patchRouteSummary,
+    patchSegmentRoute,
     selectedDate,
     setSelectedDate,
     startDate,
@@ -524,7 +515,6 @@ export function useFuturePlanner(
     fetchPlansForDate,
     addSpot,
     updateSpot,
-    setSpotTransitMode,
     removeSpot,
     moveSpotUp,
     moveSpotDown,

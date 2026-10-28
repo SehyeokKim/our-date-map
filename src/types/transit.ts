@@ -1,64 +1,59 @@
-export interface TransitSubPath {
-  trafficType: 1 | 2 | 3; // 1: Subway, 2: Bus, 3: Walk
-  sectionTime: number; // minutes
+export interface LatLngPoint {
+  lat: number;
+  lng: number;
+}
+
+/** 구간 경로를 고르는 탭. 대중교통은 후보가 여러 개, 자동차·도보는 하나다 */
+export type RouteMode = "transit" | "car" | "walk";
+
+/** 경로를 이루는 한 단계의 이동 방식. 지도에서 walk는 점선으로 그린다 */
+export type RouteStepKind = "subway" | "bus" | "walk" | "car";
+
+export interface RouteStep {
+  kind: RouteStepKind;
+  duration: number; // seconds
   distance: number; // meters
-  transportName?: string; // e.g. "1호선", "첨단09"
-  startName?: string;
-  endName?: string;
-  passStations?: { lat: number; lng: number }[];
+  /** 노선명 (예: "2호선", "7716"). 같은 구간을 다니는 노선이 여럿이면 첫 번째 */
+  name?: string;
+  /** 같은 구간에서 대신 탈 수 있는 다른 노선 수 */
+  altCount?: number;
+  /** 타는 곳 / 내리는 곳 */
+  start?: string;
+  end?: string;
+  /** 지나는 정류장·역 수 (타는 곳 포함) */
+  stopCount?: number;
+  path?: LatLngPoint[];
 }
 
-export interface TransitRouteInfo {
-  totalTime: number; // minutes
-  /** 도보를 포함한 총 이동 거리(m). 예전에 저장된 경로에는 없을 수 있다 */
-  totalDistance?: number;
-  payment: number; // KRW fare
-  busTransitCount: number;
-  subwayTransitCount: number;
-  firstStartStation?: string;
-  lastEndStation?: string;
-  subpaths: TransitSubPath[];
-  polylinePath?: { lat: number; lng: number }[];
-  isWalkOnly?: boolean;
+export interface RouteOption {
+  mode: RouteMode;
+  duration: number; // seconds, 승차 전·하차 후 도보 포함
+  distance: number; // meters
+  fare?: number; // KRW
+  transfers?: number;
+  steps: RouteStep[];
 }
 
-/** 자동차 구간 — Kakao Mobility 최단 거리 경로 */
-export interface CarRouteInfo {
-  totalTime: number; // minutes
-  totalDistance: number; // meters
+/** `/api/transit`, `/api/walk` 응답 */
+export interface RouteOptionsResponse {
+  routes: RouteOption[];
 }
 
 /**
- * 사용자가 구간별로 고르는 이동수단.
- * - transit: 도보 + 대중교통(지하철·버스 모두) 중 이동 거리가 가장 짧은 경로 (ODsay)
- * - car: 이동 거리가 가장 짧은 자동차 경로 (Kakao Mobility)
+ * `route_summary.transitRoutes[from->to]`에 저장되는 구간 경로.
+ * 예전 저장분은 `routeInfo`/`carRoute` 형식이라 `route`가 없다 (`readSavedRoute` 참고).
  */
-export type TransitMode = "transit" | "car";
-
-/** `/api/transit` 응답 — 도보 포함 이동 거리가 가장 짧은 대중교통 경로 하나 */
-export interface TransitRouteResponse {
-  route: TransitRouteInfo;
-}
-
-export interface TransitRouteResult {
+export interface SavedSegmentRoute {
   fromSpotId: string;
   toSpotId: string;
-  /** 대중교통 구간의 경로 */
-  routeInfo: TransitRouteInfo | null;
-  /** 자동차 구간의 경로 */
-  carRoute?: CarRouteInfo | null;
-  /**
-   * 이 결과를 만들 때 사용한 이동수단 — 사용자가 바꾸면 다시 조회하는 기준.
-   * 예전에 저장된 결과에는 지금은 없는 값("subway" 등)이 들어 있을 수 있다.
-   */
-  mode?: TransitMode;
-  error?: string | null;
-  loading?: boolean;
+  route: RouteOption;
 }
 
-export interface TransitQueryParams {
-  SX: number;
-  SY: number;
-  EX: number;
-  EY: number;
+/** 화면에 보여주는 구간 상태 */
+export interface SegmentRouteState {
+  fromSpotId: string;
+  toSpotId: string;
+  route: RouteOption | null;
+  loading?: boolean;
+  error?: string | null;
 }

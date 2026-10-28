@@ -77,8 +77,8 @@
 
 - 날짜(기간)와 제목으로 플랜을 만들면 오늘을 기준으로 **데이트 계획 / 데이트 기록** 탭에 자동으로 나뉘어요
 - 경유지는 장소를 검색하거나 지도에 핀을 찍어 추가하고, 순서도 바꿀 수 있어요
-- **Kakao Mobility**로 코스 전체 경로선과 총 거리·소요시간을 그려요
-- 구간마다 이동수단을 **대중교통 / 자동차** 중에서 골라요. 대중교통은 **ODsay**로 도보 포함 최단 경로의 노선·소요시간을, 자동차는 최단 거리 경로를 보여줘요
+- 구간마다 길찾기 앱처럼 **추천 경로 목록**에서 하나를 골라요. 대중교통(추천순·최소시간·최소환승·최소도보 정렬), 자동차, 도보 탭이 있고, 고르지 않은 구간은 대중교통 추천 경로(가까우면 도보)로 채워져요
+- 지도에는 구간마다 고른 경로가 그려지고, **도보 구간은 점선**, 지하철·버스·자동차는 실선으로 구분돼요
 - 계산한 경로는 플랜에 함께 저장돼서, 다시 열 때는 **API를 다시 부르지 않고** 바로 그려요
 
 </td>
@@ -146,7 +146,7 @@
 | --- | --- |
 | Frontend | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · Lucide React |
 | Backend / DB | Supabase (PostgreSQL · Auth · Storage · RLS) · Next.js Route Handlers |
-| 지도 · 경로 | Kakao Maps JavaScript SDK · Kakao Mobility Directions API · ODsay 대중교통 API |
+| 지도 · 경로 | Kakao Maps JavaScript SDK · 카카오맵 REST API(대중교통·도보 경로) · Kakao Mobility Directions API |
 | PWA / Push | Web App Manifest (standalone) · Service Worker · Web Push (VAPID) |
 | 유틸리티 | browser-image-compression (클라이언트 이미지 압축) |
 
@@ -155,20 +155,21 @@
 ## 🏗️ 아키텍처 & 엔지니어링 포인트
 
 ### 1. API 키 보호 프록시 패턴
-외부 REST API(Kakao Mobility, ODsay)는 클라이언트에서 직접 호출하지 않고 **Next.js Route Handler를 프록시로 경유**합니다. 비밀 키는 서버 환경변수로만 접근해 클라이언트 번들에 노출되지 않습니다.
+외부 REST API(카카오맵 경로, Kakao Mobility)는 클라이언트에서 직접 호출하지 않고 **Next.js Route Handler를 프록시로 경유**합니다. 비밀 키는 서버 환경변수로만 접근해 클라이언트 번들에 노출되지 않습니다.
 
 ```
 Client → /api/directions → Kakao Mobility API   (KAKAO_REST_API_KEY, 서버 전용)
-Client → /api/transit    → ODsay API            (ODSAY_API_KEY, 서버 전용)
+Client → /api/transit    → 카카오맵 대중교통 경로  (KAKAO_REST_API_KEY, 서버 전용)
+Client → /api/walk       → 카카오맵 도보 경로      (KAKAO_REST_API_KEY, 서버 전용)
 Client → /api/push/send  → Web Push 발송         (VAPID_PRIVATE_KEY, 서버 전용)
 ```
 
 ### 2. API 쿼터 보호 다층 캐싱
-ODsay 일 1,000회 등 외부 API 쿼터를 보호하기 위해 경로 데이터를 3단계로 캐싱합니다.
+카카오맵 경로 API 일 1,000회 무료 쿼터 등을 보호하기 위해 경로 데이터를 3단계로 캐싱합니다.
 
-1. **인메모리 캐시** — 동일 구간(좌표 키) 중복 호출 방지 (`useTransitRoute`)
+1. **인메모리 캐시** — 동일 구간(좌표 키) 중복 호출 방지 (`useSegmentRoutes`, 서버 Route Handler)
 2. **localStorage** — 새로고침 간 플랜/경로 보존
-3. **DB 영구 저장** — 계산된 경로 전체(`path` Polyline 좌표, 구간별 대중교통 정보)를 `date_plans.route_summary`(JSONB)에 저장, 코스 불러오기 시 API 재호출 없이 즉시 복원 렌더링. 장소 추가/삭제/순서 변경 시에만 재탐색
+3. **DB 영구 저장** — 구간마다 고른 경로(단계별 노선·시간·좌표)를 `date_plans.route_summary`(JSONB)에 저장, 코스 불러오기 시 API 재호출 없이 즉시 복원 렌더링. 경로가 없는 구간만 편집 중에 조회
 
 ### 3. 데이터 무결성 설계
 - **소프트 삭제**: 핀 삭제 시 원본을 `deleted_date_spots`에 JSONB로 아카이빙 후 `deleted_at` 마킹 — **DB 트리거**가 동기화를 보장하고, 복원 API 제공
@@ -214,7 +215,8 @@ src/
 ├── app/
 │   ├── api/
 │   │   ├── directions/route.ts   # Kakao Mobility 경유지 경로 프록시
-│   │   ├── transit/route.ts      # ODsay 대중교통 경로 프록시
+│   │   ├── transit/route.ts      # 카카오맵 대중교통 경로 프록시
+│   │   ├── walk/route.ts         # 카카오맵 도보 경로 프록시
 │   │   └── push/send/route.ts    # Web Push 발송 + 이력 기록
 │   ├── auth/callback/route.ts    # Kakao OAuth 콜백 (세션 교환)
 │   └── page.tsx                  # 메인 지도 화면
@@ -223,7 +225,7 @@ src/
 │   ├── map/                      # MapContainer
 │   └── modal/                    # 스팟/플랜/프로필/푸시 모달 & 바텀 시트
 ├── hooks/                        # useKakaoMap, useDateSpots, useFuturePlanner,
-│                                 # useTransitRoute, useWebPush, useAuth ...
+│                                 # useSegmentRoutes, useWebPush, useAuth ...
 ├── lib/                          # supabase 클라이언트, 이미지 압축 업로드
 └── types/                        # 도메인 타입 (spot, planner, transit, supabase)
 supabase/
@@ -247,12 +249,9 @@ public/
 NEXT_PUBLIC_SUPABASE_URL=<Supabase 프로젝트 URL>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<Supabase anon key>
 
-# Kakao (클라이언트: 지도 SDK / 서버 전용: Mobility REST)
+# Kakao (클라이언트: 지도 SDK / 서버 전용: 카카오맵 경로·Mobility REST)
 NEXT_PUBLIC_KAKAO_MAP_KEY=<Kakao JavaScript 키>
 KAKAO_REST_API_KEY=<Kakao REST API 키>
-
-# ODsay 대중교통 (서버 전용)
-ODSAY_API_KEY=<ODsay API 키>
 
 # Web Push VAPID (npx web-push generate-vapid-keys)
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=<VAPID public key>

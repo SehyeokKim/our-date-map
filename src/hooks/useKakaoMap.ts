@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DateSpot, LatLng } from "@/types/spot";
 import { AppMode, PlannedSpot } from "@/types/planner";
+import { RouteLine, RouteLineStyle } from "@/lib/route";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function useKakaoMap(
@@ -30,7 +31,7 @@ export function useKakaoMap(
 
   const overlaysRef = useRef<any[]>([]);
   const plannedOverlaysRef = useRef<any[]>([]);
-  const polylineRef = useRef<any | null>(null);
+  const polylinesRef = useRef<any[]>([]);
   const tempOverlayRef = useRef<any | null>(null);
   const tempElRef = useRef<HTMLDivElement | null>(null);
   const geocoderRef = useRef<any | null>(null);
@@ -336,47 +337,49 @@ export function useKakaoMap(
     [map, clearPlannedSpotMarkers]
   );
 
-  // Render Route Polyline connecting spots
-  const renderRoutePolyline = useCallback(
-    (pathCoords: { lat: number; lng: number }[]) => {
+  // Clear route lines
+  const clearRoutePolyline = useCallback(() => {
+    polylinesRef.current.forEach((line) => line.setMap(null));
+    polylinesRef.current = [];
+  }, []);
+
+  // 구간 경로선을 그린다. 차량은 실선, 도보는 점선, 아직 경로가 없는 구간은 흐린 긴 점선이다.
+  const renderRouteLines = useCallback(
+    (lines: RouteLine[]) => {
       const kakao = window.kakao;
       if (!kakao || !kakao.maps || !map) return;
 
-      if (polylineRef.current) {
-        polylineRef.current.setMap(null);
-        polylineRef.current = null;
-      }
+      clearRoutePolyline();
 
-      if (pathCoords.length < 2) return;
-
-      const kakaoPath = pathCoords.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
-
-      // Kakao SDK 옵션은 CSS 클래스를 못 쓰므로 현재 테마의 --plan 토큰 값을 직접 읽는다
+      // Kakao SDK 옵션은 CSS 클래스를 못 쓰므로 현재 테마의 --plan 토큰 값을 직접 읽는다.
+      // 색은 하나로 두고 굵기와 선 모양으로만 수단을 구분해, 어느 테마에서도 지도 위 대비가 같다.
       const planColor =
         getComputedStyle(document.documentElement).getPropertyValue("--plan").trim() ||
         "#4f7a6a";
+      const styles: Record<RouteLineStyle, { weight: number; opacity: number; stroke: string }> = {
+        vehicle: { weight: 6, opacity: 0.9, stroke: "solid" },
+        car: { weight: 5, opacity: 0.85, stroke: "solid" },
+        walk: { weight: 4, opacity: 0.95, stroke: "shortdash" },
+        pending: { weight: 3, opacity: 0.4, stroke: "longdash" },
+      };
 
-      const polyline = new kakao.maps.Polyline({
-        map: map,
-        path: kakaoPath,
-        strokeWeight: 5,
-        strokeColor: planColor,
-        strokeOpacity: 0.9,
-        strokeStyle: "solid",
+      lines.forEach(({ path, style }) => {
+        if (path.length < 2) return;
+        const option = styles[style];
+        polylinesRef.current.push(
+          new kakao.maps.Polyline({
+            map,
+            path: path.map((c) => new kakao.maps.LatLng(c.lat, c.lng)),
+            strokeWeight: option.weight,
+            strokeColor: planColor,
+            strokeOpacity: option.opacity,
+            strokeStyle: option.stroke,
+          })
+        );
       });
-
-      polylineRef.current = polyline;
     },
-    [map]
+    [map, clearRoutePolyline]
   );
-
-  // Clear polyline
-  const clearRoutePolyline = useCallback(() => {
-    if (polylineRef.current) {
-      polylineRef.current.setMap(null);
-      polylineRef.current = null;
-    }
-  }, []);
 
   // Transition from Step 1 Summary to Step 2 Full Detail View
   const openDetailFromSummary = useCallback((spot: DateSpot) => {
@@ -609,7 +612,7 @@ export function useKakaoMap(
     clearMemorySpotMarkers,
     renderPlannedSpotMarkers,
     clearPlannedSpotMarkers,
-    renderRoutePolyline,
+    renderRouteLines,
     clearRoutePolyline,
     summarySpot,
     closeSummary,

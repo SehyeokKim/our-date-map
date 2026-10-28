@@ -1,5 +1,3 @@
-import { TransitMode } from "@/types/transit";
-
 export interface PlannedSpot {
   id: string;
   title: string;
@@ -9,36 +7,25 @@ export interface PlannedSpot {
   address?: string;
   order: number;
   createdAt: string;
-  /**
-   * 직전 경유지에서 **이 장소로 오는** 이동수단.
-   * 사용자가 고르지 않았으면 undefined이며 대중교통으로 본다 (`resolveTransitMode`).
-   * (한 번 고르면 다시 바꾸기 전까지 유지된다)
-   */
-  transitMode?: TransitMode;
 }
 
 export type AppMode = 'memory' | 'planning';
 
-export interface RouteDirectionsResult {
-  path: { lat: number; lng: number }[];
-  distance?: number; // Total distance in meters
-  duration?: number; // Total duration in seconds
-  error?: string;
-  /** 길찾기 실패로 경유지를 직선으로 이은 임시 경로인지 여부 (저장하지 않는다) */
-  isFallback?: boolean;
-}
-
 export interface RouteSummaryData {
+  /**
+   * 예전 플랜에 저장된 코스 전체 자동차 경로(거리·시간·선). 이제 새로 만들지 않고,
+   * 구간 경로가 하나도 없는 예전 플랜을 열었을 때 지도에 그리는 용도로만 읽는다.
+   */
   distance?: number;
   duration?: number;
   path?: { lat: number; lng: number }[];
-  /**
-   * `path`를 계산할 때의 경유지 서명 (`getRoutePathKey`).
-   * 현재 경유지와 다르면 저장된 경로는 낡은 것이므로 다시 조회한다.
-   * 이 값이 없는 예전 저장분도 낡은 것으로 보고 한 번 다시 조회한다.
-   */
+  /** `path`를 계산할 때의 경유지 서명 (`getRoutePathKey`). 지금 경유지와 같을 때만 `path`를 그린다 */
   pathKey?: string;
-  transitRoutes?: Record<string, any>;
+  /**
+   * 구간별 선택 경로 (`"출발 id->도착 id"` 키). 새 형식은 `SavedSegmentRoute`이고,
+   * 예전 저장분은 ODsay 시절 형식이 섞여 있을 수 있어 읽을 때 `readSavedRoute`로 거른다.
+   */
+  transitRoutes?: Record<string, unknown>;
 }
 
 export interface DatePlan {
