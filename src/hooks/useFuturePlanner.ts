@@ -208,10 +208,10 @@ export function useFuturePlanner(
       const finalRouteSummary = routeSummary || currentRouteSummary;
 
       try {
+        // 작성자(user_id·created_by)는 새로 만들 때만 넣는다. 수정할 때 넣으면 커플 상대가 저장하는 순간
+        // 작성자가 그 사람으로 바뀌어 버린다.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload: any = {
-          user_id: userId || null,
-          created_by: userId || null,
           title,
           plan_date: start,
           start_date: start,
@@ -238,6 +238,8 @@ export function useFuturePlanner(
             .from("date_plans")
             .insert({
               ...payload,
+              user_id: userId || null,
+              created_by: userId || null,
               created_at: new Date().toISOString(),
             })
             .select()
@@ -256,9 +258,16 @@ export function useFuturePlanner(
           fetchAllDatePlans();
           fetchPlansForDate(selectedDate);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[useFuturePlanner] Failed saving plan to DB:", err);
-        showToast("DB 저장 실패: 네트워크 및 권한을 확인해 주세요.", "error");
+        // 수정 권한이 없으면 RLS가 대상 행을 걸러 `.single()`이 "행 없음"(PGRST116)으로 실패한다
+        const code = (err as { code?: string } | null)?.code;
+        showToast(
+          code === "PGRST116"
+            ? "이 코스를 저장할 권한이 없어요. 커플 연결 상태를 확인해 주세요."
+            : "DB 저장 실패: 네트워크 상태를 확인해 주세요.",
+          "error"
+        );
       } finally {
         setIsSavingDb(false);
       }

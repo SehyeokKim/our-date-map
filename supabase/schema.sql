@@ -357,8 +357,9 @@ CREATE POLICY "Couple can read date_plans" ON public.date_plans FOR SELECT TO au
   USING (public.is_me_or_partner(user_id) OR public.is_me_or_partner(created_by));
 CREATE POLICY "Couple can insert date_plans" ON public.date_plans FOR INSERT TO authenticated
   WITH CHECK (public.is_me_or_partner(COALESCE(created_by, user_id)));
-CREATE POLICY "Owner can update date_plans" ON public.date_plans FOR UPDATE TO authenticated
-  USING (auth.uid() = user_id OR auth.uid() = created_by);
+CREATE POLICY "Couple can update date_plans" ON public.date_plans FOR UPDATE TO authenticated
+  USING (public.is_me_or_partner(user_id) OR public.is_me_or_partner(created_by))
+  WITH CHECK (public.is_me_or_partner(user_id) OR public.is_me_or_partner(created_by));
 CREATE POLICY "Owner can delete date_plans" ON public.date_plans FOR DELETE TO authenticated
   USING (auth.uid() = user_id OR auth.uid() = created_by);
 
