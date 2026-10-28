@@ -13,9 +13,12 @@ import {
   formatMinutes,
   routeSignature,
   sortTransitRoutes,
+  stepColor,
   stepLabel,
   walkDistanceOf,
 } from "@/lib/transit";
+import { isSamePlace } from "@/lib/route";
+import { RouteDurationBar } from "@/components/route/RouteDurationBar";
 
 interface RouteOptionsSheetProps {
   from: PlannedSpot;
@@ -44,28 +47,11 @@ const EMPTY_MESSAGE: Record<RouteMode, string> = {
 
 const SORTS: TransitSort[] = ["recommend", "time", "transfer", "walk"];
 
-/** 지도 도보 점선과 같은 무늬. 목록에서도 도보 구간을 같은 표기로 읽게 한다 */
-const WALK_STRIPE =
-  "bg-[repeating-linear-gradient(90deg,var(--plan)_0_4px,transparent_4px_7px)] opacity-60";
-
 const StepIcon = ({ step, className }: { step: RouteStep; className?: string }) => {
   const Icon =
     step.kind === "subway" ? TrainFront : step.kind === "bus" ? Bus : step.kind === "car" ? Car : Footprints;
   return <Icon className={className} aria-hidden />;
 };
-
-/** 단계별 소요시간 비율 막대. 차량은 채운 막대, 도보는 점선 무늬 */
-const DurationBar = ({ route }: { route: RouteOption }) => (
-  <div className="flex h-2 w-full gap-0.5 overflow-hidden rounded-full" aria-hidden>
-    {route.steps.map((step, i) => (
-      <div
-        key={i}
-        style={{ flexGrow: Math.max(step.duration, 30) }}
-        className={step.kind === "walk" ? WALK_STRIPE : "bg-plan"}
-      />
-    ))}
-  </div>
-);
 
 const RouteCard = ({
   route,
@@ -76,7 +62,10 @@ const RouteCard = ({
   isSelected: boolean;
   onSelect: () => void;
 }) => {
-  const rideSteps = route.steps.filter((s) => s.kind === "subway" || s.kind === "bus");
+  // 칩 색은 지도 선과 같아야 하므로 전체 단계 기준 순번을 함께 들고 다닌다
+  const rideSteps = route.steps
+    .map((step, index) => ({ step, color: stepColor(route.steps, index) }))
+    .filter(({ step }) => step.kind === "subway" || step.kind === "bus");
   const walkSeconds = route.steps.reduce((sum, s) => (s.kind === "walk" ? sum + s.duration : sum), 0);
   const meta = [
     formatMeters(route.distance),
@@ -106,13 +95,16 @@ const RouteCard = ({
         )}
       </div>
       <p className="text-[11px] text-ink-muted">{meta.join(" · ")}</p>
-      <DurationBar route={route} />
+      <RouteDurationBar route={route} />
 
       {rideSteps.length > 0 ? (
         <ol className="space-y-1">
-          {rideSteps.map((step, i) => (
+          {rideSteps.map(({ step, color }, i) => (
             <li key={i} className="flex items-center gap-2 text-[11px] text-ink min-w-0">
-              <span className="flex items-center gap-1 shrink-0 rounded-md bg-plan text-on-accent px-1.5 py-0.5 font-bold">
+              <span
+                style={{ backgroundColor: color }}
+                className="flex items-center gap-1 shrink-0 rounded-md text-white px-1.5 py-0.5 font-bold"
+              >
                 <StepIcon step={step} className="w-3 h-3" />
                 {stepLabel(step)}
               </span>
@@ -257,7 +249,9 @@ export const RouteOptionsSheet: React.FC<RouteOptionsSheetProps> = ({
               경로를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.
             </p>
           ) : routes.length === 0 ? (
-            <p className="py-10 text-center text-xs text-ink-muted">{EMPTY_MESSAGE[mode]}</p>
+            <p className="py-10 text-center text-xs text-ink-muted">
+              {isSamePlace(from, to) ? "출발지와 도착지가 같은 장소예요." : EMPTY_MESSAGE[mode]}
+            </p>
           ) : (
             routes.map((route, i) => {
               const signature = routeSignature(route);

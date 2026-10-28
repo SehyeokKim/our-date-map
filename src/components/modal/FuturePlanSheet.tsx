@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { PlannedSpot } from "@/types/planner";
 import { RouteMode, SegmentRouteState } from "@/types/transit";
 import { formatMeters, formatMinutes, routeStepsSummary, segmentPairKey } from "@/lib/transit";
+import { RouteDurationBar } from "@/components/route/RouteDurationBar";
+import { PlanDayPicker } from "@/components/plan/PlanDayPicker";
+import { formatDayDate, resolveSpotDates } from "@/lib/planDates";
 import {
   Calendar,
   ChevronUp,
@@ -40,8 +43,10 @@ interface FuturePlanSheetProps {
   isSaving?: boolean;
   /** 편집 모드에서 플랜 제목을 바꾼다 (DB 반영은 완료 시) */
   onRenamePlan?: (title: string) => void;
-  /** 편집 모드에서 경유지 제목·메모를 바꾼다 (DB 반영은 완료 시) */
-  onUpdateSpot?: (id: string, updates: { title: string; memo?: string }) => void;
+  /** 편집 모드에서 경유지 제목·메모·날짜를 바꾼다 (DB 반영은 완료 시) */
+  onUpdateSpot?: (id: string, updates: { title: string; memo?: string; date?: string }) => void;
+  /** 플랜 기간의 날짜들. 이틀 이상이면 경유지를 날짜별로 묶어 보여준다 */
+  planDays?: string[];
   /** 편집 모드에서 구간 카드를 누르면 경로 목록을 연다 */
   onOpenRouteOptions?: (from: PlannedSpot, to: PlannedSpot) => void;
 }
@@ -68,14 +73,22 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   onRenamePlan,
   onUpdateSpot,
   onOpenRouteOptions,
+  planDays = [],
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
-  // 인라인 편집 상태 — 플랜 제목과 경유지(제목·메모)
+  // 인라인 편집 상태 — 플랜 제목과 경유지(제목·메모·날짜)
   const [titleDraft, setTitleDraft] = useState<string | null>(null);
-  const [spotDraft, setSpotDraft] = useState<{ id: string; title: string; memo: string } | null>(
-    null
-  );
+  const [spotDraft, setSpotDraft] = useState<{
+    id: string;
+    title: string;
+    memo: string;
+    date: string;
+  } | null>(null);
+
+  // 여러 날짜 플랜이면 경유지마다 실제 날짜를 정해 두고, 날짜가 바뀌는 곳에 "N일차" 구분을 넣는다
+  const isMultiDay = planDays.length > 1;
+  const spotDates = isMultiDay ? resolveSpotDates(plannedSpots, planDays) : [];
 
   const displayTitle = planTitle?.trim() || "데이트 코스 상세";
 
@@ -88,7 +101,11 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
 
   const commitSpot = () => {
     if (!spotDraft) return;
-    onUpdateSpot?.(spotDraft.id, { title: spotDraft.title, memo: spotDraft.memo });
+    onUpdateSpot?.(spotDraft.id, {
+      title: spotDraft.title,
+      memo: spotDraft.memo,
+      date: isMultiDay ? spotDraft.date : undefined,
+    });
     setSpotDraft(null);
   };
 
@@ -105,9 +122,11 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
     .slice(1)
     .map((to, i) => segmentRoutes?.[segmentPairKey(plannedSpots[i].id, to.id)]);
   const routedSegments = segmentList.filter((s) => s?.route);
+  // 같은 장소 구간은 이동이 없을 뿐 빠진 구간이 아니다
+  const movingSegmentCount = segmentList.filter((s) => !s?.samePlace).length;
   const totalDuration = routedSegments.reduce((sum, s) => sum + (s?.route?.duration ?? 0), 0);
   const totalDistance = routedSegments.reduce((sum, s) => sum + (s?.route?.distance ?? 0), 0);
-  const isPartialTotal = routedSegments.length < segmentList.length;
+  const isPartialTotal = routedSegments.length < movingSegmentCount;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 max-w-md mx-auto px-4 pb-4 transition-all duration-300">
@@ -199,7 +218,9 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                     <div className="flex items-center gap-1.5 font-medium min-w-0">
                       <Route className="w-4 h-4 text-plan shrink-0" />
                       <span className="truncate">
-                        {routedSegments.length === 0
+                        {movingSegmentCount === 0
+                          ? "이동 없음"
+                          : routedSegments.length === 0
                           ? loadingRoutes
                             ? "경로 계산 중..."
                             : "구간 경로가 아직 없어요"
@@ -264,11 +285,25 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                     ? segmentRoutes?.[segmentPairKey(spot.id, nextSpot.id)]
                     : undefined;
                   const segmentRoute = segment?.route ?? null;
-                  const SegmentIcon = MODE_ICON[segmentRoute?.mode ?? "transit"];
+                  const SegmentIcon = segment?.samePlace
+                    ? MapPin
+                    : MODE_ICON[segmentRoute?.mode ?? "transit"];
                   const canPickRoute = isEditing && Boolean(onOpenRouteOptions);
+
+                  const spotDate = spotDates[index];
+                  const startsDay = isMultiDay && (index === 0 || spotDate !== spotDates[index - 1]);
 
                   return (
                     <React.Fragment key={spot.id}>
+                      {startsDay && (
+                        <div className={`flex items-center gap-2 ${index === 0 ? "" : "pt-2"}`}>
+                          <span className="text-[11px] font-bold text-plan-strong">
+                            {planDays.indexOf(spotDate) + 1}일차
+                          </span>
+                          <span className="text-[11px] text-ink-muted">{formatDayDate(spotDate)}</span>
+                          <div className="h-px flex-1 bg-plan-line" />
+                        </div>
+                      )}
                       {spotDraft && spotDraft.id === spot.id ? (
                       /* 경유지 인라인 편집 — 제목과 계획 메모 */
                       <div className="p-3 rounded-2xl bg-surface border-2 border-plan shadow-xs space-y-2">
@@ -299,6 +334,13 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                           rows={2}
                           className="w-full bg-surface-2 border border-line rounded-lg px-2.5 py-1.5 text-[11px] text-ink focus:outline-none focus:ring-2 focus:ring-plan resize-none"
                         />
+                        {isMultiDay && (
+                          <PlanDayPicker
+                            days={planDays}
+                            value={spotDraft.date}
+                            onChange={(date) => setSpotDraft({ ...spotDraft, date })}
+                          />
+                        )}
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
@@ -326,13 +368,20 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                                 id: spot.id,
                                 title: spot.title,
                                 memo: spot.memo || "",
+                                date: spotDate ?? "",
                               });
                             } else {
                               onPanToSpot?.(spot.latitude, spot.longitude);
                             }
                           }}
                           className="flex items-center gap-3 min-w-0 cursor-pointer flex-1"
-                          title={isEditing ? "클릭 시 제목·메모 수정" : "클릭 시 지도 위치로 이동"}
+                          title={
+                            isEditing
+                              ? isMultiDay
+                                ? "클릭 시 제목·메모·날짜 수정"
+                                : "클릭 시 제목·메모 수정"
+                              : "클릭 시 지도 위치로 이동"
+                          }
                         >
                           {/* Order Badge */}
                           <div className="w-7 h-7 rounded-full bg-plan text-on-accent font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
@@ -411,6 +460,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                                   <div className="text-[10px] text-plan-strong font-medium truncate mt-0.5">
                                     {routeStepsSummary(segmentRoute)}
                                   </div>
+                                  <RouteDurationBar route={segmentRoute} size="sm" className="mt-1.5" />
                                 </>
                               ) : (
                                 <div className="text-plan-strong text-[11px]">

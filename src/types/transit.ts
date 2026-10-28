@@ -23,6 +23,11 @@ export interface RouteStep {
   /** 지나는 정류장·역 수 (타는 곳 포함) */
   stopCount?: number;
   path?: LatLngPoint[];
+  /**
+   * 승차 전·하차 후 도보. 카카오 대중교통 응답에는 좌표가 없어 서버가 직선으로 채우고,
+   * 경로를 고르면 화면에서 도보 경로 API로 실제 길을 받아 `path`를 바꾼다.
+   */
+  connector?: boolean;
 }
 
 export interface RouteOption {
@@ -56,4 +61,6 @@ export interface SegmentRouteState {
   route: RouteOption | null;
   loading?: boolean;
   error?: string | null;
+  /** 출발·도착이 같은 장소라 이동이 없는 구간. 합계에서는 0으로 친다 */
+  samePlace?: boolean;
 }

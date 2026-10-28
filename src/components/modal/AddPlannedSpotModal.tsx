@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, MapPin, Sparkles } from "lucide-react";
+import { PlanDayPicker } from "@/components/plan/PlanDayPicker";
 
 interface AddPlannedSpotModalProps {
   isOpen: boolean;
@@ -13,8 +14,13 @@ interface AddPlannedSpotModalProps {
     memo: string | undefined,
     lat: number,
     lng: number,
-    address?: string
+    address?: string,
+    date?: string
   ) => void;
+  /** 플랜 기간의 날짜들. 이틀 이상일 때만 날짜를 고른다 */
+  planDays?: string[];
+  /** 날짜 기본값. 보통 마지막 경유지의 날짜다 */
+  defaultDate?: string;
 }
 
 export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
@@ -23,16 +29,21 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
   latLng,
   initialAddress = "",
   onSubmit,
+  planDays = [],
+  defaultDate,
 }) => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
+  const [date, setDate] = useState<string>("");
+  const showDate = planDays.length > 1;
 
   useEffect(() => {
     if (isOpen) {
       setTitle("");
       setMemo("");
+      setDate(defaultDate ?? "");
     }
-  }, [isOpen]);
+  }, [isOpen, defaultDate]);
 
   if (!isOpen || !latLng) return null;
 
@@ -45,7 +56,8 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
       memo || undefined,
       latLng.lat,
       latLng.lng,
-      initialAddress
+      initialAddress,
+      showDate ? date || planDays[0] : undefined
     );
   };
 
@@ -107,6 +119,13 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
               className="w-full px-3.5 py-2.5 bg-surface-2 border border-line rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-plan focus:bg-surface transition-all resize-none"
             />
           </div>
+
+          {showDate && (
+            <div>
+              <span className="block text-xs font-semibold text-ink mb-1">방문 날짜</span>
+              <PlanDayPicker days={planDays} value={date || planDays[0]} onChange={setDate} />
+            </div>
+          )}
 
           <div className="pt-2 flex items-center gap-2">
             <button

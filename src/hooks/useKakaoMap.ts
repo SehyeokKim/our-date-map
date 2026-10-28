@@ -343,7 +343,7 @@ export function useKakaoMap(
     polylinesRef.current = [];
   }, []);
 
-  // 구간 경로선을 그린다. 차량은 실선, 도보는 점선, 아직 경로가 없는 구간은 흐린 긴 점선이다.
+  // 구간 경로선을 그린다. 수단·노선은 색으로 나누고(같은 굵기), 도보는 파란 원 점선, 길과 경유지 사이는 회색 원 점선, 아직 경로가 없는 구간은 흐린 긴 점선이다.
   const renderRouteLines = useCallback(
     (lines: RouteLine[]) => {
       const kakao = window.kakao;
@@ -351,19 +351,15 @@ export function useKakaoMap(
 
       clearRoutePolyline();
 
-      // Kakao SDK 옵션은 CSS 클래스를 못 쓰므로 현재 테마의 --plan 토큰 값을 직접 읽는다.
-      // 색은 하나로 두고 굵기와 선 모양으로만 수단을 구분해, 어느 테마에서도 지도 위 대비가 같다.
-      const planColor =
-        getComputedStyle(document.documentElement).getPropertyValue("--plan").trim() ||
-        "#4f7a6a";
       const styles: Record<RouteLineStyle, { weight: number; opacity: number; stroke: string }> = {
-        vehicle: { weight: 6, opacity: 0.9, stroke: "solid" },
-        car: { weight: 5, opacity: 0.85, stroke: "solid" },
-        walk: { weight: 4, opacity: 0.95, stroke: "shortdash" },
-        pending: { weight: 3, opacity: 0.4, stroke: "longdash" },
+        solid: { weight: 5, opacity: 0.85, stroke: "solid" },
+        // 카카오는 선 끝을 둥글게 그려서 shortdot이 굵기만 한 원을 간격을 두고 찍는다
+        walk: { weight: 5, opacity: 0.95, stroke: "shortdot" },
+        spur: { weight: 5, opacity: 0.85, stroke: "shortdot" },
+        pending: { weight: 3, opacity: 0.5, stroke: "longdash" },
       };
 
-      lines.forEach(({ path, style }) => {
+      lines.forEach(({ path, style, color }) => {
         if (path.length < 2) return;
         const option = styles[style];
         polylinesRef.current.push(
@@ -371,7 +367,7 @@ export function useKakaoMap(
             map,
             path: path.map((c) => new kakao.maps.LatLng(c.lat, c.lng)),
             strokeWeight: option.weight,
-            strokeColor: planColor,
+            strokeColor: color,
             strokeOpacity: option.opacity,
             strokeStyle: option.stroke,
           })

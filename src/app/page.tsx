@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Script from "next/script";
 import { ToastState, DeletedDateSpot } from "@/types/spot";
 import { useKakaoMap } from "@/hooks/useKakaoMap";
@@ -31,7 +31,8 @@ import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
 import { AppMode, DatePlan, PlannedSpot } from "@/types/planner";
 import { buildRouteLines, getRoutePathKey } from "@/lib/route";
-import { readSavedRoute, segmentPairKey } from "@/lib/transit";
+import { ROUTE_COLORS, readSavedRoute, segmentPairKey } from "@/lib/transit";
+import { listPlanDays, resolveSpotDates } from "@/lib/planDates";
 
 export default function Home() {
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -138,6 +139,8 @@ export default function Home() {
     patchSegmentRoute,
     currentTitle,
     setCurrentTitle,
+    startDate,
+    endDate,
     allDatePlans,
     isScheduleModalOpen,
     setIsScheduleModalOpen,
@@ -157,17 +160,25 @@ export default function Home() {
     moveSpotDown,
   } = useFuturePlanner(showToast, user?.id);
 
+  // 여러 날짜 플랜의 날짜 목록. 새 경유지의 날짜 기본값은 마지막 경유지의 날짜다
+  const planDays = useMemo(() => listPlanDays(startDate, endDate), [startDate, endDate]);
+  const lastSpotDate = useMemo(
+    () => resolveSpotDates(plannedSpots, planDays).at(-1) ?? planDays[0],
+    [plannedSpots, planDays]
+  );
+
   // 코스 편집 상태 — 새 플랜을 만들면 곧바로 편집에 들어가야 해서 시트 밖에서 관리한다
   const [isEditingPlan, setIsEditingPlan] = useState<boolean>(false);
   // "핀으로 추가" — 이 동안에만 플래너 모드에서 지도 클릭으로 핀을 찍을 수 있다
   const [isPickingOnMap, setIsPickingOnMap] = useState<boolean>(false);
 
   // 구간별 경로 (카카오 대중교통·도보, Kakao Mobility 자동차)
-  // 경유지를 등록·수정하는 동안에만 조회하고, 그냥 볼 때는 저장된 결과를 쓴다 (일일 쿼터 보호)
-  const { segmentRoutes, loadingRoutes, searchRoutes } = useSegmentRoutes(
+  // 경유지를 등록·수정하는 동안에만 조회하고, 그냥 볼 때는 저장된 결과를 쓴다 (일일 쿼터 보호).
+  // 개발 서버에서는 경로 확인이 쉽도록 조회 모드에서도 부른다. 결과는 완료를 눌러야 DB에 남는다
+  const { segmentRoutes, loadingRoutes, searchRoutes, selectRoute } = useSegmentRoutes(
     plannedSpots,
     currentRouteSummary?.transitRoutes,
-    isEditingPlan,
+    isEditingPlan || process.env.NODE_ENV === "development",
     patchSegmentRoute
   );
   // 경로 목록을 연 구간
@@ -317,7 +328,7 @@ export default function Home() {
             legacyPath.length > 1 &&
             currentRouteSummary?.pathKey === getRoutePathKey(plannedSpots)
           ) {
-            renderRouteLines([{ path: legacyPath, style: "vehicle" }]);
+            renderRouteLines([{ path: legacyPath, style: "solid", color: ROUTE_COLORS.car }]);
           } else {
             renderRouteLines(lines);
           }
@@ -504,8 +515,10 @@ export default function Home() {
           }}
           latLng={newSpotLatLng}
           initialAddress={currentAddress}
-          onSubmit={(title, memo, lat, lng, address) => {
-            addSpot(title, memo, lat, lng, address);
+          planDays={planDays}
+          defaultDate={lastSpotDate}
+          onSubmit={(title, memo, lat, lng, address, date) => {
+            addSpot(title, memo, lat, lng, address, date);
             closeAddModal();
             setIsPickingOnMap(false);
           }}
@@ -610,6 +623,7 @@ export default function Home() {
           onRenamePlan={setCurrentTitle}
           onUpdateSpot={updateSpot}
           onOpenRouteOptions={(from, to) => setRoutePicker({ from, to })}
+          planDays={planDays}
         />
       )}
 
@@ -623,11 +637,7 @@ export default function Home() {
           }
           searchRoutes={searchRoutes}
           onSelect={(route) => {
-            patchSegmentRoute(segmentPairKey(routePicker.from.id, routePicker.to.id), {
-              fromSpotId: routePicker.from.id,
-              toSpotId: routePicker.to.id,
-              route,
-            });
+            selectRoute(routePicker.from, routePicker.to, route);
             setRoutePicker(null);
           }}
           onClose={() => setRoutePicker(null)}

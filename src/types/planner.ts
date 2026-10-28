@@ -7,6 +7,11 @@ export interface PlannedSpot {
   address?: string;
   order: number;
   createdAt: string;
+  /**
+   * 여러 날짜 플랜에서 이 경유지를 방문하는 날 (`YYYY-MM-DD`).
+   * 없으면 앞 경유지의 날짜를 따른다 (`resolveSpotDates`).
+   */
+  date?: string;
 }
 
 export type AppMode = 'memory' | 'planning';

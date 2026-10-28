@@ -18,6 +18,30 @@ export const TRANSIT_SORT_LABEL: Record<TransitSort, string> = {
   walk: "최소도보",
 };
 
+/**
+ * 지도 경로선·목록 칩·시간 막대가 함께 쓰는 경로 색. 지도 타일은 테마와 상관없이 밝아서 테마 토큰이 아닌 고정 색이다.
+ * 지하철과 버스는 색 계열을 나누고, 같은 종류로 갈아타면 다음 색으로 바꿔 환승 지점이 보이게 한다.
+ * 도보는 길찾기 앱에서 익숙한 파란 점, 길과 경유지 사이의 짧은 연결(spur)은 회색 점이다.
+ * 지도 위에서 튀지 않도록 채도를 낮춘 톤이고, 차량 색은 모두 흰 글자와 4.8:1 이상이다.
+ */
+export const ROUTE_COLORS = {
+  subway: ["#6a52b3", "#2f7c7a"],
+  bus: ["#3d7f52", "#ad4778"],
+  car: "#434a55",
+  walk: "#4f7bd4",
+  spur: "#8b929c",
+} as const;
+
+/** `steps[index]`의 색. 지하철·버스는 같은 경로 안에서 앞서 탄 같은 종류의 수로 색을 고른다 */
+export const stepColor = (steps: RouteStep[], index: number): string => {
+  const step = steps[index];
+  if (step.kind === "walk") return ROUTE_COLORS.walk;
+  if (step.kind === "car") return ROUTE_COLORS.car;
+  const palette = ROUTE_COLORS[step.kind];
+  const earlier = steps.slice(0, index).filter((s) => s.kind === step.kind).length;
+  return palette[earlier % palette.length];
+};
+
 export const segmentPairKey = (fromId: string, toId: string) => `${fromId}->${toId}`;
 
 export const walkDistanceOf = (route: RouteOption) =>

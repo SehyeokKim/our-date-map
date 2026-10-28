@@ -379,7 +379,8 @@ export function useFuturePlanner(
       memo: string | undefined,
       lat: number,
       lng: number,
-      address?: string
+      address?: string,
+      date?: string
     ) => {
       const newSpot: PlannedSpot = {
         id: `plan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
@@ -390,6 +391,7 @@ export function useFuturePlanner(
         address,
         order: plannedSpots.length + 1,
         createdAt: new Date().toISOString(),
+        date,
       };
 
       const updated = [...plannedSpots, newSpot];
@@ -401,15 +403,20 @@ export function useFuturePlanner(
     [plannedSpots, saveSpots, showToast]
   );
 
-  // Update a spot's title/memo (편집 모드에서 경유지 내용 수정)
+  // Update a spot's title/memo/date (편집 모드에서 경유지 내용 수정)
   const updateSpot = useCallback(
-    (id: string, updates: { title: string; memo?: string }) => {
+    (id: string, updates: { title: string; memo?: string; date?: string }) => {
       const nextTitle = updates.title.trim();
       const nextMemo = updates.memo?.trim();
 
       const updated = plannedSpots.map((s) =>
         s.id === id
-          ? { ...s, title: nextTitle || s.title, memo: nextMemo || undefined }
+          ? {
+              ...s,
+              title: nextTitle || s.title,
+              memo: nextMemo || undefined,
+              date: updates.date ?? s.date,
+            }
           : s
       );
       saveSpots(updated);

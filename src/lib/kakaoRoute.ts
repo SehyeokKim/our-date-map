@@ -82,6 +82,7 @@ const connectorStep = (
   start,
   end,
   path: [from, to],
+  connector: true,
 });
 
 /** 카카오 대중교통 `routes[]`를 후보 목록으로 바꾼다. 응답 순서(카카오 추천순)를 유지한다 */
