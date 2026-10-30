@@ -472,35 +472,41 @@ export function useFuturePlanner(
     [plannedSpots, saveSpots, showToast]
   );
 
-  // Move spot up
-  const moveSpotUp = useCallback(
-    (index: number) => {
-      if (index <= 0 || index >= plannedSpots.length) return;
-      const updated = [...plannedSpots];
-      const temp = updated[index - 1];
-      updated[index - 1] = updated[index];
-      updated[index] = temp;
+  /**
+   * 경유지를 한 칸 옮긴다. 여러 날짜 플랜에서 날짜 경계를 넘을 때는 자리를 바꾸지 않고 옆 경유지의 날짜를 따른다.
+   * 예: 2일차 첫 경유지를 올리면 1일차 마지막이 되고, 한 번 더 올려야 1일차 안에서 자리를 바꾼다.
+   */
+  const moveSpot = useCallback(
+    (index: number, step: -1 | 1) => {
+      const target = index + step;
+      if (index < 0 || index >= plannedSpots.length || target < 0 || target >= plannedSpots.length) {
+        return;
+      }
 
-      const reordered = updated.map((s, i) => ({ ...s, order: i + 1 }));
-      saveSpots(reordered);
+      const days = listPlanDays(startDate, endDate);
+      const multiDay = days.length > 1;
+      const resolved = resolveSpotDates(plannedSpots, days);
+      // 날짜를 넣지 않은 경유지는 앞 경유지의 날짜를 따르므로, 순서가 바뀌어도 보이던 날짜가 남도록 적어 둔다
+      const updated = multiDay
+        ? plannedSpots.map((s, i) => ({ ...s, date: resolved[i] }))
+        : [...plannedSpots];
+
+      if (multiDay && resolved[index] !== resolved[target]) {
+        updated[index] = { ...updated[index], date: resolved[target] };
+      } else {
+        [updated[index], updated[target]] = [updated[target], updated[index]];
+      }
+
+      saveSpots(updated.map((s, i) => ({ ...s, order: i + 1 })));
     },
-    [plannedSpots, saveSpots]
+    [plannedSpots, saveSpots, startDate, endDate]
   );
+
+  // Move spot up
+  const moveSpotUp = useCallback((index: number) => moveSpot(index, -1), [moveSpot]);
 
   // Move spot down
-  const moveSpotDown = useCallback(
-    (index: number) => {
-      if (index < 0 || index >= plannedSpots.length - 1) return;
-      const updated = [...plannedSpots];
-      const temp = updated[index + 1];
-      updated[index + 1] = updated[index];
-      updated[index] = temp;
-
-      const reordered = updated.map((s, i) => ({ ...s, order: i + 1 }));
-      saveSpots(reordered);
-    },
-    [plannedSpots, saveSpots]
-  );
+  const moveSpotDown = useCallback((index: number) => moveSpot(index, 1), [moveSpot]);
 
   // Clear all planned spots
   const clearAllPlans = useCallback(() => {
