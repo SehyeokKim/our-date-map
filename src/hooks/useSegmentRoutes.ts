@@ -20,6 +20,16 @@ import { isSamePlace, thinPath } from "@/lib/route";
  */
 const FAILURE_RETRY_MS = 2 * 60 * 1000;
 
+/**
+ * 경유지 순서·위치가 바뀐 뒤 이만큼 더 바뀌지 않아야 빈 구간을 조회한다.
+ * 위/아래 버튼을 여러 번 누르는 동안 거쳐 가는 중간 순서마다 API를 부르지 않기 위함이다
+ */
+const EDIT_SETTLE_MS = 2000;
+
+/** 경로에 영향을 주는 경유지 구성(순서·좌표). 이름·메모만 고친 경우는 같다 */
+const spotsLayoutKey = (spots: PlannedSpot[]) =>
+  spots.map((s) => `${s.id}:${s.latitude},${s.longitude}`).join("|");
+
 /** 저장 형식이 바뀌면 올린다. 예전 sessionStorage 값을 새 형식으로 잘못 읽지 않게 한다 */
 const SESSION_PREFIX = "route_options_v2";
 
@@ -168,6 +178,8 @@ export function useSegmentRoutes(
 
   // 사용자가 직접 고른 경로 (구간별 서명). 늦게 끝난 자동 선택이나 도보 보강이 이를 덮어쓰지 않게 한다
   const chosenRef = useRef<Map<string, string>>(new Map());
+  // 직전 effect가 본 경유지 구성. 구성이 바뀐 때만 조회를 미룬다
+  const layoutKeyRef = useRef<string | null>(null);
 
   /** 목록에서 고른 경로. 바로 반영하고, 도보 길을 받아 오면 한 번 더 반영한다 */
   const selectRoute = useCallback(
@@ -209,6 +221,10 @@ export function useSegmentRoutes(
   );
 
   useEffect(() => {
+    const layoutKey = spotsLayoutKey(plannedSpots);
+    const layoutChanged = layoutKeyRef.current !== null && layoutKeyRef.current !== layoutKey;
+    layoutKeyRef.current = layoutKey;
+
     if (plannedSpots.length < 2) {
       setSegmentRoutes({});
       setLoadingRoutes(false);
@@ -285,10 +301,12 @@ export function useSegmentRoutes(
       setLoadingRoutes(false);
     };
 
-    loadPending();
+    // 구간 하나가 채워질 때마다(savedRoutes 변경) 다시 도는 경우는 기다리지 않고 이어서 조회한다
+    const timer = setTimeout(loadPending, layoutChanged ? EDIT_SETTLE_MS : 0);
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [plannedSpots, savedRoutes, enabled, pickDefaultRoute, attachWalkPaths]);
 
