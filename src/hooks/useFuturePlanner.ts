@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { PlannedSpot, AppMode, DatePlan, RouteSummaryData } from "@/types/planner";
 import { SavedSegmentRoute } from "@/types/transit";
 import { supabase } from "@/lib/supabase/client";
+import { listPlanDays, resolveSpotDates } from "@/lib/planDates";
 
 const STORAGE_KEY = "our_date_map_planned_spots";
 const STORAGE_ROUTE_KEY = "our_date_map_route_summary";
@@ -403,13 +404,24 @@ export function useFuturePlanner(
         date,
       };
 
-      const updated = [...plannedSpots, newSpot];
+      // 날짜를 고르면 그 날의 마지막 경유지 뒤에 넣는다. 맨 끝에 붙이면 2일차 아래에 1일차가 다시 생긴다
+      const days = listPlanDays(startDate, endDate);
+      const spotDates = resolveSpotDates(plannedSpots, days);
+      const insertAt =
+        date && days.includes(date)
+          ? spotDates.filter((d) => d <= date).length
+          : plannedSpots.length;
+      const updated = [
+        ...plannedSpots.slice(0, insertAt),
+        newSpot,
+        ...plannedSpots.slice(insertAt),
+      ].map((s, i) => ({ ...s, order: i + 1 }));
       saveSpots(updated);
       showToast(`'${newSpot.title}'이(가) 플래닝에 추가되었습니다!`, "success");
       setIsAddModalOpen(false);
       setPendingLatLng(null);
     },
-    [plannedSpots, saveSpots, showToast]
+    [plannedSpots, saveSpots, showToast, startDate, endDate]
   );
 
   // Update a spot's title/memo/date (편집 모드에서 경유지 내용 수정)
