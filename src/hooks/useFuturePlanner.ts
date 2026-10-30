@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { PlannedSpot, AppMode, DatePlan, RouteSummaryData } from "@/types/planner";
 import { SavedSegmentRoute } from "@/types/transit";
 import { supabase } from "@/lib/supabase/client";
-import { listPlanDays, resolveSpotDates } from "@/lib/planDates";
+import { dayEndIndex, listPlanDays, resolveSpotDates } from "@/lib/planDates";
 
 const STORAGE_KEY = "our_date_map_planned_spots";
 const STORAGE_ROUTE_KEY = "our_date_map_route_summary";
@@ -405,12 +405,7 @@ export function useFuturePlanner(
       };
 
       // 날짜를 고르면 그 날의 마지막 경유지 뒤에 넣는다. 맨 끝에 붙이면 2일차 아래에 1일차가 다시 생긴다
-      const days = listPlanDays(startDate, endDate);
-      const spotDates = resolveSpotDates(plannedSpots, days);
-      const insertAt =
-        date && days.includes(date)
-          ? spotDates.filter((d) => d <= date).length
-          : plannedSpots.length;
+      const insertAt = dayEndIndex(plannedSpots, date, listPlanDays(startDate, endDate));
       const updated = [
         ...plannedSpots.slice(0, insertAt),
         newSpot,
@@ -429,20 +424,38 @@ export function useFuturePlanner(
     (id: string, updates: { title: string; memo?: string; date?: string }) => {
       const nextTitle = updates.title.trim();
       const nextMemo = updates.memo?.trim();
+      const index = plannedSpots.findIndex((s) => s.id === id);
+      if (index < 0) return;
 
-      const updated = plannedSpots.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              title: nextTitle || s.title,
-              memo: nextMemo || undefined,
-              date: updates.date ?? s.date,
-            }
-          : s
+      const current = plannedSpots[index];
+      const edited: PlannedSpot = {
+        ...current,
+        title: nextTitle || current.title,
+        memo: nextMemo || undefined,
+        date: updates.date ?? current.date,
+      };
+
+      const days = listPlanDays(startDate, endDate);
+      const resolved = resolveSpotDates(plannedSpots, days);
+      const movesDay =
+        updates.date !== undefined && days.includes(updates.date) && updates.date !== resolved[index];
+      if (!movesDay) {
+        saveSpots(plannedSpots.map((s) => (s.id === id ? edited : s)));
+        return;
+      }
+
+      // 날짜가 바뀌면 그 날의 마지막 경유지 뒤로 옮긴다. 제자리에 두면 2일차 사이에 1일차가 끼어 보인다.
+      // 나머지 경유지에는 지금 보이는 날짜를 적어 둔다. 날짜 없이 이 경유지의 날짜를 따르던 뒤 경유지가 함께 옮겨 가지 않게 하기 위함이다
+      const others = plannedSpots
+        .map((s, i) => ({ ...s, date: resolved[i] }))
+        .filter((s) => s.id !== id);
+      const insertAt = dayEndIndex(others, edited.date, days);
+      const updated = [...others.slice(0, insertAt), edited, ...others.slice(insertAt)].map(
+        (s, i) => ({ ...s, order: i + 1 })
       );
       saveSpots(updated);
     },
-    [plannedSpots, saveSpots]
+    [plannedSpots, saveSpots, startDate, endDate]
   );
 
   // Remove spot

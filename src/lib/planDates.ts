@@ -55,3 +55,21 @@ export const resolveSpotDates = (spots: Pick<PlannedSpot, "date">[], days: strin
   });
   return resolved;
 };
+
+/**
+ * 경유지를 `date`의 마지막 경유지 바로 뒤에 넣을 자리. 그 날짜보다 뒤 날짜의 경유지 앞이다.
+ * 날짜가 없거나 플랜 기간 밖이면 맨 끝이다.
+ */
+export const dayEndIndex = (
+  spots: Pick<PlannedSpot, "date">[],
+  date: string | undefined,
+  days: string[]
+): number => {
+  if (!date || !days.includes(date)) return spots.length;
+  const resolved = resolveSpotDates(spots, days);
+  let index = 0;
+  resolved.forEach((d, i) => {
+    if (d <= date) index = i + 1;
+  });
+  return index;
+};
