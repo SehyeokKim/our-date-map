@@ -1,6 +1,6 @@
 import { PlannedSpot } from "@/types/planner";
 import { RouteOption } from "@/types/transit";
-import { ROUTE_COLORS, stepColor } from "@/lib/transit";
+import { ROUTE_COLORS } from "@/lib/transit";
 
 /**
  * 코스 경로선(Kakao Mobility)이 어떤 경유지 구성으로 계산됐는지 나타내는 서명.
@@ -56,7 +56,7 @@ export const thinPath = (
 };
 
 /**
- * 지도 경로선 모양. solid는 지하철·버스·자동차, walk는 도보(파란 점), spur는 길과 경유지 사이의 짧은 연결(회색 점),
+ * 지도 경로선 모양. solid는 지하철·버스·자동차(테두리·화살표), walk는 도보(구간 색 점), spur는 길과 경유지 사이의 짧은 연결(회색 점),
  * pending은 경로가 아직 없는 구간
  */
 export type RouteLineStyle = "solid" | "walk" | "spur" | "pending";
@@ -65,7 +65,38 @@ export interface RouteLine {
   path: { lat: number; lng: number }[];
   style: RouteLineStyle;
   color: string;
+  /** 몇 번째 구간인지. 지도에서 구간 단위로 강조한다 */
+  group: number;
 }
+
+/**
+ * 지도 경로선의 구간별 색. 이웃한 구간이 이웃한 색상(빨강 → 주황 → 초록 → 파랑 → 보라)을 받아
+ * 구간은 구분되면서 전체가 한 흐름으로 보이게 한다. 흰 화살표가 보이도록 밝은 노랑은 뺐다.
+ */
+export const ROUTE_SEGMENT_COLORS = [
+  "#e0475b",
+  "#ea6c3c",
+  "#43a06a",
+  "#2b98a4",
+  "#3d78d8",
+  "#6a5fd1",
+  "#a256c4",
+] as const;
+
+export const segmentColor = (index: number) =>
+  ROUTE_SEGMENT_COLORS[index % ROUTE_SEGMENT_COLORS.length];
+
+/** `#rrggbb` 두 색을 `t`(0-1) 비율로 섞는다 */
+export const mixColor = (from: string, to: string, t: number): string => {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  return `#${[0, 1, 2]
+    .map((i) =>
+      Math.round(channel(from, i) + (channel(to, i) - channel(from, i)) * t)
+        .toString(16)
+        .padStart(2, "0")
+    )
+    .join("")}`;
+};
 
 /** 경로 끝과 경유지가 이보다 멀면 회색 연결선을 긋는다 */
 const SPUR_MIN_M = 3;
@@ -104,7 +135,7 @@ const sameEnds = (a: { lat: number; lng: number }[], b: { lat: number; lng: numb
 };
 
 /**
- * 구간마다 고른 경로를 지도에 그릴 선 목록으로 바꾼다. 색은 목록 칩과 같은 `stepColor`를 쓴다.
+ * 구간마다 고른 경로를 지도에 그릴 선 목록으로 바꾼다. 한 구간의 선은 모두 그 구간의 색(`segmentColor`)을 쓴다.
  * - 길찾기 API의 경로는 경유지에서 가장 가까운 길에서 시작·끝나므로, 경유지와 경로 끝 사이는 회색 점으로 잇는다.
  * - 앞 구간의 하차 후 도보와 다음 구간의 승차 전 도보처럼 같은 두 지점을 잇는 도보는 한 번만 그린다.
  *   점선이 서로 어긋나게 겹치면 점이 다닥다닥 붙어 보이기 때문이다.
@@ -119,19 +150,21 @@ export const buildRouteLines = (
     const origin = { lat: from.latitude, lng: from.longitude };
     const destination = { lat: to.latitude, lng: to.longitude };
     const steps = routeOf(from.id, to.id)?.steps ?? [];
-    const stepLines: RouteLine[] = steps.flatMap((s, index) =>
+    const color = segmentColor(i);
+    const stepLines: RouteLine[] = steps.flatMap((s) =>
       (s.path?.length ?? 0) >= 2
         ? [
             {
               path: removeBacktracks(s.path!),
               style: s.kind === "walk" ? "walk" : "solid",
-              color: stepColor(steps, index),
+              color,
+              group: i,
             } as RouteLine,
           ]
         : []
     );
     if (stepLines.length === 0) {
-      return [{ path: [origin, destination], style: "pending", color: ROUTE_COLORS.spur } as RouteLine];
+      return [{ path: [origin, destination], style: "pending", color, group: i } as RouteLine];
     }
 
     const first = stepLines[0].path[0];
@@ -139,10 +172,10 @@ export const buildRouteLines = (
     const last = lastPath[lastPath.length - 1];
     const spurs: RouteLine[] = [];
     if (getStraightDistance(origin, first) > SPUR_MIN_M) {
-      spurs.push({ path: [origin, first], style: "spur", color: ROUTE_COLORS.spur });
+      spurs.push({ path: [origin, first], style: "spur", color: ROUTE_COLORS.spur, group: i });
     }
     if (getStraightDistance(last, destination) > SPUR_MIN_M) {
-      spurs.push({ path: [last, destination], style: "spur", color: ROUTE_COLORS.spur });
+      spurs.push({ path: [last, destination], style: "spur", color: ROUTE_COLORS.spur, group: i });
     }
     return [...stepLines, ...spurs];
   });

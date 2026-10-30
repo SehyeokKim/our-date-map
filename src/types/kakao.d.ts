@@ -23,7 +23,9 @@ declare global {
           strokeColor?: string;
           strokeOpacity?: number;
           strokeStyle?: string;
+          zIndex?: number;
         }) => any;
+        Point: new (x: number, y: number) => any;
         event: {
           addListener: (target: any, type: string, handler: (e: any) => void) => void;
           removeListener: (target: any, type: string, handler: (e: any) => void) => void;

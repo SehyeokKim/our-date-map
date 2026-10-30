@@ -30,8 +30,8 @@ import { CustomPushMessageModal } from "@/components/modal/CustomPushMessageModa
 import { DateItineraryModal } from "@/components/modal/DateItineraryModal";
 import { CreateDatePlanModal } from "@/components/modal/CreateDatePlanModal";
 import { AppMode, DatePlan, PlannedSpot } from "@/types/planner";
-import { buildRouteLines, getRoutePathKey } from "@/lib/route";
-import { ROUTE_COLORS, readSavedRoute, segmentPairKey } from "@/lib/transit";
+import { buildRouteLines, getRoutePathKey, segmentColor } from "@/lib/route";
+import { readSavedRoute, segmentPairKey } from "@/lib/transit";
 import { listPlanDays, resolveSpotDates } from "@/lib/planDates";
 
 export default function Home() {
@@ -328,7 +328,7 @@ export default function Home() {
             legacyPath.length > 1 &&
             currentRouteSummary?.pathKey === getRoutePathKey(plannedSpots)
           ) {
-            renderRouteLines([{ path: legacyPath, style: "solid", color: ROUTE_COLORS.car }]);
+            renderRouteLines([{ path: legacyPath, style: "solid", color: segmentColor(0), group: 0 }]);
           } else {
             renderRouteLines(lines);
           }

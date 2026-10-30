@@ -3,9 +3,43 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DateSpot, LatLng } from "@/types/spot";
 import { AppMode, PlannedSpot } from "@/types/planner";
-import { RouteLine, RouteLineStyle } from "@/lib/route";
+import { RouteLine, RouteLineStyle, mixColor } from "@/lib/route";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/** 지도에 올린 경로선 하나와, 강조할 때 되돌릴 원래 색·투명도·순서 */
+interface RouteShape {
+  polyline: any;
+  group: number;
+  color: string;
+  opacity: number;
+  zIndex: number;
+}
+
+interface LineOption {
+  weight: number;
+  opacity: number;
+  stroke: string;
+}
+
+/** 강조하지 않은 구간은 이 회색 쪽으로 섞고 투명도를 낮춰 채도를 뺀다 */
+const DIM_TARGET = "#c9ced6";
+const DIM_MIX = 0.45;
+const DIM_OPACITY = 0.55;
+/** 실선 테두리는 선 색에 검정을 이만큼 섞는다 */
+const BORDER_DARKEN = 0.4;
+const ARROW_COLOR = "#ffffff";
+/** 화살표 사이 화면 거리와 꺾쇠 한 변의 크기(px) */
+const ARROW_GAP_PX = 56;
+const ARROW_SIZE_PX = 1.8;
+/**
+ * 마우스·손가락이 닿는 범위. 보이는 선보다 굵은 투명 선을 맨 위에 깔아,
+ * 가는 실선이나 점 사이가 빈 도보선도 쉽게 잡히게 한다
+ */
+const HIT_WEIGHT_PX = 18;
+const HIT_Z_INDEX = 30;
+/** 많이 확대했을 때 화살표가 지나치게 늘지 않게 막는다 */
+const MAX_ARROWS = 400;
+
 export function useKakaoMap(
   showToast: (message: string, type?: "success" | "error" | "info") => void,
   appMode: AppMode = "memory",
@@ -31,7 +65,15 @@ export function useKakaoMap(
 
   const overlaysRef = useRef<any[]>([]);
   const plannedOverlaysRef = useRef<any[]>([]);
-  const polylinesRef = useRef<any[]>([]);
+  const polylinesRef = useRef<RouteShape[]>([]);
+  const arrowsRef = useRef<RouteShape[]>([]);
+  // 화살표를 찍을 실선. 지도를 움직이면 이 선들로 화살표를 다시 계산한다
+  const arrowLinesRef = useRef<RouteLine[]>([]);
+  const hoveredGroupRef = useRef<number | null>(null);
+  const pinnedGroupRef = useRef<number | null>(null);
+  const lineClickedAtRef = useRef<number>(0);
+  // 경로선을 잡기 위한 투명 선. 색은 그대로 두고 순서만 바꾼다
+  const hitLinesRef = useRef<{ polyline: any; group: number }[]>([]);
   const tempOverlayRef = useRef<any | null>(null);
   const tempElRef = useRef<HTMLDivElement | null>(null);
   const geocoderRef = useRef<any | null>(null);
@@ -339,11 +381,125 @@ export function useKakaoMap(
 
   // Clear route lines
   const clearRoutePolyline = useCallback(() => {
-    polylinesRef.current.forEach((line) => line.setMap(null));
+    [...polylinesRef.current, ...arrowsRef.current].forEach(({ polyline }) => polyline.setMap(null));
+    hitLinesRef.current.forEach(({ polyline }) => polyline.setMap(null));
+    hitLinesRef.current = [];
     polylinesRef.current = [];
+    arrowsRef.current = [];
+    arrowLinesRef.current = [];
   }, []);
 
-  // 구간 경로선을 그린다. 수단·노선은 색으로 나누고(같은 굵기), 도보는 파란 원 점선, 길과 경유지 사이는 회색 원 점선, 아직 경로가 없는 구간은 흐린 긴 점선이다.
+  // 강조할 구간: 마우스를 올린 구간(웹)이 먼저, 없으면 누른 구간(앱). 나머지는 흐리게 둔다
+  const applyRouteHighlight = useCallback(() => {
+    const active = hoveredGroupRef.current ?? pinnedGroupRef.current;
+    [...polylinesRef.current, ...arrowsRef.current].forEach(
+      ({ polyline, group, color, opacity, zIndex }) => {
+        const on = group === active;
+        polyline.setOptions({
+          strokeColor: on ? color : mixColor(color, DIM_TARGET, DIM_MIX),
+          strokeOpacity: on ? opacity : opacity * DIM_OPACITY,
+        });
+        polyline.setZIndex(on ? zIndex + 10 : zIndex);
+      }
+    );
+    // 강조한 구간의 잡는 선을 맨 위로 올려, 다른 구간과 겹친 곳에서도 강조가 그 구간에 머물게 한다
+    hitLinesRef.current.forEach(({ polyline, group }) =>
+      polyline.setZIndex(group === active ? HIT_Z_INDEX + 1 : HIT_Z_INDEX)
+    );
+  }, []);
+
+  const bindRouteEvents = useCallback(
+    (polyline: any, group: number) => {
+      const kakao = window.kakao;
+      const canHover = window.matchMedia("(hover: hover)").matches;
+      if (canHover) {
+        kakao.maps.event.addListener(polyline, "mouseover", () => {
+          hoveredGroupRef.current = group;
+          applyRouteHighlight();
+        });
+        kakao.maps.event.addListener(polyline, "mouseout", () => {
+          if (hoveredGroupRef.current !== group) return;
+          hoveredGroupRef.current = null;
+          applyRouteHighlight();
+        });
+      }
+      kakao.maps.event.addListener(polyline, "click", () => {
+        lineClickedAtRef.current = Date.now();
+        pinnedGroupRef.current = group;
+        applyRouteHighlight();
+      });
+    },
+    [applyRouteHighlight]
+  );
+
+  // 실선 위에 진행 방향 화살표(흰 꺾쇠)를 화면 간격으로 찍는다. 화면 거리 기준이라 지도를 움직일 때마다 다시 그린다
+  const drawRouteArrows = useCallback(() => {
+    const kakao = window.kakao;
+    const container = mapContainerRef.current;
+    if (!kakao || !kakao.maps || !map || !container) return;
+
+    arrowsRef.current.forEach(({ polyline }) => polyline.setMap(null));
+    arrowsRef.current = [];
+
+    const projection = map.getProjection();
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const inView = (x: number, y: number) =>
+      x > -ARROW_GAP_PX && x < width + ARROW_GAP_PX && y > -ARROW_GAP_PX && y < height + ARROW_GAP_PX;
+    const toCoords = (x: number, y: number) =>
+      projection.coordsFromContainerPoint(new kakao.maps.Point(x, y));
+
+    for (const line of arrowLinesRef.current) {
+      const points: { x: number; y: number }[] = line.path.map((c) =>
+        projection.containerPointFromCoords(new kakao.maps.LatLng(c.lat, c.lng))
+      );
+      let walked = 0;
+      let next = ARROW_GAP_PX / 2;
+      for (let i = 1; i < points.length; i++) {
+        const a = points[i - 1];
+        const b = points[i];
+        const length = Math.hypot(b.x - a.x, b.y - a.y);
+        if (length === 0) continue;
+        const ux = (b.x - a.x) / length;
+        const uy = (b.y - a.y) / length;
+        for (; next <= walked + length; next += ARROW_GAP_PX) {
+          if (arrowsRef.current.length >= MAX_ARROWS) break;
+          const t = next - walked;
+          const x = a.x + ux * t;
+          const y = a.y + uy * t;
+          if (!inView(x, y)) continue;
+          const backX = x - ux * ARROW_SIZE_PX;
+          const backY = y - uy * ARROW_SIZE_PX;
+          const polyline = new kakao.maps.Polyline({
+            map,
+            path: [
+              toCoords(backX - uy * ARROW_SIZE_PX, backY + ux * ARROW_SIZE_PX),
+              toCoords(x + ux * ARROW_SIZE_PX, y + uy * ARROW_SIZE_PX),
+              toCoords(backX + uy * ARROW_SIZE_PX, backY - ux * ARROW_SIZE_PX),
+            ],
+            strokeWeight: 1.5,
+            strokeColor: ARROW_COLOR,
+            strokeOpacity: 1,
+            strokeStyle: "solid",
+            zIndex: 3,
+          });
+          bindRouteEvents(polyline, line.group);
+          arrowsRef.current.push({
+            polyline,
+            group: line.group,
+            color: ARROW_COLOR,
+            opacity: 1,
+            zIndex: 3,
+          });
+        }
+        walked += length;
+      }
+    }
+    applyRouteHighlight();
+  }, [map, bindRouteEvents, applyRouteHighlight]);
+
+  // 구간 경로선을 그린다. 구간마다 색을 나누고, 지하철·버스·자동차는 어두운 테두리와 흰 화살표가 있는 실선,
+  // 도보는 구간 색 원 점선, 길과 경유지 사이는 회색 원 점선, 아직 경로가 없는 구간은 긴 점선이다.
   const renderRouteLines = useCallback(
     (lines: RouteLine[]) => {
       const kakao = window.kakao;
@@ -351,31 +507,94 @@ export function useKakaoMap(
 
       clearRoutePolyline();
 
-      const styles: Record<RouteLineStyle, { weight: number; opacity: number; stroke: string }> = {
-        solid: { weight: 5, opacity: 0.85, stroke: "solid" },
+      const styles: Record<RouteLineStyle, LineOption> = {
+        solid: { weight: 5, opacity: 1, stroke: "solid" },
         // 카카오는 선 끝을 둥글게 그려서 shortdot이 굵기만 한 원을 간격을 두고 찍는다
-        walk: { weight: 5, opacity: 0.95, stroke: "shortdot" },
-        spur: { weight: 5, opacity: 0.85, stroke: "shortdot" },
-        pending: { weight: 3, opacity: 0.5, stroke: "longdash" },
+        walk: { weight: 4, opacity: 1, stroke: "shortdot" },
+        spur: { weight: 4, opacity: 0.85, stroke: "shortdot" },
+        pending: { weight: 2, opacity: 0.7, stroke: "longdash" },
       };
 
-      lines.forEach(({ path, style, color }) => {
-        if (path.length < 2) return;
-        const option = styles[style];
-        polylinesRef.current.push(
-          new kakao.maps.Polyline({
-            map,
-            path: path.map((c) => new kakao.maps.LatLng(c.lat, c.lng)),
-            strokeWeight: option.weight,
-            strokeColor: color,
-            strokeOpacity: option.opacity,
-            strokeStyle: option.stroke,
-          })
-        );
+      const addLine = (line: RouteLine, option: LineOption, color: string, zIndex: number) => {
+        const polyline = new kakao.maps.Polyline({
+          map,
+          path: line.path.map((c) => new kakao.maps.LatLng(c.lat, c.lng)),
+          strokeWeight: option.weight,
+          strokeColor: color,
+          strokeOpacity: option.opacity,
+          strokeStyle: option.stroke,
+          zIndex,
+        });
+        bindRouteEvents(polyline, line.group);
+        polylinesRef.current.push({ polyline, group: line.group, color, opacity: option.opacity, zIndex });
+      };
+
+      lines.forEach((line) => {
+        if (line.path.length < 2) return;
+        const option = styles[line.style];
+        if (line.style === "solid") {
+          // 테두리: 선 색을 어둡게 한 조금 더 굵은 선을 아래에 깐다
+          addLine(
+            line,
+            { ...option, weight: option.weight + 3 },
+            mixColor(line.color, "#000000", BORDER_DARKEN),
+            1
+          );
+          arrowLinesRef.current.push(line);
+        }
+        addLine(line, option, line.color, 2);
+
+        // 투명도가 0이면 이벤트를 받지 않을 수 있어 눈에 띄지 않을 만큼만 남긴다
+        const hit = new kakao.maps.Polyline({
+          map,
+          path: line.path.map((c) => new kakao.maps.LatLng(c.lat, c.lng)),
+          strokeWeight: HIT_WEIGHT_PX,
+          strokeColor: "#000000",
+          strokeOpacity: 0.01,
+          strokeStyle: "solid",
+          zIndex: HIT_Z_INDEX,
+        });
+        bindRouteEvents(hit, line.group);
+        hitLinesRef.current.push({ polyline: hit, group: line.group });
       });
+
+      // 경유지가 줄어 강조하던 구간이 없어졌으면 강조를 푼다
+      const groups = new Set(lines.map((line) => line.group));
+      if (pinnedGroupRef.current !== null && !groups.has(pinnedGroupRef.current)) {
+        pinnedGroupRef.current = null;
+      }
+      hoveredGroupRef.current = null;
+      drawRouteArrows();
     },
-    [map, clearRoutePolyline]
+    [map, clearRoutePolyline, bindRouteEvents, drawRouteArrows]
   );
+
+  // 지도를 움직이면 화살표를 다시 찍고, 경로 밖을 누르면 강조를 푼다
+  useEffect(() => {
+    if (!map) return;
+    const kakao = window.kakao;
+    if (!kakao || !kakao.maps) return;
+
+    const handleIdle = () => {
+      if (arrowLinesRef.current.length > 0) drawRouteArrows();
+    };
+    const handleClick = () => {
+      // 경로선을 누르면 지도 클릭도 함께 올 수 있어, 방금 경로선을 눌렀다면 무시한다
+      setTimeout(() => {
+        if (Date.now() - lineClickedAtRef.current < 300) return;
+        if (pinnedGroupRef.current === null) return;
+        pinnedGroupRef.current = null;
+        applyRouteHighlight();
+      }, 0);
+    };
+
+    kakao.maps.event.addListener(map, "idle", handleIdle);
+    kakao.maps.event.addListener(map, "click", handleClick);
+    return () => {
+      kakao.maps.event.removeListener(map, "idle", handleIdle);
+      kakao.maps.event.removeListener(map, "click", handleClick);
+    };
+  }, [map, drawRouteArrows, applyRouteHighlight]);
 
   // Transition from Step 1 Summary to Step 2 Full Detail View
   const openDetailFromSummary = useCallback((spot: DateSpot) => {
