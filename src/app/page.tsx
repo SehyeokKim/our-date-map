@@ -156,6 +156,8 @@ export default function Home() {
     addSpot,
     updateSpot,
     removeSpot,
+    addNearbyPoint,
+    removeNearbyPoint,
     moveSpotUp,
     moveSpotDown,
   } = useFuturePlanner(showToast, user?.id);
@@ -171,6 +173,13 @@ export default function Home() {
   const [isEditingPlan, setIsEditingPlan] = useState<boolean>(false);
   // "핀으로 추가" — 이 동안에만 플래너 모드에서 지도 클릭으로 핀을 찍을 수 있다
   const [isPickingOnMap, setIsPickingOnMap] = useState<boolean>(false);
+  // 주변 갈 곳을 보고 있는 경유지. 이 동안 지도에는 그 경유지와 주변 핀만 그린다.
+  // 경유지가 지워지면 저절로 코스 목록으로 돌아가도록 id로 들고 있다가 매번 찾는다
+  const [focusedSpotId, setFocusedSpotId] = useState<string | null>(null);
+  const focusedSpot = useMemo(
+    () => (focusedSpotId ? plannedSpots.find((s) => s.id === focusedSpotId) ?? null : null),
+    [focusedSpotId, plannedSpots]
+  );
 
   // 구간별 경로 (카카오 대중교통·도보, Kakao Mobility 자동차)
   // 경유지를 등록·수정하는 동안에만 조회하고, 그냥 볼 때는 저장된 결과를 쓴다 (일일 쿼터 보호).
@@ -222,6 +231,7 @@ export default function Home() {
       loadPlanFromDb(plan);
       setIsEditingPlan(false);
       setIsPickingOnMap(false);
+      setFocusedSpotId(null);
       if (plan.spots && plan.spots.length > 0) {
         fitBounds(plan.spots.map((s: PlannedSpot) => ({ lat: s.latitude, lng: s.longitude })));
       }
@@ -234,6 +244,7 @@ export default function Home() {
     async (start: string, end: string, title?: string) => {
       setIsEditingPlan(true);
       setIsPickingOnMap(false);
+      setFocusedSpotId(null);
       await startNewDatePlan(start, end, title);
     },
     [startNewDatePlan]
@@ -270,8 +281,33 @@ export default function Home() {
   const handlePickOnMap = useCallback(() => {
     setIsAddressSearchOpen(false);
     setIsPickingOnMap(true);
-    showToast("지도를 눌러 경유지 위치를 선택하세요 📍", "info");
-  }, [showToast]);
+    showToast(
+      focusedSpot ? "지도를 눌러 주변 갈 곳을 선택하세요 📍" : "지도를 눌러 경유지 위치를 선택하세요 📍",
+      "info"
+    );
+  }, [showToast, focusedSpot]);
+
+  // 경유지 주변 화면을 열고 닫는다. 열 때는 경유지와 주변 핀이 모두 보이게 지도를 맞춘다
+  const handleFocusSpot = useCallback(
+    (id: string | null) => {
+      setFocusedSpotId(id);
+      setRoutePicker(null);
+      setIsPickingOnMap(false);
+      if (!id) return;
+      const spot = plannedSpots.find((s) => s.id === id);
+      if (!spot) return;
+      const nearby = spot.nearby ?? [];
+      if (nearby.length > 0) {
+        fitBounds([
+          { lat: spot.latitude, lng: spot.longitude },
+          ...nearby.map((p) => ({ lat: p.latitude, lng: p.longitude })),
+        ]);
+      } else {
+        panToSpot(spot.latitude, spot.longitude, 4);
+      }
+    },
+    [plannedSpots, fitBounds, panToSpot]
+  );
 
   // Load date spots from Supabase when map is ready
   useEffect(() => {
@@ -311,7 +347,11 @@ export default function Home() {
 
       // 코스 핀·경로선은 하단 시트와 같은 조건으로 표시한다 (플랜을 불러왔거나 새로 시작했을 때).
       // 둘을 별도 상태로 두면 모드를 오갈 때 시트만 남고 경로가 사라지는 불일치가 생긴다.
-      if (isPlanSheetOpen) {
+      if (isPlanSheetOpen && focusedSpot) {
+        // 주변 화면 — 다른 경유지와 경로선은 숨긴다
+        renderPlannedSpotMarkers([focusedSpot], focusedSpot.nearby ?? []);
+        clearRoutePolyline();
+      } else if (isPlanSheetOpen) {
         renderPlannedSpotMarkers(plannedSpots);
 
         if (plannedSpots.length >= 2) {
@@ -351,6 +391,7 @@ export default function Home() {
     map,
     spots,
     plannedSpots,
+    focusedSpot,
     isPlanSheetOpen,
     currentRouteSummary,
     segmentRoutes,
@@ -517,8 +558,13 @@ export default function Home() {
           initialAddress={currentAddress}
           planDays={planDays}
           defaultDate={lastSpotDate}
+          nearbyOf={focusedSpot?.title}
           onSubmit={(title, memo, lat, lng, address, date) => {
-            addSpot(title, memo, lat, lng, address, date);
+            if (focusedSpot) {
+              addNearbyPoint(focusedSpot.id, { title, memo, lat, lng, address });
+            } else {
+              addSpot(title, memo, lat, lng, address, date);
+            }
             closeAddModal();
             setIsPickingOnMap(false);
           }}
@@ -554,10 +600,18 @@ export default function Home() {
         isOpen={isAddressSearchOpen}
         onClose={() => setIsAddressSearchOpen(false)}
         accent={addressSearchTarget === "planning" ? "plan" : "memory"}
-        title={addressSearchTarget === "planning" ? "경유지 추가" : "주소로 추가"}
+        title={
+          addressSearchTarget === "planning"
+            ? focusedSpot
+              ? "주변 갈 곳 추가"
+              : "경유지 추가"
+            : "주소로 추가"
+        }
         subtitle={
           addressSearchTarget === "planning"
-            ? "검색한 장소를 코스 마지막에 추가해요"
+            ? focusedSpot
+              ? `${focusedSpot.title} 근처에 들를 곳을 검색해요`
+              : "검색한 장소를 코스 마지막에 추가해요"
             : "주소나 장소 이름으로 검색해 핀을 찍어보세요"
         }
         onPickOnMap={addressSearchTarget === "planning" ? handlePickOnMap : undefined}
@@ -624,6 +678,13 @@ export default function Home() {
           onUpdateSpot={updateSpot}
           onOpenRouteOptions={(from, to) => setRoutePicker({ from, to })}
           planDays={planDays}
+          focusedSpotId={focusedSpot?.id ?? null}
+          onFocusSpot={handleFocusSpot}
+          onAddNearby={() => {
+            setAddressSearchTarget("planning");
+            setIsAddressSearchOpen(true);
+          }}
+          onRemoveNearby={removeNearbyPoint}
         />
       )}
 

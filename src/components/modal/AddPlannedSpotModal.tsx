@@ -21,6 +21,8 @@ interface AddPlannedSpotModalProps {
   planDays?: string[];
   /** 날짜 기본값. 보통 마지막 경유지의 날짜다 */
   defaultDate?: string;
+  /** 경유지 주변 갈 곳을 추가할 때 넘기는 경유지 이름. 있으면 문구를 바꾸고 날짜는 받지 않는다 */
+  nearbyOf?: string;
 }
 
 export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
@@ -31,11 +33,12 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
   onSubmit,
   planDays = [],
   defaultDate,
+  nearbyOf,
 }) => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [date, setDate] = useState<string>("");
-  const showDate = planDays.length > 1;
+  const showDate = !nearbyOf && planDays.length > 1;
 
   useEffect(() => {
     if (isOpen) {
@@ -71,8 +74,14 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-display text-ink text-base">미래 데이트 플랜 추가</h3>
-              <p className="text-xs text-ink-muted">방문하고 싶은 장소를 코스에 추가해요</p>
+              <h3 className="font-display text-ink text-base">
+                {nearbyOf ? "주변 갈 곳 추가" : "미래 데이트 플랜 추가"}
+              </h3>
+              <p className="text-xs text-ink-muted">
+                {nearbyOf
+                  ? `${nearbyOf} 근처에 들를 곳을 모아 둬요`
+                  : "방문하고 싶은 장소를 코스에 추가해요"}
+              </p>
             </div>
           </div>
           <button
@@ -140,7 +149,7 @@ export const AddPlannedSpotModal: React.FC<AddPlannedSpotModalProps> = ({
               disabled={!title.trim()}
               className="flex-1 py-3 bg-plan text-on-accent rounded-xl font-semibold text-sm hover:bg-plan-strong disabled:opacity-50 transition-all shadow-[var(--shadow-card)]"
             >
-              플랜 코스에 추가
+              {nearbyOf ? "주변 갈 곳에 추가" : "플랜 코스에 추가"}
             </button>
           </div>
         </form>

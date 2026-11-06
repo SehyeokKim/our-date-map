@@ -4,6 +4,7 @@ import { RouteMode, SegmentRouteState } from "@/types/transit";
 import { formatMeters, formatMinutes, routeStepsSummary, segmentPairKey } from "@/lib/transit";
 import { RouteDurationBar } from "@/components/route/RouteDurationBar";
 import { PlanDayPicker } from "@/components/plan/PlanDayPicker";
+import { NearbyPointsPanel } from "@/components/plan/NearbyPointsPanel";
 import { formatDayDate, resolveSpotDates } from "@/lib/planDates";
 import {
   Calendar,
@@ -18,6 +19,7 @@ import {
   Car,
   Footprints,
   ChevronRight,
+  ChevronLeft,
   Pencil,
   Check,
   MapPinPlus,
@@ -49,6 +51,12 @@ interface FuturePlanSheetProps {
   planDays?: string[];
   /** 편집 모드에서 구간 카드를 누르면 경로 목록을 연다 */
   onOpenRouteOptions?: (from: PlannedSpot, to: PlannedSpot) => void;
+  /** 주변 갈 곳을 보고 있는 경유지. 있으면 코스 목록 대신 그 경유지의 주변 목록을 보여준다 */
+  focusedSpotId?: string | null;
+  /** 경유지의 주변 화면에 들어가거나(id) 코스 목록으로 돌아온다(null) */
+  onFocusSpot?: (id: string | null) => void;
+  onAddNearby?: () => void;
+  onRemoveNearby?: (spotId: string, pointId: string) => void;
 }
 
 const MODE_ICON: Record<RouteMode, React.ElementType> = {
@@ -74,8 +82,15 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
   onUpdateSpot,
   onOpenRouteOptions,
   planDays = [],
+  focusedSpotId = null,
+  onFocusSpot,
+  onAddNearby,
+  onRemoveNearby,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const focusedSpot = focusedSpotId
+    ? plannedSpots.find((s) => s.id === focusedSpotId) ?? null
+    : null;
 
   // 인라인 편집 상태 — 플랜 제목과 경유지(제목·메모·날짜)
   const [titleDraft, setTitleDraft] = useState<string | null>(null);
@@ -136,6 +151,34 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
           onClick={() => setIsExpanded(!isExpanded)}
           className="p-3.5 flex items-center justify-between cursor-pointer border-b border-line bg-plan-tint"
         >
+          {focusedSpot ? (
+          /* 주변 화면 헤더 — 뒤로 가기로 코스 목록에 돌아온다 */
+          <div className="flex items-center gap-2.5 min-w-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onFocusSpot?.(null);
+              }}
+              aria-label="코스 목록으로 돌아가기"
+              title="코스 목록으로 돌아가기"
+              className="w-8 h-8 rounded-full bg-plan text-on-accent flex items-center justify-center shadow-sm shrink-0 hover:bg-plan-strong transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="font-display text-ink text-sm truncate">{focusedSpot.title} 주변</h2>
+                <span className="bg-surface text-plan-strong font-bold text-[11px] px-2 py-0.5 rounded-full shrink-0">
+                  {focusedSpot.nearby?.length ?? 0}곳
+                </span>
+              </div>
+              <p className="text-[10px] text-ink-muted truncate">
+                다른 경유지는 지도에서 잠시 숨겼어요
+              </p>
+            </div>
+          </div>
+          ) : (
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full bg-plan text-on-accent flex items-center justify-center shadow-sm shrink-0">
               <Calendar className="w-4 h-4" />
@@ -189,6 +232,7 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
               </p>
             </div>
           </div>
+          )}
 
           <div className="flex items-center gap-1">
             <button
@@ -206,7 +250,23 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
         </div>
 
         {/* Content Body */}
-        {isExpanded && (
+        {isExpanded && focusedSpot && (
+          <div className="p-4 space-y-3 max-h-[42vh] overflow-y-auto">
+            <NearbyPointsPanel
+              spot={focusedSpot}
+              isEditing={isEditing}
+              isSaving={isSaving}
+              onToggleEdit={onToggleEdit}
+              onPanTo={onPanToSpot}
+              onAdd={onAddNearby}
+              onRemove={
+                onRemoveNearby ? (pointId) => onRemoveNearby(focusedSpot.id, pointId) : undefined
+              }
+            />
+          </div>
+        )}
+
+        {isExpanded && !focusedSpot && (
           <div className="p-4 space-y-3 max-h-[42vh] overflow-y-auto">
             {/* 상단 바 — 왼쪽은 경로 요약(거리·시간), 오른쪽은 수정 토글.
                 경로 요약은 2곳 이상일 때만 계산되지만, 수정 버튼은 장소가 없을 때도
@@ -439,6 +499,24 @@ export const FuturePlanSheet: React.FC<FuturePlanSheetProps> = ({
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                        )}
+
+                        {/* 주변 갈 곳 — 누르면 이 경유지만 지도에 남기고 주변 목록을 연다 */}
+                        {onFocusSpot && (
+                          <button
+                            type="button"
+                            onClick={() => onFocusSpot(spot.id)}
+                            title="주변 갈 곳 보기"
+                            aria-label={`${spot.title} 주변 갈 곳 보기`}
+                            className="shrink-0 ml-1 -mr-1 min-w-11 min-h-11 flex items-center justify-center gap-0.5 rounded-xl text-plan-strong hover:bg-surface transition-colors cursor-pointer"
+                          >
+                            {(spot.nearby?.length ?? 0) > 0 && (
+                              <span className="text-[10px] font-bold bg-plan-tint border border-plan-line rounded-full px-1.5 py-px">
+                                {spot.nearby?.length}
+                              </span>
+                            )}
+                            <ChevronRight className="w-5 h-5" aria-hidden />
+                          </button>
                         )}
                       </div>
                       )}

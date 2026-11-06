@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DateSpot, LatLng } from "@/types/spot";
-import { AppMode, PlannedSpot } from "@/types/planner";
+import { AppMode, NearbyPoint, PlannedSpot } from "@/types/planner";
 import { RouteLine, RouteLineStyle, mixColor } from "@/lib/route";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -319,7 +319,7 @@ export function useKakaoMap(
 
   // Render Planned Spot markers (Numbered violet circles)
   const renderPlannedSpotMarkers = useCallback(
-    (plannedSpotsData: PlannedSpot[]) => {
+    (plannedSpotsData: PlannedSpot[], nearbyPoints: NearbyPoint[] = []) => {
       const kakao = window.kakao;
       if (!kakao || !kakao.maps || !map) return;
 
@@ -372,6 +372,55 @@ export function useKakaoMap(
           clickable: true,
         });
 
+        overlay.setMap(map);
+        plannedOverlaysRef.current.push(overlay);
+      });
+
+      // 주변 갈 곳은 번호 없는 작은 핀으로 그린다. 순서가 없어 경유지 핀과 모양을 구분한다
+      nearbyPoints.forEach((point) => {
+        const position = new kakao.maps.LatLng(point.latitude, point.longitude);
+
+        const el = document.createElement("div");
+        el.className = "flex flex-col items-center select-none touch-manipulation pointer-events-auto cursor-pointer";
+        el.style.pointerEvents = "auto";
+        el.style.touchAction = "manipulation";
+        (el.style as any).webkitTapHighlightColor = "transparent";
+
+        el.innerHTML = `
+          <div class="relative flex flex-col items-center hover:scale-105 transition-transform">
+            <div class="w-6 h-6 rounded-full bg-surface border-2 border-plan shadow-md flex items-center justify-center">
+              <div class="w-2 h-2 rounded-full bg-plan"></div>
+            </div>
+            <div data-label class="mt-1 bg-surface/95 border border-plan-line px-1.5 py-0.5 rounded-full shadow-sm text-[10px] font-semibold text-ink whitespace-nowrap max-w-[110px] truncate"></div>
+          </div>
+        `;
+        const label = el.querySelector("[data-label]");
+        if (label) label.textContent = point.title;
+
+        const stopMapPan = (e: Event) => {
+          e.stopPropagation();
+        };
+        el.addEventListener("touchstart", stopMapPan, { passive: true });
+        el.addEventListener("touchmove", stopMapPan, { passive: true });
+        el.addEventListener("pointerdown", stopMapPan);
+        el.addEventListener("mousedown", stopMapPan);
+
+        const handleSelect = (e: Event) => {
+          if (e.cancelable) e.preventDefault();
+          e.stopPropagation();
+          map.panTo(position);
+        };
+        el.addEventListener("click", handleSelect);
+        el.addEventListener("touchend", handleSelect);
+
+        const overlay = new kakao.maps.CustomOverlay({
+          position,
+          content: el,
+          xAnchor: 0.5,
+          yAnchor: 0.5,
+          zIndex: 34,
+          clickable: true,
+        });
         overlay.setMap(map);
         plannedOverlaysRef.current.push(overlay);
       });
@@ -804,9 +853,11 @@ export function useKakaoMap(
 
   // Pan map smooth transition to single coordinate
   const panToSpot = useCallback(
-    (lat: number, lng: number) => {
+    (lat: number, lng: number, level?: number) => {
       const kakao = window.kakao;
       if (!kakao || !kakao.maps || !map) return;
+      // 확대 수준을 주면 지금보다 멀리 보고 있을 때만 그만큼 당겨 온다
+      if (level !== undefined && map.getLevel() > level) map.setLevel(level);
       map.panTo(new kakao.maps.LatLng(lat, lng));
     },
     [map]

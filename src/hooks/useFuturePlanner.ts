@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { PlannedSpot, AppMode, DatePlan, RouteSummaryData } from "@/types/planner";
+import { PlannedSpot, AppMode, DatePlan, RouteSummaryData, NearbyPoint } from "@/types/planner";
 import { SavedSegmentRoute } from "@/types/transit";
 import { supabase } from "@/lib/supabase/client";
 import { dayEndIndex, listPlanDays, resolveSpotDates } from "@/lib/planDates";
@@ -472,6 +472,43 @@ export function useFuturePlanner(
     [plannedSpots, saveSpots, showToast]
   );
 
+  // 경유지 주변 갈 곳 추가. 순서가 없어 목록 끝에 붙인다
+  const addNearbyPoint = useCallback(
+    (
+      spotId: string,
+      point: { title: string; memo?: string; lat: number; lng: number; address?: string }
+    ) => {
+      const newPoint: NearbyPoint = {
+        id: `near_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        title: point.title.trim() || "주변 갈 곳",
+        memo: point.memo?.trim() || undefined,
+        latitude: point.lat,
+        longitude: point.lng,
+        address: point.address,
+        createdAt: new Date().toISOString(),
+      };
+      saveSpots(
+        plannedSpots.map((s) =>
+          s.id === spotId ? { ...s, nearby: [...(s.nearby ?? []), newPoint] } : s
+        )
+      );
+      showToast(`'${newPoint.title}'을(를) 주변 갈 곳에 추가했어요.`, "success");
+    },
+    [plannedSpots, saveSpots, showToast]
+  );
+
+  // 경유지 주변 갈 곳 삭제
+  const removeNearbyPoint = useCallback(
+    (spotId: string, pointId: string) => {
+      saveSpots(
+        plannedSpots.map((s) =>
+          s.id === spotId ? { ...s, nearby: (s.nearby ?? []).filter((p) => p.id !== pointId) } : s
+        )
+      );
+    },
+    [plannedSpots, saveSpots]
+  );
+
   /**
    * 경유지를 한 칸 옮긴다. 여러 날짜 플랜에서 날짜 경계를 넘을 때는 자리를 바꾸지 않고 옆 경유지의 날짜를 따른다.
    * 예: 2일차 첫 경유지를 올리면 1일차 마지막이 되고, 한 번 더 올려야 1일차 안에서 자리를 바꾼다.
@@ -563,6 +600,8 @@ export function useFuturePlanner(
     addSpot,
     updateSpot,
     removeSpot,
+    addNearbyPoint,
+    removeNearbyPoint,
     moveSpotUp,
     moveSpotDown,
     clearAllPlans,

@@ -1,3 +1,14 @@
+/** 경유지 근처에서 들를 만한 곳. 순서와 경로 없이 핀으로만 모아 둔다 */
+export interface NearbyPoint {
+  id: string;
+  title: string;
+  memo?: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  createdAt: string;
+}
+
 export interface PlannedSpot {
   id: string;
   title: string;
@@ -12,6 +23,8 @@ export interface PlannedSpot {
    * 없으면 앞 경유지의 날짜를 따른다 (`resolveSpotDates`).
    */
   date?: string;
+  /** 이 경유지 주변에 갈 곳 */
+  nearby?: NearbyPoint[];
 }
 
 export type AppMode = 'memory' | 'planning';
