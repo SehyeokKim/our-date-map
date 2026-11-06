@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { DatePlan } from "@/types/planner";
+import { todayLocalDate } from "@/lib/planDates";
 import { X, Calendar, MapPin, Trash2, ArrowRight, Sparkles, Clock, Plus } from "lucide-react";
 
 interface DateItineraryModalProps {
@@ -25,14 +26,12 @@ export const DateItineraryModal: React.FC<DateItineraryModalProps> = ({
 
   if (!isOpen) return null;
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = todayLocalDate();
 
-  const pastPlans = allPlans.filter(
-    (p) => (p.end_date || p.start_date || p.plan_date) < todayStr
-  );
-  const futurePlans = allPlans.filter(
-    (p) => (p.start_date || p.plan_date) >= todayStr
-  );
+  // 마지막 날이 끝날 때까지는 계획, 다음 날 0시부터 기록으로 넘긴다
+  const isPast = (p: DatePlan) => (p.end_date || p.start_date || p.plan_date) < todayStr;
+  const pastPlans = allPlans.filter(isPast);
+  const futurePlans = allPlans.filter((p) => !isPast(p));
 
   const displayedPlans = activeTab === "future" ? futurePlans : pastPlans;
 

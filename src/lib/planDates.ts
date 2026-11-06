@@ -17,6 +17,9 @@ const toDateString = (date: Date) =>
     date.getDate()
   ).padStart(2, "0")}`;
 
+/** 오늘의 현지 날짜 `YYYY-MM-DD`. `toISOString()`은 UTC라 한국 시간 0시부터 9시까지 어제로 나온다 */
+export const todayLocalDate = () => toDateString(new Date());
+
 /** 플랜 기간의 날짜 목록 (시작일부터 종료일까지) */
 export const listPlanDays = (start?: string, end?: string): string[] => {
   const first = start ? parseLocalDate(start) : null;
